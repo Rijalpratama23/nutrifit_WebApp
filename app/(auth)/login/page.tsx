@@ -1,5 +1,9 @@
+import Image from "next/image"
+import FormLogin from "@/components/componentsAuth/login/page"
+
+
 export default function LoginPage() {
     return(
-        <h1>Login Page</h1>
+        <FormLogin />  
     )
 }
