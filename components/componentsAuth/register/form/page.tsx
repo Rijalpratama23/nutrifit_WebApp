@@ -5,11 +5,12 @@ import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
-export default function Form() {
+export default function FormRegister() {
   // 1. State untuk sembunyikan/lihat password
   const [showPassword, setShowPassword] = useState(false);
 
   // 2. State untuk menangkap data input (opsional, tapi bagus untuk interaksi)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
@@ -19,7 +20,7 @@ export default function Form() {
       alert('Harap isi semua kolom!');
       return;
     }
-    console.log('Logging in with:', { email, password });
+    console.log('Anda sudah Daftar:', { name, email,  password });
     // Di sini biasanya kamu melakukan push router atau fetch API
   };
 
@@ -34,6 +35,21 @@ export default function Form() {
       </div>
       <div className="flex items-center ml-1 mt-8">
         <form onSubmit={handleSubmit} className="w-full">
+          <div className="namae mb-4">
+            <label htmlFor="name" className="font-semibold text-lg">
+              Nama
+            </label>
+            <div>
+              <input
+                type="text"
+                placeholder="jhondoe"
+                required 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg"
+              />
+            </div>
+          </div>
           <div className="email mb-4">
             <label htmlFor="email" className="font-semibold text-lg">
               Email
@@ -70,28 +86,11 @@ export default function Form() {
           </div>
           <div className="flex justify-between mb-3">
             <input type="checkbox" className="cursor-pointer" />
-            <Link href="/">
-              <p className="text-sm text-primary">Lupa kata sandi?</p>
-            </Link>
           </div>
           <div className="mb-3">
             <button type="submit" className="bg-primary w-full cursor-pointer py-2 text-white font-semibold rounded-lg">
-              Login
+              Daftar
             </button>
-          </div>
-          <div>
-            <button type="button" className="flex cursor-pointer w-full gap-3 justify-center items-center outline-1 py-2 px-8 font-semibold rounded-lg">
-              <Image src="/authimg/google.png" alt="picture" width={20} height={20} />
-              <p>Masuk dengan google</p>
-            </button>
-          </div>
-          <div className="flex justify-center mt-3">
-            <p className="text-sm">
-              Belum punya akun?{' '}
-              <Link href="/register">
-                <span className="text-primary text-sm">Daftar disini</span>
-              </Link>
-            </p>
           </div>
         </form>
       </div>
