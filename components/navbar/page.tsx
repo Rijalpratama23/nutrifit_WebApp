@@ -5,23 +5,23 @@ import Link from 'next/link';
 
 export default function Navbar() {
   return (
-    <header className='w-screen h-18 md:flex justify-center items-center md:px-10 md:pr-25 gap-20'>
+    <header className='fixed top-0 left-0 right-0 z-[9999] h-16 flex justify-between items-center px-6 md:px-10 bg-white shadow-md'>
       <div className="logo md:flex justify-center items-center md:pt-5 md:pr-10">
         <Image src='/Logo.png' alt='logo' width={200} height={100}/>
       </div>
       <nav className="md:flex ">     
         <ul className='md:flex justify-between md:gap-15'>
             <li className='font-semibold md:font-bold hover-text-primary'>
-                <Link href="">Beranda</Link>
+                <Link href="#hero">Beranda</Link>
             </li>
              <li className='font-semibold md:font-bold hover-text-primary'>
-                <Link href="">Konsultasi</Link>
+                <Link href="#konsultasi">Konsultasi</Link>
             </li>
              <li className='font-semibold md:font-bold hover-text-primary'>
-                <Link href="">Tim Ahli</Link>
+                <Link href="#tim">Tim Ahli</Link>
             </li>
              <li className='font-semibold md:font-bold hover-text-primary'>
-                <Link href="">Artikel Kesehatan</Link>
+                <Link href="#artikel">Artikel Kesehatan</Link>
             </li>
         </ul>
       </nav>

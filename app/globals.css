@@ -73,9 +73,12 @@
     --foreground: #ededed;
   }
 }
-
+html {
+  scroll-behavior: smooth;
+}
 body {
   background: var(--color-bg-light);
   color: var(--color-text);
   font-family: var(--font-primary);
+  overflow-x: hidden;
 }

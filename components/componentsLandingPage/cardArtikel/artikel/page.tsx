@@ -2,7 +2,7 @@ import ArtikelLanding from "./artikelLanding/page"
 
 export default function Artikel() {
     return(
-         <div className="min-h-130 bg-primary">
+         <div className="py-15 bg-primary" id="artikel">
                 <div className="pl-20">
                   <h2 className="font-semibold text-white text-3xl pt-10">Artikel Kesehatan</h2>
                   <p className="text-white font-light">Pilih Artikel sesuai minat anda</p>

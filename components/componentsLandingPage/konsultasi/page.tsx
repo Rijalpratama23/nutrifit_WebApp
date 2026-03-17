@@ -3,7 +3,7 @@ import ButtonSecond from '@/components/button/secondaryButton/page';
 
 export default function Konsultasi() {
   return (
-    <div className="min-h-screen bg-primary px-20">
+    <div className="py-20 bg-primary mb-10 px-20" id='konsultasi'>
       <div className="text-white pt-4 mb-8">
         <h2 className="font-semibold text-3xl text-">Pilih Jenis Konsultasi</h2>
         <p className="font-light">Sesuaikan toopik konsultasi dengan kebutuhan dan tujuan anda</p>
@@ -50,7 +50,7 @@ export default function Konsultasi() {
         </div>
       </div>
 
-      <div className="flex justify-center items-center bg-white mt-5 p-5 rounded-2xl gap-15">
+      <div className="flex justify-center items-center bg-white mt-5 mb-10 p-5 rounded-2xl  gap-15">
         {/* card atur jadwal */}
         <div className="w-full flex justify-around p-3">
           <Image src="/landingpage/doctor.png" alt="picture" width={300} height={15} />

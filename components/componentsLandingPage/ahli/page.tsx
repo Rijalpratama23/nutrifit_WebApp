@@ -8,7 +8,7 @@ import ButtonSecond from "@/components/button/secondaryButton/page";
 
 export default function timAhli() {
   return (
-    <div className="min-h-130">
+    <div className="py-15" id="tim">
       <div className="text-center mt-4 md:mt-10 mb-5 md:mb-10">
         <h1 className="font-semibold text-3xl text-primary">Kenali Tim Ahli</h1>
         <p className="text-primary font-light">sesuaikan tim ahli dengan ynag anda butuhkan!</p>

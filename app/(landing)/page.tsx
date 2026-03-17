@@ -7,13 +7,15 @@ import Footer from '@/components/footer/page';
 
 export default function LandingPage() {
   return (
-    <div className="overflow-x-hidden overflow-y-hidden">
+    <div className="overflow-x-hidden">
       <Navbar />
-      <Hero />
-      <Konsultasi />
-      <TimAhli />
-      <Artikel />
-      <Footer />
+      <main className='pt-16'>
+        <Hero />
+        <Konsultasi />
+        <TimAhli />
+        <Artikel />
+        <Footer />
+      </main>
     </div>
   );
 }

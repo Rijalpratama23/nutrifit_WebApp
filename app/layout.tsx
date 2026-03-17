@@ -28,6 +28,7 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${poppins.variable} antialiased`}
       >
+
         {children}
       </body>
     </html>
