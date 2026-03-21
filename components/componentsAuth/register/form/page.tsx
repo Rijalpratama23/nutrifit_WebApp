@@ -2,26 +2,45 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { supabase } from '@/utils/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
-import Link from 'next/link';
+import router from 'next/navigation';
 
 export default function FormRegister() {
-  // 1. State untuk sembunyikan/lihat password
   const [showPassword, setShowPassword] = useState(false);
-
-  // 2. State untuk menangkap data input (opsional, tapi bagus untuk interaksi)
-  const [name, setName] = useState('')
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email || !password) {
+    setLoading(true);
+
+    if (!email || !password || !fullName) {
       alert('Harap isi semua kolom!');
+      setLoading(false);
       return;
     }
-    console.log('Anda sudah Daftar:', { name, email,  password });
-    // Di sini biasanya kamu melakukan push router atau fetch API
+    // pemanggilan fungsi signUp di supabase
+    const { data, error } = await supabase.auth.signUp({
+      email:email,
+      password:password,
+      options: {
+        data: {
+          fullName,
+        }
+      }
+    })
+
+    if (error) {
+      alert(`Gagal Daftar: ${error.message}`);
+    }else {
+      alert(`Pendaftaran berhasil! silahkan cek email untuk konfirmasi (jika aktif) atau langsung login`)
+      router.push('/login')
+    }
+
+    setLoading(false)
   };
 
   return (
@@ -44,8 +63,8 @@ export default function FormRegister() {
                 type="text"
                 placeholder="jhondoe"
                 required 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
                 className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg"
               />
             </div>
@@ -89,7 +108,7 @@ export default function FormRegister() {
           </div>
           <div className="mb-3">
             <button type="submit" className="bg-primary w-full cursor-pointer py-2 text-white font-semibold rounded-lg">
-              Daftar
+              {loading? 'Memproses..' : 'Daftar'}
             </button>
           </div>
         </form>

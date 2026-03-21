@@ -1,4 +1,4 @@
-import Navbar from '@/components/navbar/page';
+import Navbar from '@/components/componentsLandingPage/navbar/page';
 import Hero from '@/components/componentsLandingPage/hero/page';
 import Konsultasi from '@/components/componentsLandingPage/konsultasi/page';
 import TimAhli from '@/components/componentsLandingPage/ahli/page';

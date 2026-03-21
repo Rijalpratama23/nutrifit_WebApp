@@ -1,28 +1,46 @@
-'use client'; // Wajib ditambahkan di Next.js App Router untuk interaktivitas
+'use client';
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { supabase } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Form() {
-  // 1. State untuk sembunyikan/lihat password
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-
-  // 2. State untuk menangkap data input (opsional, tapi bagus untuk interaksi)
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Logika validasi dipindahkan ke dalam handleSubmit agar tidak error saat render
     if (!email || !password) {
       alert('Harap isi semua kolom!');
       return;
     }
-    console.log('Logging in with:', { email, password });
-    // Di sini biasanya kamu melakukan push router atau fetch API
+
+    setLoading(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      alert(`login gagal : ${error.message}`);
+    } else {
+      alert('login berhasil');
+      router.push('/dashboard');
+      router.refresh();
+    }
+    setLoading(false);
   };
 
+  // Bagian return HARUS di dalam fungsi Form()
   return (
     <div className="w-90 shadw-xl m-5 p-5">
       <div className="mb-4">
@@ -39,14 +57,7 @@ export default function Form() {
               Email
             </label>
             <div>
-              <input
-                type="email"
-                placeholder="example@gmail.com"
-                required // Validasi HTML5
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg"
-              />
+              <input type="email" placeholder="example@gmail.com" required value={email} onChange={async (e) => setEmail(e.target.value)} className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg" />
             </div>
           </div>
           <div className="mb-4">
@@ -54,15 +65,7 @@ export default function Form() {
               Password
             </label>
             <div className="relative flex items-center">
-              <input
-                type={showPassword ? 'text' : 'password'} // Interaktivitas Tipe Input
-                placeholder="*****"
-                required // Validasi HTML5
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg"
-              />
-              {/* Tombol Mata Interaktif */}
+              <input type={showPassword ? 'text' : 'password'} placeholder="*****" required value={password} onChange={(e) => setPassword(e.target.value)} className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg" />
               <div onClick={() => setShowPassword(!showPassword)} className="absolute right-3 cursor-pointer text-gray-500 hover:text-gray-700">
                 {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </div>
@@ -75,8 +78,12 @@ export default function Form() {
             </Link>
           </div>
           <div className="mb-3">
-            <button type="submit" className="bg-primary w-full cursor-pointer py-2 text-white font-semibold rounded-lg">
-              Login
+            <button
+              type="submit"
+              disabled={loading} // Bagus untuk mencegah double submit
+              className="bg-primary w-full cursor-pointer py-2 text-white font-semibold rounded-lg"
+            >
+              {loading ? 'Memproses...' : 'Login'}
             </button>
           </div>
           <div>
@@ -97,4 +104,4 @@ export default function Form() {
       </div>
     </div>
   );
-}
+} // Tutup kurung kurawal fungsi Form berada di paling akhir
