@@ -4,9 +4,12 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { supabase } from '@/utils/supabase/client';
 import { Eye, EyeOff } from 'lucide-react';
-import router from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function FormRegister() {
+  const router = useRouter();
+
   const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,23 +27,23 @@ export default function FormRegister() {
     }
     // pemanggilan fungsi signUp di supabase
     const { data, error } = await supabase.auth.signUp({
-      email:email,
-      password:password,
+      email: email,
+      password: password,
       options: {
         data: {
           fullName,
-        }
-      }
-    })
+        },
+      },
+    });
 
     if (error) {
       alert(`Gagal Daftar: ${error.message}`);
-    }else {
-      alert(`Pendaftaran berhasil! silahkan cek email untuk konfirmasi (jika aktif) atau langsung login`)
-      router.push('/login')
+    } else {
+      alert(`Pendaftaran berhasil! silahkan cek email untuk konfirmasi (jika aktif) atau langsung login`);
+      router.push('/login');
     }
 
-    setLoading(false)
+    setLoading(false);
   };
 
   return (
@@ -59,14 +62,7 @@ export default function FormRegister() {
               Nama
             </label>
             <div>
-              <input
-                type="text"
-                placeholder="jhondoe"
-                required 
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg"
-              />
+              <input type="text" placeholder="jhondoe" required value={fullName} onChange={(e) => setFullName(e.target.value)} className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg" />
             </div>
           </div>
           <div className="email mb-4">
@@ -108,8 +104,14 @@ export default function FormRegister() {
           </div>
           <div className="mb-3">
             <button type="submit" className="bg-primary w-full cursor-pointer py-2 text-white font-semibold rounded-lg">
-              {loading? 'Memproses..' : 'Daftar'}
+              {loading ? 'Memproses..' : 'Daftar'}
             </button>
+          </div>
+
+          <div className='flex justify-center'>
+            <Link href="./login">
+              <p className='text-sm'>Sudah punya akun? <span className='text-primary'>Login</span></p>
+            </Link>
           </div>
         </form>
       </div>

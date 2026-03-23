@@ -34,7 +34,7 @@ export default function Form() {
       alert(`login gagal : ${error.message}`);
     } else {
       alert('login berhasil');
-      router.push('/dashboard');
+      router.push('/user/dashboardUser');
       router.refresh();
     }
     setLoading(false);
@@ -104,4 +104,4 @@ export default function Form() {
       </div>
     </div>
   );
-} // Tutup kurung kurawal fungsi Form berada di paling akhir
+}
