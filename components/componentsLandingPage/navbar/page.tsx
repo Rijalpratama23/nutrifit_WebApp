@@ -26,6 +26,29 @@ export default function Navbar() {
     };
   }, [open]);
 
+  useEffect(() => {
+    const sections = ['#hero', '#konsultasi', '#tim', '#artikel'];
+
+    const handleScroll = () => {
+      let current = '#hero';
+
+      sections.forEach((id) => {
+        const section = document.querySelector(id);
+        if (sections) {
+          const rect = section.getBoundingClientRect();
+
+          if (rect.top <= 150 && rect.bottom >= 150) {
+            current = id;
+          }
+        }
+      });
+      setActive(current);
+    };
+    window.addEventListener('scroll', handleScroll);
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-[9999] h-16 flex justify-between items-center px-6 md:px-10 bg-white shadow-md">
       {/* LOGO */}
