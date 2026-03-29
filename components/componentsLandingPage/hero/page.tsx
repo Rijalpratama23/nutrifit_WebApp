@@ -15,7 +15,7 @@ export default function Hero() {
               <p>NutriFit adalah platform digital yang membantu mencapai target berat badan dan pola hidup sehat melalui panduan nutrisi dan konsultasi ahli.</p>
             </div>
             <div>
-              <ButtonXl />
+              <ButtonXl title="Konsultasi Sekarang!" />
             </div>
           </div>
         </div>

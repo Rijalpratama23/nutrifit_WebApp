@@ -88,7 +88,7 @@ export default function Navbar() {
           <p className="font-semibold">Daftar</p>
         </Link>
         <Link href="/login">
-          <button className="bg-primary font-semibold px-6 py-2 text-white rounded-xl">Masuk</button>
+          <button className="bg-primary font-semibold px-6 py-2 text-white rounded-xl cursor-pointer">Masuk</button>
         </Link>
       </div>
 
@@ -162,7 +162,7 @@ export default function Navbar() {
             </Link>
 
             <Link href="/login" onClick={(e) => e.stopPropagation()}>
-              <button className="bg-primary mb-5 font-semibold px-6 py-2 text-white rounded-xl w-fit">Masuk</button>
+              <button className="bg-primary mb-5 font-semibold px-6 py-2 text-white rounded-xl w-fit cursor-pointer">Masuk</button>
             </Link>
           </div>
         </div>
