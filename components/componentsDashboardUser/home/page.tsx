@@ -3,6 +3,9 @@
 import Image from 'next/image';
 import ButtonXl from '@/components/button/buttonXl/page';
 import { useState, useEffect } from 'react';
+import { Calendar, Bell } from 'lucide-react';
+import ButtonSecond from '@/components/button/secondaryButton/page';
+import Footer from '@/components/footer/page';
 
 export default function DashboardUser() {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -18,7 +21,7 @@ export default function DashboardUser() {
       id: 2,
       title: 'Program Nutrisi',
       desc: 'Ikuti program kesehatan yang dirancang khusus untuk Anda',
-      img: '/landingPage/hero.png', // Ganti dengan gambar lain jika ada
+      img: '/landingPage/hero.png',
     },
     {
       id: 3,
@@ -57,26 +60,71 @@ export default function DashboardUser() {
             ))}
           </div>
         </div>
-        {/* Indikator Titik (Dots) */}
-        <div className="flex gap-3 mt-8">
+        <div className="flex gap-2 md:gap-3 mt-6 md:mt-8">
           {slides.map((_, index) => (
-            <button key={index} onClick={() => setCurrentSlide(index)} className={`h-3 transition-all duration-300 rounded-full shadow-xl ${currentSlide === index ? 'w-8 bg-primary shadow-lg' : 'w-3 bg-blue-300 opacity-50 shadow-lg'}`} />
+            <button
+              key={index}
+              onClick={() => setCurrentSlide(index)}
+              className={`h-3 transition-all duration-300 rounded-full shadow-xl ${currentSlide === index ? 'w-8 bg-primary shadow-lg' : 'w-3 bg-blue-300 opacity-50 shadow-lg'}`}
+              aria-label={`slide-${index}`}
+            />
           ))}
         </div>
       </div>
 
-      <div className="konsultasi">
-        <div>
-          <div>
-            <h1>Selamat Datang di Nutrifit @Users</h1>
-            <p>Mari kita mulai perjalanan sehat anda hari ini!</p>
+      <section className="konsultasi bg-primary pb-6 md:pb-8">
+        <div className="p-5 md:p-8 text-white">
+          <div className="px-2 md:px-5">
+            <h1 className="text-xl md:text-3xl font-semibold">Selamat Datang di Nutrifit @Users</h1>
+            <p className="text-sm md:text-base text-shadow-white">Mari kita mulai perjalanan sehat anda hari ini!</p>
+          </div>
+
+          <div className="flex justify-center px-2 md:px-5 mt-6 md:mt-10">
+            <div className="w-full max-w-screen-lg">
+              <div className="flex flex-col md:flex-row md:justify-center md:items-stretch gap-6 md:gap-8">
+                {/* three cards */}
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="cart flex-1 flex justify-center items-center bg-light p-4 md:p-6 rounded-xl">
+                    <div className="w-full max-w-md">
+                      <div className="flex gap-3 items-center">
+                        <Calendar size={25} className="text-secondary" />
+                        <p className="text-black font-semibold text-lg md:text-xl">Konsultasi</p>
+                      </div>
+                      <div className="text-black font-normal my-4 md:my-8">
+                        <p>konsultasi sekarang juga</p>
+                      </div>
+                      <div className="flex justify-center items-center">
+                        <ButtonSecond text="Konsultasi" background="bg-secondary" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="program"></div>
+      <section className="program p-6 md:p-10">
+        <div className="flex justify-center">
+          <div className="w-full max-w-4xl px-4">
+            <h1 className="text-center font-semibold text-primary text-2xl md:text-3xl">Program Anda</h1>
+            <div className="flex flex-col md:flex-row mt-5 md:mt-8 justify-center items-center gap-6 md:gap-10 pt-6 md:pt-10 p-4 md:p-5 rounded-2xl md:rounded-4xl shadow-2xl border border-gray-200">
+              <div className="w-full md:w-1/2 flex justify-center">
+                <Image src="/landingPage/doctor.png" alt="picture" width={260} height={160} className="object-contain" />
+              </div>
+              <div className="w-full md:w-1/2">
+                <p className="text-base md:text-lg mb-4 md:mb-5">
+                  Atur jadwal Konsultasi anda dengan <br className="hidden md:block" /> waktu yang fleksibel dan senyaman <br className="hidden md:block" /> mungkin
+                </p>
+                <ButtonXl title="Mulai Konsultasi" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <footer></footer>
+      <Footer logoSrc="/logoPutih.png" logoAlt="picture" accentColor="bg-white" background="bg-primary" textColor="text-white" />
     </div>
   );
 }
