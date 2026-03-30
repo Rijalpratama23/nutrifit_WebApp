@@ -4,8 +4,7 @@ import ButtonXl from '@/components/button/buttonXl/page';
 export default function Hero() {
   return (
     <section className="mx-3 md:mx-15" id="hero">
-      {/* hero section */}
-      <div className="py-20 md:py-32 hero md:flex justify-between items-center md:gap-15">
+      <div className="py-10 md:py-32 hero md:flex justify-between items-center md:gap-15">
         <div className="flex justify-between p-5">
           <div>
             <h2 className="font-semibold text-4xl mb-8 md:w-130">
