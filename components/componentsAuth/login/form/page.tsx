@@ -2,103 +2,84 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { supabase } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { useLoginForm } from '../useFromHooks/page'; 
 
 export default function Form() {
-  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { formData, loading, errorMsg, handleChange, handleLogin } = useLoginForm();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    // Logika validasi dipindahkan ke dalam handleSubmit agar tidak error saat render
-    if (!email || !password) {
-      alert('Harap isi semua kolom!');
-      return;
-    }
-
-    setLoading(true);
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      alert(`login gagal : ${error.message}`);
-    } else {
-      alert('login berhasil');
-      router.push('/user/dashboardUser');
-      router.refresh();
-    }
-    setLoading(false);
-  };
-
-  // Bagian return HARUS di dalam fungsi Form()
   return (
-    <div className="w-90 shadw-xl m-5 p-5">
-      <div className="mb-4">
-        <Image src="/Logo.png" alt="picture" width={200} height={100} />
-      </div>
-      <div className="ml-1">
-        <h2 className="font-semibold text-lg">Selamat Datang!</h2>
-        <p className="text-sm">Silahkan masuk untuk mengakses fitur</p>
-      </div>
-      <div className="flex items-center ml-1 mt-8">
-        <form onSubmit={handleSubmit} className="w-full">
-          <div className="email mb-4">
-            <label htmlFor="email" className="font-semibold text-lg">
-              Email
-            </label>
-            <div>
-              <input type="email" placeholder="example@gmail.com" required value={email} onChange={async (e) => setEmail(e.target.value)} className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg" />
-            </div>
-          </div>
+    <div className="flex items-center justify-center bg-white px-4">
+      <div className="w-full max-w-md bg-white p-6 rounded-xl">
+        <div className="mb-4 flex justify-center md:justify-start">
+          <Image src="/Logo.png" alt="logo" width={180} height={80} />
+        </div>
+
+        <div className="text-center md:text-left mb-6">
+          <h2 className="font-semibold text-xl text-gray-800">Selamat Datang!</h2>
+          <p className="text-sm text-gray-600">Silahkan masuk untuk mengakses fitur</p>
+        </div>
+
+        {errorMsg && <p className="text-red-500 text-xs mb-4 italic">*{errorMsg}</p>}
+
+        <form onSubmit={handleLogin} className="w-full">
           <div className="mb-4">
-            <label htmlFor="password" className="font-semibold text-lg">
-              Password
-            </label>
-            <div className="relative flex items-center">
-              <input type={showPassword ? 'text' : 'password'} placeholder="*****" required value={password} onChange={(e) => setPassword(e.target.value)} className="py-2 px-2 w-full outline-1 outline-gray-400 rounded-lg" />
-              <div onClick={() => setShowPassword(!showPassword)} className="absolute right-3 cursor-pointer text-gray-500 hover:text-gray-700">
+            <label className="font-semibold text-gray-700">Email</label>
+            <input
+              name="email" 
+              type="email"
+              placeholder="example@gmail.com"
+              required
+              value={formData.email} 
+              onChange={handleChange} 
+              className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="font-semibold text-gray-700">Password</label>
+            <div className="relative">
+              <input
+                name="password" 
+                type={showPassword ? 'text' : 'password'}
+                placeholder="*****"
+                required
+                value={formData.password} 
+                onChange={handleChange}
+                className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500"
+              />
+              <div onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 cursor-pointer text-gray-500">
                 {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
               </div>
             </div>
           </div>
-          <div className="flex justify-between mb-3">
-            <input type="checkbox" className="cursor-pointer" />
-            <Link href="/">
-              <p className="text-sm text-primary">Lupa kata sandi?</p>
+
+          <div className="flex justify-between items-center mb-4 text-sm">
+            <label className="flex items-center gap-1 text-gray-600">
+              <input type="checkbox" /> Ingat saya
+            </label>
+            <Link href="/" className="text-blue-600 hover:underline">
+              Lupa kata sandi?
             </Link>
           </div>
-          <div className="mb-3">
-            <button
-              type="submit"
-              disabled={loading} // Bagus untuk mencegah double submit
-              className="bg-primary w-full cursor-pointer py-2 text-white font-semibold rounded-lg"
-            >
-              {loading ? 'Memproses...' : 'Login'}
-            </button>
-          </div>
-          <div>
-            <button type="button" className="flex cursor-pointer w-full gap-3 justify-center items-center outline-1 py-2 px-8 font-semibold rounded-lg">
-              <Image src="/authimg/google.png" alt="picture" width={20} height={20} />
-              <p>Masuk dengan google</p>
-            </button>
-          </div>
-          <div className="flex justify-center mt-3">
-            <p className="text-sm">
-              Belum punya akun?{' '}
-              <Link href="/register">
-                <span className="text-primary text-sm">Daftar disini</span>
-              </Link>
-            </p>
+
+          {/* Tombol Login */}
+          <button type="submit" disabled={loading} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400">
+            {loading ? 'Memproses...' : 'Login'}
+          </button>
+
+          <button type="button" className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">
+            <Image src="/authimg/google.png" alt="google" width={20} height={20} />
+            Masuk dengan google
+          </button>
+
+          <div className="text-center mt-4 text-sm">
+            Belum punya akun?{' '}
+            <Link href="/register" className="text-blue-600 font-bold hover:underline">
+              Daftar disini
+            </Link>
           </div>
         </form>
       </div>
