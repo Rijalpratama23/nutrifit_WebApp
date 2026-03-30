@@ -28,27 +28,27 @@ export default function AppBar() {
         <nav className="hidden md:flex">
           <ul className="flex justify-between md:gap-10">
             <li className="font-semibold md:font-bold">
-              <Link href="#hero" className="cursor-pointer hover-text-primary transition-all duration-300">
+              <Link href="/user/dashboardUser" className="cursor-pointer hover-text-primary transition-all duration-300">
                 Dashboard
               </Link>
             </li>
             <li className="font-semibold md:font-bold">
-              <Link href="#konsultasi" className="cursor-pointer hover-text-primary transition-all duration-300">
+              <Link href="/user/konsultasi" className="cursor-pointer hover-text-primary transition-all duration-300">
                 Konsultasi
               </Link>
             </li>
             <li className="font-semibold md:font-bold">
-              <Link href="#tim" className="cursor-pointer hover-text-primary transition-all duration-300">
+              <Link href="/user/program" className="cursor-pointer hover-text-primary transition-all duration-300">
                 Program
               </Link>
             </li>
             <li className="font-semibold md:font-bold">
-              <Link href="#tim" className="cursor-pointer hover-text-primary transition-all duration-300">
+              <Link href="/user/rencanaNutrisi" className="cursor-pointer hover-text-primary transition-all duration-300">
                 Rencana Nutrisi
               </Link>
             </li>
             <li className="font-semibold md:font-bold">
-              <Link href="#artikel" className="cursor-pointer hover-text-primary transition-all duration-300">
+              <Link href="/user/artikel-user" className="cursor-pointer hover-text-primary transition-all duration-300">
                 Artikel & Edukasi
               </Link>
             </li>
