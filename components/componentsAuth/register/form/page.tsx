@@ -71,6 +71,8 @@ export default function FormRegister() {
             {loading ? 'Memproses..' : 'Daftar'}
           </button>
         </div>
+
+        <p className='text-center'>Kembali ke halaman <Link href='/login'><span className='text-primary cursor-pointer'>login</span></Link></p>
       </form>
     </div>
   );
