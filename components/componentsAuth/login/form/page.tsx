@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { useLoginForm } from '../useFromHooks/page'; 
+import { useLoginForm } from '../useFromLogin/page'; 
 
 export default function Form() {
   const [showPassword, setShowPassword] = useState(false);
@@ -60,13 +60,13 @@ export default function Form() {
             <label className="flex items-center gap-1 text-gray-600">
               <input type="checkbox" /> Ingat saya
             </label>
-            <Link href="/" className="text-blue-600 hover:underline">
+            <Link href="/" className="text-primary hover:underline">
               Lupa kata sandi?
             </Link>
           </div>
 
           {/* Tombol Login */}
-          <button type="submit" disabled={loading} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400">
+          <button type="submit" disabled={loading} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400 hover:bg-blue-500 cursor-pointer">
             {loading ? 'Memproses...' : 'Login'}
           </button>
 
@@ -77,7 +77,7 @@ export default function Form() {
 
           <div className="text-center mt-4 text-sm">
             Belum punya akun?{' '}
-            <Link href="/register" className="text-blue-600 font-bold hover:underline">
+            <Link href="/register" className="text-primary font-bold hover:underline">
               Daftar disini
             </Link>
           </div>
