@@ -4,12 +4,35 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
-import { useLoginForm } from '../useFromLogin/page'; 
+import { useLoginForm } from '../useFromLogin/page';
+import { supabase } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-hot-toast';
 
 export default function Form() {
   const [showPassword, setShowPassword] = useState(false);
   const { formData, loading, errorMsg, handleChange, handleLogin } = useLoginForm();
+  const router = useRouter();
 
+  // LOGIN LOGICAL OAUTH //
+  const handleLoginGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `http://localhost:3000/user/dashboardUser`,
+
+      },
+    });
+    if (error) {
+      toast.error(`login galgal ${error.message}`)
+      return;
+    } else {
+      router.push('/user/dashboardUser');
+      router.refresh();
+    }
+  };
+
+    // KOMPONEN UI //
   return (
     <div className="flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md bg-white p-6 rounded-xl">
@@ -27,26 +50,18 @@ export default function Form() {
         <form onSubmit={handleLogin} className="w-full">
           <div className="mb-4">
             <label className="font-semibold text-gray-700">Email</label>
-            <input
-              name="email" 
-              type="email"
-              placeholder="example@gmail.com"
-              required
-              value={formData.email} 
-              onChange={handleChange} 
-              className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500"
-            />
+            <input name="email" type="email" placeholder="example@gmail.com" required value={formData.email} onChange={handleChange} className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500" />
           </div>
 
           <div className="mb-4">
             <label className="font-semibold text-gray-700">Password</label>
             <div className="relative">
               <input
-                name="password" 
+                name="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="*****"
                 required
-                value={formData.password} 
+                value={formData.password}
                 onChange={handleChange}
                 className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500"
               />
@@ -70,7 +85,7 @@ export default function Form() {
             {loading ? 'Memproses...' : 'Login'}
           </button>
 
-          <button type="button" className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">
+          <button onClick={handleLoginGoogle} type="button" className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">
             <Image src="/authimg/google.png" alt="google" width={20} height={20} />
             Masuk dengan google
           </button>
