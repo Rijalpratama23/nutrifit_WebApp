@@ -6,9 +6,11 @@ import { useState, useEffect } from 'react';
 import { Calendar, Bell } from 'lucide-react';
 import ButtonSecond from '@/components/button/secondaryButton/page';
 import Footer from '@/components/footer/page';
+import { useUser } from '@/hooks/useUser';
 
 export default function DashboardUser() {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const { user } = useUser();
 
   const slides = [
     {
@@ -75,7 +77,7 @@ export default function DashboardUser() {
       <section className="konsultasi bg-primary pb-6 md:pb-8">
         <div className="p-5 md:p-8 text-white">
           <div className="px-2 md:px-5">
-            <h1 className="text-xl md:text-3xl font-semibold">Selamat Datang di Nutrifit @Users</h1>
+            <h1 className="text-xl md:text-3xl font-semibold">Selamat Datang di Nutrifit {user?.name ? `,${user.name}` : '@Users'}</h1>
             <p className="text-sm md:text-base text-shadow-white">Mari kita mulai perjalanan sehat anda hari ini!</p>
           </div>
 

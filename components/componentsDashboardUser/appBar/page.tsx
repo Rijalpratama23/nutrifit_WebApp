@@ -4,9 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Bell, CircleArrowLeft, UserRound, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { useUser } from '@/hooks/useUser';
 
 export default function AppBar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, loading } = useUser();
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -64,7 +66,7 @@ export default function AppBar() {
             <div className="bg-white rounded-full p-1.5 text-primary">
               <UserRound size={18} strokeWidth={2.5} />
             </div>
-            <p className="text-white font-semibold text-sm">Jhondoe</p>
+            <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
             <Link href="/profileComponents" className="cursor-pointer">
               <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
             </Link>
@@ -122,7 +124,7 @@ export default function AppBar() {
                   <div className="bg-white rounded-full p-1.5 text-primary">
                     <UserRound size={18} strokeWidth={2.5} />
                   </div>
-                  <p className="text-white font-semibold text-sm">Jhondoe</p>
+                  <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
                 </div>
                 <Link href="/profileComponents" onClick={() => setIsOpen(false)} className="cursor-pointer">
                   <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={22} />

@@ -1,4 +1,4 @@
-import AppBar from "@/components/componentsDashboardUser/appBar/page"
+import { AppBar } from '@/components/dashboard';
 
 export default function konsultasiUser() {
     return(
