@@ -26,9 +26,6 @@ export default function Form() {
     if (error) {
       toast.error(`login galgal ${error.message}`)
       return;
-    } else {
-      router.push('/user/dashboardUser');
-      router.refresh();
     }
   };
 

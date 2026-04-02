@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AppBar } from '@/components/dashboard';
+import AppBar from '@/components/componentsDashboardUser/appBar/page';
 
 export default function artikelUser() {
   return (

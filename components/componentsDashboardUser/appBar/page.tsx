@@ -86,27 +86,27 @@ export default function AppBar() {
           <nav className="flex flex-col gap-8 flex-1">
             <ul className="flex flex-col gap-6">
               <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="#hero" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+                <Link href="/user/dashboardUser" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
                   Beranda
                 </Link>
               </li>
               <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="#konsultasi" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+                <Link href="/user/konsultasi" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
                   Konsultasi
                 </Link>
               </li>
               <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="#tim" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+                <Link href="/user/program" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
                   Program
                 </Link>
               </li>
               <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="#tim" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+                <Link href="/user/rencanaNutrisi" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
                   Rencana Nutrisi
                 </Link>
               </li>
               <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="#artikel" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+                <Link href="/user/artikel-user" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
                   Artikel Kesehatan
                 </Link>
               </li>
