@@ -4,13 +4,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Bell, CircleArrowLeft, UserRound, Menu, X } from 'lucide-react';
 import { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
 
 export default function AppBar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, loading } = useUser();
+  const pathname = usePathname();
 
   const toggleMenu = () => setIsOpen(!isOpen);
+
+  const isActive = (href: string) => pathname === href;
 
   return (
     <>
@@ -29,28 +33,28 @@ export default function AppBar() {
         {/* Navigasi Desktop */}
         <nav className="hidden md:flex">
           <ul className="flex justify-between md:gap-10">
-            <li className="font-semibold md:font-bold">
-              <Link href="/user/dashboardUser" className="cursor-pointer hover-text-primary transition-all duration-300">
+            <li className={`font-semibold md:font-bold ${isActive('/user/dashboardUser') ? 'text-primary' : 'text-gray-700'}`}>
+              <Link href="/user/dashboardUser" className="cursor-pointer hover:text-primary transition-all duration-300 block">
                 Dashboard
               </Link>
             </li>
-            <li className="font-semibold md:font-bold">
-              <Link href="/user/konsultasi" className="cursor-pointer hover-text-primary transition-all duration-300">
+            <li className={`font-semibold md:font-bold ${isActive('/user/konsultasi') ? 'text-primary' : 'text-gray-700'}`}>
+              <Link href="/user/konsultasi" className="cursor-pointer hover:text-primary transition-all duration-300 block">
                 Konsultasi
               </Link>
             </li>
-            <li className="font-semibold md:font-bold">
-              <Link href="/user/program" className="cursor-pointer hover-text-primary transition-all duration-300">
+            <li className={`font-semibold md:font-bold ${isActive('/user/program') ? 'text-primary' : 'text-gray-700'}`}>
+              <Link href="/user/program" className="cursor-pointer hover:text-primary transition-all duration-300 block">
                 Program
               </Link>
             </li>
-            <li className="font-semibold md:font-bold">
-              <Link href="/user/rencanaNutrisi" className="cursor-pointer hover-text-primary transition-all duration-300">
+            <li className={`font-semibold md:font-bold ${isActive('/user/rencanaNutrisi') ? 'text-primary' : 'text-gray-700'}`}>
+              <Link href="/user/rencanaNutrisi" className="cursor-pointer hover:text-primary transition-all duration-300 block">
                 Rencana Nutrisi
               </Link>
             </li>
-            <li className="font-semibold md:font-bold">
-              <Link href="/user/artikel-user" className="cursor-pointer hover-text-primary transition-all duration-300">
+            <li className={`font-semibold md:font-bold ${isActive('/user/artikel-user') ? 'text-primary' : 'text-gray-700'}`}>
+              <Link href="/user/artikel-user" className="cursor-pointer hover:text-primary transition-all duration-300 block">
                 Artikel & Edukasi
               </Link>
             </li>
@@ -85,28 +89,28 @@ export default function AppBar() {
 
           <nav className="flex flex-col gap-8 flex-1">
             <ul className="flex flex-col gap-6">
-              <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="/user/dashboardUser" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+              <li className={`font-medium ${isActive('/user/dashboardUser') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
+                <Link href="/user/dashboardUser" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
                   Beranda
                 </Link>
               </li>
-              <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="/user/konsultasi" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+              <li className={`font-medium ${isActive('/user/konsultasi') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
+                <Link href="/user/konsultasi" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
                   Konsultasi
                 </Link>
               </li>
-              <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="/user/program" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+              <li className={`font-medium ${isActive('/user/program') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
+                <Link href="/user/program" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
                   Program
                 </Link>
               </li>
-              <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="/user/rencanaNutrisi" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+              <li className={`font-medium ${isActive('/user/rencanaNutrisi') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
+                <Link href="/user/rencanaNutrisi" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
                   Rencana Nutrisi
                 </Link>
               </li>
-              <li className="font-medium text-gray-700" onClick={() => setIsOpen(false)}>
-                <Link href="/user/artikel-user" className="cursor-pointer hover-text-primary transition-all duration-300 block w-full">
+              <li className={`font-medium ${isActive('/user/artikel-user') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
+                <Link href="/user/artikel-user" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
                   Artikel Kesehatan
                 </Link>
               </li>

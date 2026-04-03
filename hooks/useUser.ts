@@ -35,7 +35,6 @@ export function useUser() {
         setLoading(false);
       }
     };
-
     getUser();
 
     // Listen untuk perubahan auth state
