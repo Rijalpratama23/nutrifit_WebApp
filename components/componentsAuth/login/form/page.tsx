@@ -82,7 +82,7 @@ export default function Form() {
             {loading ? 'Memproses...' : 'Login'}
           </button>
 
-          <button onClick={handleLoginGoogle} type="button" className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50">
+          <button onClick={handleLoginGoogle} type="button" className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer">
             <Image src="/authimg/google.png" alt="google" width={20} height={20} />
             Masuk dengan google
           </button>
