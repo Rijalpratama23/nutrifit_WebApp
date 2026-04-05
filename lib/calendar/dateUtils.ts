@@ -1,7 +1,3 @@
-/**
- * Utility functions untuk kalender
- * Fungsi-fungsi di sini menangani logika kalender murni (tidak ada React)
- */
 
 export interface CalendarDay {
   date: number;
@@ -10,9 +6,6 @@ export interface CalendarDay {
   fullDate: Date;
 }
 
-/**
- * Mendapatkan jumlah hari dalam sebuah bulan
- */
 export function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
