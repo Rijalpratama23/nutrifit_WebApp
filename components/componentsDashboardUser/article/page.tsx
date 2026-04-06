@@ -1,17 +1,19 @@
+'use client';
+
 import SelectArtikel from './ui/selectKategori/page';
 import CartArtikel from './ui/cartArtikel/page';
+import ArtikelCarrousel from './ui/artikelCarrousel/page';
 
 export default function PageArtikel() {
   return (
-    <div>
-      {/* carrousel */}
-      <div className="mt-30 p-30 bg-yellow-300 rounded-2xl">carrousel</div>
+    <div className="max-w-7xl mx-auto px-4 md:px-8">
+      <ArtikelCarrousel />
 
-      {/* pemilihan artikel */}
-      <SelectArtikel />
+      <div className="mt-8">
+        <SelectArtikel />
+      </div>
 
-      {/* card artikel */}
-      <div className="mt-10 h-200 md:mt-15">
+      <div className="mt-10 md:mt-15 min-h-screen">
         <CartArtikel />
       </div>
     </div>
