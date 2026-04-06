@@ -10,11 +10,9 @@ import HeroCarousel from './ui/carrousel/page';
 export default function DashboardUser() {
   const { user } = useUser();
 
-
   return (
     <div className="">
       <HeroCarousel />
-
       <section className="konsultasi bg-primary pb-6 md:pb-8">
         <div className="p-5 md:p-8 text-white">
           <div className="px-2 md:px-5">
@@ -49,7 +47,6 @@ export default function DashboardUser() {
       </section>
 
      <ProgramSec />
-
       <Footer logoSrc="/logoPutih.png" logoAlt="picture" accentColor="bg-white" background="bg-primary" textColor="text-white" />
     </div>
   );

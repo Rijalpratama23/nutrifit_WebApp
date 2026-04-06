@@ -47,6 +47,10 @@
 .hover-text-primary:hover {
   color: var(--color-primary);
 }
+
+.hover-bg-primary:hover {
+  background-color: var(--color-primary);
+}
 /* FONT */
 
 .text-gradient {
