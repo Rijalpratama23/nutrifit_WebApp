@@ -66,15 +66,17 @@ export default function AppBar() {
           <Link href="" className="group">
             <Bell size={24} className="text-gray-700 group-hover:hover-text-primary transition-all duration-300" />
           </Link>
-          <div className="flex items-center gap-3 bg-primary py-1.5 pl-2 pr-2 rounded-full shadow-md hover:brightness-110 transition-all cursor-pointer">
-            <div className="bg-white rounded-full p-1.5 text-primary">
-              <UserRound size={18} strokeWidth={2.5} />
+          <Link href='/user/profile'>
+            <div className="flex items-center gap-3 bg-primary py-1.5 pl-2 pr-2 rounded-full shadow-md hover:brightness-110 transition-all cursor-pointer">
+              <div className="bg-white rounded-full p-1.5 text-primary">
+                <UserRound size={18} strokeWidth={2.5} />
+              </div>
+              <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
+              <Link href="/profile" className="cursor-pointer">
+                <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
+              </Link>
             </div>
-            <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
-            <Link href="/profileComponents" className="cursor-pointer">
-              <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
-            </Link>
-          </div>
+          </Link>
         </div>
       </header>
 
