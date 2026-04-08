@@ -54,13 +54,17 @@
 /* FONT */
 
 .text-gradient {
-  background: linear-gradient(
-    to right,
-    var(--color-primary),
-    var(--color-secondary)
-  );
+  background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* bg-radiant */
+@layer utilities {
+  .bg-profile-gradient {
+    /* Gradasi dari biru sangat muda ke putih bersih */
+    background: linear-gradient(180deg, #e2e8f0 0%, #ffffff 50%, #ffffff 100%);
+  }
 }
 
 .font-primary {

@@ -72,9 +72,7 @@ export default function AppBar() {
                 <UserRound size={18} strokeWidth={2.5} />
               </div>
               <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
-              <Link href="/profile" className="cursor-pointer">
                 <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
-              </Link>
             </div>
           </Link>
         </div>
