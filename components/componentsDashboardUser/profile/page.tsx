@@ -12,7 +12,7 @@ export default function ProfilePage() {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-center sm:justify-between items-center gap-4 sm:gap-6">
         <Header icon={<User size={40} className="w-6 sm:w-8 md:w-10 lg:w-10" />} title="Profile" subTitle="Kelola identitas dan tujuan anda" />
-        <BtnSet /> 
+        <BtnSet />
       </div>
       <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 md:gap-8 lg:gap-10 mt-6 sm:mt-8 md:mt-10 max-w-7xl mx-auto">
         {/* Sidebar */}
