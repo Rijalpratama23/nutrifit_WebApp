@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { generateCalendarDays, CalendarDay, getMonthName } from '@/lib/calendar/dateUtils';
+import { generateCalendarDays, CalendarDay, getMonthName } from '@/lib/libUser/calendar/dateUtils';
 
 /**
  * Custom hook untuk manage state kalender

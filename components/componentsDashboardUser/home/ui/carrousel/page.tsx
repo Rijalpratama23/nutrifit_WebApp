@@ -1,8 +1,8 @@
 // components/dashboard/HeroCarousel.js
 import Image from 'next/image';
 import ButtonXl from '@/components/button/buttonXl/page';
-import { HERO_SLIDES } from '@/lib/constant.js/carrouselHome';
-import { useCarousel } from '@/lib/carrousel/useCarrousel';
+import { HERO_SLIDES } from '@/lib/libUser/constant.js/carrouselHome';
+import { useCarousel } from '@/lib/libUser/carrousel/useCarrousel';
 
 export default function HeroCarousel() {
   const { currentSlide, setCurrentSlide } = useCarousel(HERO_SLIDES.length);

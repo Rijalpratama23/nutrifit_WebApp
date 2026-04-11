@@ -1,7 +1,9 @@
-import SideBar from "@/components/componentsDashboardAhli/sideBar/page"
+import PageDashboard from '@/components/componentsDashboardAhli/dasboardAhli/page';
 
-export default function DashboardAhli () {
-    return(
-        <SideBar />
-    )
+export default function DashboardAhli() {
+  return (
+    <div>
+      <PageDashboard />
+    </div>
+  );
 }

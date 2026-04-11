@@ -1,7 +1,7 @@
 // components/artikel/ArtikelBanner.tsx
 import Image from 'next/image';
-import { ARTIKEL_BANNERS } from '@/lib/artikelConstant/carrouselArtikel';
-import { useCarousel } from '@/lib/carrouselArtikel/carrouselArtikel';
+import { ARTIKEL_BANNERS } from '@/lib/libUser/artikelConstant/carrouselArtikel';
+import { useCarousel } from '@/lib/libUser/carrouselArtikel/carrouselArtikel';
 
 export default function ArtikelCarrousel() {
   const { currentIndex, setCurrentIndex } = useCarousel(ARTIKEL_BANNERS.length);
