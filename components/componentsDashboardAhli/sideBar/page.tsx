@@ -22,11 +22,11 @@ export default function SideBar() {
   }, []);
 
   const navItems = [
-    { href: '/', icon: <House size={24} />, label: 'Dashboard' },
-    { href: '/', icon: <Users size={24} />, label: 'Permintaan', badge: 6 },
-    { href: '/', icon: <HeartHandshake size={24} />, label: 'Konsultasi', badge: 6 },
-    { href: '/', icon: <ScrollText size={24} />, label: 'Riwayat' },
-    { href: '/', icon: <CalendarCheck size={24} />, label: 'Jadwal' },
+    { href: '/ahli/home', icon: <House size={24} />, label: 'Dashboard' },
+    { href: '/ahli/permintaan', icon: <Users size={24} />, label: 'Permintaan', badge: 6 },
+    { href: '/ahli/konsultasi', icon: <HeartHandshake size={24} />, label: 'Konsultasi', badge: 6 },
+    { href: '/ahli/riwayat', icon: <ScrollText size={24} />, label: 'Riwayat' },
+    { href: '/ahli/jadwal', icon: <CalendarCheck size={24} />, label: 'Jadwal' },
   ];
 
   // Mobile navbar — topbar + overlay drawer
@@ -93,7 +93,7 @@ export default function SideBar() {
       {/* Header */}
       <div className={`flex items-center p-4 min-h-[64px] ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
         {!isCollapsed && <Image src="/logoPutih.png" alt="logo" width={130} height={10} />}
-        <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-white hover:bg-white/20 rounded-md p-1 transition-colors flex-shrink-0">
+        <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-white cursor-pointer hover:bg-white/20 rounded-md p-1 transition-colors flex-shrink-0">
           {isCollapsed ? <ChevronsRight size={24} /> : <ChevronsLeft size={24} />}
         </button>
       </div>
