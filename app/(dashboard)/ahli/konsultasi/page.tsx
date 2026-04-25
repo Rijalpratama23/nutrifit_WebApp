@@ -1,13 +1,9 @@
-import SideBar from "@/components/componentsDashboardAhli/sideBar/page"
-import ContentKonsultasi from "@/components/componentsDashboardAhli/konsultasi/page"
-import Konsultasi from "@/components/componentsLandingPage/konsultasi/page"
+import PageKonsultasiAhli from "@/components/componentsDashboardAhli/konsultasi/page"
 
-
-export default function PageKonsultasi() {
+export default function Konsultasi() {
     return(
         <div>
-            <ContentKonsultasi />
-            <SideBar />
+            <PageKonsultasiAhli />
         </div>
     )
 }

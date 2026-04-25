@@ -1,7 +1,11 @@
-export default function ContentPermintaan() {
+import SideBar from "../sideBar/page"
+import ContainerPermintaan from "./ui/page"
+
+export default function PagePermintaan() {
     return(
-        <div>
-            <h1>ini page permintaan</h1>
+        <div className="min-h-screen bg-[#F0F7FF] flex">
+            <SideBar />
+            <ContainerPermintaan />
         </div>
     )
 }

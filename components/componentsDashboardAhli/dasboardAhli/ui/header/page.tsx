@@ -4,7 +4,7 @@ import Link from 'next/link';
 export default function HeaderKomponents() {
   return (
     <div className="flex justify-between items-center mb-8">
-      <div>
+      <div className='md:mt-0 mt-10'>
         <h1 className="text-2xl font-bold text-slate-800">Selamat Datang Doctor @ahli</h1>
         <p className="text-slate-500 text-sm">Pemberitahuan dan informasi menyeluruh</p>
       </div>

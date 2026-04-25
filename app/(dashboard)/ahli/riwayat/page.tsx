@@ -1,11 +1,9 @@
-import ContentRiwayat from '@/components/componentsDashboardAhli/riwayat/page';
-import SideBar from '@/components/componentsDashboardAhli/sideBar/page';
+import PageRiwayat from "@/components/componentsDashboardAhli/riwayat/page";
 
-export default function PageRiwayat() {
+export default function Riwayat() {
   return (
     <>
-      <SideBar />
-      <ContentRiwayat />
+    <PageRiwayat />
     </>
   );
 }

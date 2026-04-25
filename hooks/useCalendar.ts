@@ -3,13 +3,6 @@
 import { useState, useCallback } from 'react';
 import { generateCalendarDays, CalendarDay, getMonthName } from '@/lib/libUser/calendar/dateUtils';
 
-/**
- * Custom hook untuk manage state kalender
- * Menangani:
- * - Bulan dan tahun saat ini
- * - Tanggal yang dipilih
- * - Navigasi bulan (prev/next)
- */
 export function useCalendar(initialDate: Date = new Date()) {
   const [currentDate, setCurrentDate] = useState<Date>(initialDate);
   const [selectedDate, setSelectedDate] = useState<Date | null>(initialDate);
@@ -29,7 +22,7 @@ export function useCalendar(initialDate: Date = new Date()) {
     });
   }, []);
 
-  // Pindah ke bulan berikutnya
+ 
   const goToNextMonth = useCallback(() => {
     setCurrentDate((prev) => {
       const newDate = new Date(prev);

@@ -1,11 +1,9 @@
-import ContentPermintaan from '@/components/componentsDashboardAhli/permintaan/page';
-import SideBar from '@/components/componentsDashboardAhli/sideBar/page';
+import PagePermintaan from '@/components/componentsDashboardAhli/permintaan/page';
 
-export default function PagePermintaan() {
+export default function Permintaan() {
   return (
-    <>
-      <SideBar />
-      <ContentPermintaan />
-    </>
+    <div>
+      <PagePermintaan />
+    </div>
   );
 }

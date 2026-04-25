@@ -1,18 +1,19 @@
 import Image from 'next/image';
 import { Youtube, Instagram, Linkedin, Facebook } from 'lucide-react';
+import Link from 'next/link';
 
 type FooterProps = {
   logoSrc?: string;
   logoAlt?: string;
   logoWidth?: number;
   logoHeight?: number;
-  accentColor?: string; 
+  accentColor?: string;
   background?: string;
   textColor?: string;
-  accentIsClass?: boolean; 
+  accentIsClass?: boolean;
 };
 
-export default function Footer({ logoSrc = '/Logo.png', logoAlt = 'NutriFit', logoWidth = 160, logoHeight = 48, accentColor = 'bg-primary', background, textColor , accentIsClass = true }: FooterProps) {
+export default function Footer({ logoSrc = '/Logo.png', logoAlt = 'NutriFit', logoWidth = 160, logoHeight = 48, accentColor = 'bg-primary', background, textColor, accentIsClass = true }: FooterProps) {
   return (
     <footer className={`w-full ${background} pt-10 pb-8 px-6 md:px-16 lg:px-24 border-t border-gray-100`}>
       <div className="max-w-7xl mx-auto">
@@ -67,10 +68,18 @@ export default function Footer({ logoSrc = '/Logo.png', logoAlt = 'NutriFit', lo
           <p className={`${textColor} text-sm`}>© 2026 NutriFit – Project Magang. Untuk tujuan edukasi.</p>
 
           <nav className="flex gap-6 md:gap-10">
-            <span className={`font-bold ${textColor} cursor-pointer`}>Beranda</span>
-            <span className={`font-bold ${textColor} cursor-pointer`}>Konsultasi</span>
-            <span className={`font-bold ${textColor} cursor-pointer`}>Tim Ahli</span>
-            <span className={`font-bold ${textColor} cursor-pointer`}>Artikel</span>
+            <Link href="#hero">
+              <span className={`font-bold ${textColor} cursor-pointer`}>Beranda</span>
+            </Link>
+            <Link href="#konsultasi">
+              <span className={`font-bold ${textColor} cursor-pointer`}>Konsultasi</span>
+            </Link>
+            <Link href="#tim">
+              <span className={`font-bold ${textColor} cursor-pointer`}>Tim Ahli</span>
+            </Link>
+            <Link href="#artikel">
+              <span className={`font-bold ${textColor} cursor-pointer`}>Artikel</span>
+            </Link>
           </nav>
         </div>
       </div>

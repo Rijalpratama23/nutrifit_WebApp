@@ -1,7 +1,11 @@
-export default function ContentKonsultasi() {
+import SideBar from "../sideBar/page"
+import ContainerKonsultasi from "./ui/page"
+
+export default function PageKonsultasiAhli() {
     return(
         <div>
-            <h1>ini page Konsultasi</h1>
+            <SideBar />
+            <ContainerKonsultasi />
         </div>
     )
 }
