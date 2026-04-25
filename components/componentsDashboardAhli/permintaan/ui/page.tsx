@@ -24,6 +24,14 @@ const dummyData: Permintaan[] = [
   { id: 9, user: 'Dadan Sugandi', tujuan: 'Menaikan berat badan', waktu: '10-03-06 | 10:00' },
 ];
 
+// Lebar kolom — sama persis di thead & tbody agar sejajar
+const COL = {
+  user: 'w-[30%] px-6 py-3',
+  tujuan: 'w-[30%] px-4 py-3',
+  waktu: 'w-[25%] px-4 py-3',
+  aksi: 'w-[15%] px-6 py-3',
+};
+
 export default function ContainerPermintaan() {
   const { isCollapsed, isMobile } = useSidebar();
   const [data, setData] = useState<Permintaan[]>(dummyData);
@@ -37,9 +45,9 @@ export default function ContainerPermintaan() {
   };
 
   return (
-    <div className={`flex-1 min-h-screen transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
+    <div className={`flex-1 min-w-0 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
-        {/* header ccomponent */}
+        {/* ── Header ── */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-2xl font-bold text-slate-800">Permintaan Konsultasi Terbaru</h1>
@@ -49,10 +57,9 @@ export default function ContainerPermintaan() {
           <div className="flex items-center gap-4">
             <div className="relative p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
               <Bell size={20} className="text-slate-600" />
-              <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+              <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
             </div>
 
-            {/* link ke hal profile */}
             <Link href="/ahli/profile">
               <div className="flex items-center cursor-pointer gap-3 bg-primary text-white pr-6 pl-1.5 py-1.5 rounded-full shadow-lg">
                 <div className="bg-white p-2 rounded-full text-primary">
@@ -67,87 +74,86 @@ export default function ContainerPermintaan() {
           </div>
         </div>
 
-        {/* tabel */}
-        <div className="bg-white rounded-2xl shadow-md w-full max-w-3xl overflow-hidden">
-          {/* Header */}
+        {/* ── Table Card ──
+            ✅ Hapus max-w-3xl → sekarang w-full, ikut lebar kontainer
+        */}
+        <div className="bg-white rounded-2xl shadow-md w-full overflow-hidden">
+          {/* Card Header */}
           <div className="px-7 pt-6 pb-3">
             <h2 className="text-[15px] font-semibold text-gray-800 tracking-wide">Permintaan Konsultasi&nbsp;&nbsp;Terbaru</h2>
           </div>
 
           {/* Blue Divider */}
-          <div className="h-[2.5px] w-full bg-blue-800" />
+          <div className="h-[2.5px] w-full bg-primary" />
 
-          {/* Fixed Header Table */}
-          <table className="w-full text-[13.5px] text-center table-fixed ">
-            <table className="w-full table-fixed text-[13.5px]">
-              <thead>
-                <tr>
-                  <th className="w-[30%] py-3 text-left pl-6 text-gray-500 font-semibold">User</th>
-                  <th className="w-[30%] py-3 text-left text-gray-500 font-semibold">Tujuan</th>
-                  <th className="w-[25%] py-3 text-left text-gray-500 font-semibold">Waktu</th>
-                  <th className="w-[15%] py-3 text-center text-gray-500 font-semibold">Aksi</th>
-                </tr>
-              </thead>
-            </table>
+          {/* thead — fixed, selalu kelihatan */}
+          <table className="w-full text-[13.5px] table-fixed">
+            <thead>
+              <tr>
+                <th className={`text-left text-gray-500 font-semibold ${COL.user}`}>User</th>
+                <th className={`text-left text-gray-500 font-semibold ${COL.tujuan}`}>Tujuan</th>
+                <th className={`text-left text-gray-500 font-semibold ${COL.waktu}`}>Waktu</th>
+                <th className={`text-center text-gray-500 font-semibold ${COL.aksi}`}>Aksi</th>
+              </tr>
+            </thead>
           </table>
 
-          {/* Scrollable tbody — aktif scroll setelah 6 baris (~300px) */}
-          <div className={`overflow-y-auto ${data.length > 6 ? 'max-h-[300px]' : ''}`}>
-            <table className="w-full text-[13.5px]">
+          {/* tbody scroll area */}
+          <div className="max-h-[372px] overflow-y-auto">
+            <table className="w-full text-[13.5px] table-fixed">
               <tbody>
-                {data.map((item) => (
-                  <tr key={item.id} className="border-t border-gray-100 hover:bg-blue-50 transition-colors duration-150">
-                    {/* User */}
-                    <td className="px-7 py-3.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="12" cy="8" r="4" fill="#9e9e9e" />
-                            <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" />
-                          </svg>
-                        </div>
-                        <span className="text-gray-800 font-medium">{item.user}</span>
-                      </div>
-                    </td>
-
-                    {/* Tujuan */}
-                    <td className="px-4 py-3.5 text-gray-600">{item.tujuan}</td>
-
-                    {/* Waktu */}
-                    <td className="px-4 py-3.5 text-gray-500">{item.waktu}</td>
-
-                    {/* Aksi */}
-                    <td className="px-7 py-3.5">
-                      <div className="flex items-center gap-2">
-                        {/* Approve */}
-                        <button onClick={() => handleApprove(item.id)} title="Setujui" className="w-[26px] h-[26px] rounded-full border-2 border-green-500 flex items-center justify-center hover:bg-green-50 transition-colors">
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-                            <path d="M5 13l4 4L19 7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                          </svg>
-                        </button>
-
-                        {/* Reject */}
-                        <button onClick={() => handleReject(item.id)} title="Tolak" className="w-[26px] h-[26px] rounded-full border-2 border-red-500 flex items-center justify-center hover:bg-red-50 transition-colors">
-                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
-                            <path d="M6 6l12 12M18 6L6 18" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {data.length === 0 && (
+                {data.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="text-center py-12 text-gray-400">
                       Tidak ada permintaan konsultasi.
                     </td>
                   </tr>
+                ) : (
+                  data.map((item) => (
+                    <tr key={item.id} className="border-t border-gray-100 hover:bg-blue-50 transition-colors duration-150">
+                      {/* User */}
+                      <td className={COL.user}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="8" r="4" fill="#9e9e9e" />
+                              <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" />
+                            </svg>
+                          </div>
+                          <span className="text-gray-800 font-medium truncate">{item.user}</span>
+                        </div>
+                      </td>
+
+                      {/* Tujuan */}
+                      <td className={`${COL.tujuan} text-gray-600`}>{item.tujuan}</td>
+
+                      {/* Waktu */}
+                      <td className={`${COL.waktu} text-gray-500`}>{item.waktu}</td>
+
+                      {/* Aksi */}
+                      <td className={COL.aksi}>
+                        <div className="flex items-center justify-center gap-2">
+                          {/* Approve */}
+                          <button onClick={() => handleApprove(item.id)} title="Setujui" className="w-[26px] h-[26px] rounded-full border-2 border-green-500 flex items-center justify-center hover:bg-green-50 transition-colors">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                              <path d="M5 13l4 4L19 7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </button>
+
+                          {/* Reject */}
+                          <button onClick={() => handleReject(item.id)} title="Tolak" className="w-[26px] h-[26px] rounded-full border-2 border-red-500 flex items-center justify-center hover:bg-red-50 transition-colors">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                              <path d="M6 6l12 12M18 6L6 18" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>
           </div>
-          
         </div>
       </div>
     </div>

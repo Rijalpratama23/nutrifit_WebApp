@@ -75,6 +75,12 @@
   font-family: var(--font-secondary);
 }
 
+@layer utilities {
+  .border-primary {
+  border-color: var(--color-primary);
+}
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
