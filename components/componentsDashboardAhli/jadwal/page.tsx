@@ -1,7 +1,13 @@
-export default function PageJadwal() {
+import SideBar from "../sideBar/page"
+import ContainerJadwal from "./ui/page"
+
+
+
+export default function ContentJadwal() {
     return(
-        <div>
-            <h1>ini Page Jadwal</h1>
+        <div className="min-h-screen bg-[#F0F7FF] flex">
+            <SideBar />
+            <ContainerJadwal />
         </div>
     )
 }

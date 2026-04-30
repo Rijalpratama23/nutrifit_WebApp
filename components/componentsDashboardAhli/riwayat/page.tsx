@@ -3,7 +3,7 @@ import ContainerRiwayat from "./ui/page"
 
 export default function PageRiwayat() {
     return(
-        <div>
+        <div className="min-h-screen bg-[#F0F7FF] flex">
             <SideBar />
             <ContainerRiwayat />
         </div>
