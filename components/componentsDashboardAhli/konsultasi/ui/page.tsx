@@ -107,7 +107,7 @@ export default function ContainerKonsultasi() {
               <Bell size={20} className="text-slate-600" />
               <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
             </div>
-
+        
             <Link href="/ahli/profile">
               <div className="flex items-center cursor-pointer gap-3 bg-primary text-white pr-6 pl-1.5 py-1.5 rounded-full shadow-lg">
                 <div className="bg-white p-2 rounded-full text-primary">
