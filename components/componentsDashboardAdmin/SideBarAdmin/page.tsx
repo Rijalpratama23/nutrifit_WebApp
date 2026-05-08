@@ -125,6 +125,8 @@ export default function SideBarAdmin() {
         {!isCollapsed && (
           <Link href="/login">
             <LogOut size={24} className="text-red-500" />
+
+            
           </Link>
         )}
       </div>
