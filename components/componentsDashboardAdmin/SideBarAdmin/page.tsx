@@ -126,7 +126,7 @@ export default function SideBarAdmin() {
           <Link href="/login">
             <LogOut size={24} className="text-red-500" />
 
-            
+
           </Link>
         )}
       </div>
