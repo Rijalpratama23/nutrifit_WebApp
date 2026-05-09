@@ -20,16 +20,15 @@ export default function Form() {
       provider: 'google',
       options: {
         redirectTo: `http://localhost:3000/user/dashboardUser`,
-
       },
     });
     if (error) {
-      toast.error(`login galgal ${error.message}`)
+      toast.error(`login galgal ${error.message}`);
       return;
     }
   };
 
-    // KOMPONEN UI //
+  // KOMPONEN UI //
   return (
     <div className="flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md bg-white p-6 rounded-xl">
@@ -47,7 +46,16 @@ export default function Form() {
         <form onSubmit={handleLogin} className="w-full">
           <div className="mb-4">
             <label className="font-semibold text-gray-700">Email</label>
-            <input name="email" type="email" placeholder="example@gmail.com" required value={formData.email} onChange={handleChange} className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500" />
+            <input
+              name="email"
+              type="email"
+              suppressHydrationWarning
+              placeholder="example@gmail.com"
+              required
+              value={formData.email}
+              onChange={handleChange}
+              className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500"
+            />
           </div>
 
           <div className="mb-4">
@@ -57,6 +65,7 @@ export default function Form() {
                 name="password"
                 type={showPassword ? 'text' : 'password'}
                 placeholder="*****"
+                suppressHydrationWarning
                 required
                 value={formData.password}
                 onChange={handleChange}

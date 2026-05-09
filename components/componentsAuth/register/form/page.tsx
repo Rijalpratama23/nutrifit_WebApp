@@ -56,6 +56,7 @@ export default function FormRegister() {
           <input
             name="email"
             type="email"
+            suppressHydrationWarning
             placeholder="example@gmail.com"
             required
             value={formData.email}
@@ -71,6 +72,7 @@ export default function FormRegister() {
               name="password"
               type={showPassword ? 'text' : 'password'}
               placeholder="******"
+               suppressHydrationWarning 
               required
               value={formData.password}
               onChange={handleChange}
