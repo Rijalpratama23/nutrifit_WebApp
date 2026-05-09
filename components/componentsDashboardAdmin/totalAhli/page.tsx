@@ -1,12 +1,12 @@
 import SideBarAdmin from "../SideBarAdmin/page"
-import ContainerTotalPengguna from "./ui/page"
+import ContainerTotalAhli from "./ui/page"
 
-export default function PageTotalPengguna() {
+
+export default function PageTotalAhli() {
     return(
         <div className="min-h-screen bg-[#F0F7FF] flex">
             <SideBarAdmin />
-            <ContainerTotalPengguna />
-
+            <ContainerTotalAhli />
         </div>
     )
 }

@@ -66,13 +66,13 @@ export default function AppBar() {
           <Link href="" className="group">
             <Bell size={24} className="text-gray-700 group-hover:hover-text-primary transition-all duration-300" />
           </Link>
-          <Link href='/user/profile'>
+          <Link href="/user/profile">
             <div className="flex items-center gap-3 bg-primary py-1.5 pl-2 pr-2 rounded-full shadow-md hover:brightness-110 transition-all cursor-pointer">
               <div className="bg-white rounded-full p-1.5 text-primary">
                 <UserRound size={18} strokeWidth={2.5} />
               </div>
               <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
-                <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
+              <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
             </div>
           </Link>
         </div>
@@ -123,20 +123,19 @@ export default function AppBar() {
                 <span className="font-medium">Notifikasi</span>
               </div>
 
-              <div className="flex items-center justify-between bg-primary p-2 rounded-2xl w-full pr-4 shadow-sm hover:brightness-110 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="bg-white rounded-full p-1.5 text-primary">
-                    <UserRound size={18} strokeWidth={2.5} />
+              <Link href="/user/profile" onClick={() => setIsOpen(false)} className="cursor-pointer">
+                <div className="flex items-center justify-between bg-primary p-2 rounded-2xl w-full pr-4 shadow-sm hover:brightness-110 transition-all">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white rounded-full p-1.5 text-primary">
+                      <UserRound size={18} strokeWidth={2.5} />
+                    </div>
+                    <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
                   </div>
-                  <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
-                </div>
-                <Link href="/profileComponents" onClick={() => setIsOpen(false)} className="cursor-pointer">
                   <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={22} />
-                </Link>
-              </div>
+                </div>
+              </Link>
             </div>
           </nav>
-
           <p className="text-[10px] text-gray-300 text-center mt-auto italic">Nutrifit v1.0</p>
         </div>
       </div>
