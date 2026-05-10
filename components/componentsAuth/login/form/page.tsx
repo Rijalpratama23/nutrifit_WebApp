@@ -11,7 +11,7 @@ import { toast } from 'react-hot-toast';
 
 export default function Form() {
   const [showPassword, setShowPassword] = useState(false);
-  const { formData, loading, errorMsg, handleChange, handleLogin } = useLoginForm();
+  const { formData, loading, errorMsg, handleChange, handleLogin, rememberMe, setRememberMe } = useLoginForm();
   const router = useRouter();
 
   // LOGIN LOGICAL OAUTH //
@@ -78,10 +78,10 @@ export default function Form() {
           </div>
 
           <div className="flex justify-between items-center mb-4 text-sm">
-            <label className="flex items-center gap-1 text-gray-600">
-              <input type="checkbox" /> Ingat saya
+            <label className="flex items-center gap-1 text-gray-600 cursor-pointer">
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} /> Ingat saya
             </label>
-            <Link href="/" className="text-primary hover:underline">
+            <Link href="/forgot-password" className="text-primary hover:underline">
               Lupa kata sandi?
             </Link>
           </div>

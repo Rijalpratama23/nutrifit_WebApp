@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -18,8 +18,18 @@ function getRedirectByRole(role: string): string {
 export function useLoginForm() {
   const router = useRouter();
   const [formData, setFormData] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Auto-isi email jika sebelumnya centang "ingat saya"
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    if (savedEmail) {
+      setFormData((prev) => ({ ...prev, email: savedEmail }));
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -30,13 +40,10 @@ export function useLoginForm() {
     setLoading(true);
     setErrorMsg('');
 
-    // Step 1: Login ke Supabase Auth
     const { data, error } = await supabase.auth.signInWithPassword({
       email: formData.email,
       password: formData.password,
     });
-
-    console.log('=== STEP 1 AUTH ===', { user: data?.user?.id, error });
 
     if (error || !data.user) {
       setErrorMsg('Email atau password salah.');
@@ -44,10 +51,14 @@ export function useLoginForm() {
       return;
     }
 
-    // Step 2: Ambil role dari tabel users
-    const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('id', data.user.id).single();
+    // Simpan atau hapus email dari localStorage
+    if (rememberMe) {
+      localStorage.setItem('rememberedEmail', formData.email);
+    } else {
+      localStorage.removeItem('rememberedEmail');
+    }
 
-    console.log('=== STEP 2 ROLE ===', { userData, roleError });
+    const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('id', data.user.id).single();
 
     if (roleError || !userData) {
       setErrorMsg('Gagal mengambil data pengguna.');
@@ -55,12 +66,10 @@ export function useLoginForm() {
       return;
     }
 
-    // Step 3: Redirect sesuai role
-    const redirectPath = getRedirectByRole(userData.role);
     toast.success('Login berhasil!');
-    router.push(redirectPath);
+    router.push(getRedirectByRole(userData.role));
     setLoading(false);
   };
 
-  return { formData, loading, errorMsg, handleChange, handleLogin };
+  return { formData, rememberMe, setRememberMe, loading, errorMsg, handleChange, handleLogin };
 }
