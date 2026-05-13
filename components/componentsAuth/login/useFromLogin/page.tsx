@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
 function getRedirectByRole(role: string): string {
   switch (role) {
@@ -61,12 +61,13 @@ export function useLoginForm() {
     const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('id', data.user.id).single();
 
     if (roleError || !userData) {
+      showErrorToast({ title: 'Login Gagal', message: 'Email atau password salah.' });
       setErrorMsg('Gagal mengambil data pengguna.');
       setLoading(false);
       return;
     }
 
-    toast.success('Login berhasil!');
+    showSuccessToast({ title: 'Login Berhasil!', message: 'Selamat datang kembali 👋' })
     router.push(getRedirectByRole(userData.role));
     setLoading(false);
   };

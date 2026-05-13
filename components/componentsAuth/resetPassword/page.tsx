@@ -4,6 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 import { toast } from 'react-hot-toast';
 
 export default function ResetPasswordForm() {
@@ -12,6 +13,7 @@ export default function ResetPasswordForm() {
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+ 
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +33,9 @@ export default function ResetPasswordForm() {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      toast.error('Gagal reset password: ' + error.message);
+      showErrorToast({ title: 'Gagal', message: 'Gagal mengirim email reset.' });
     } else {
-      toast.success('Password berhasil diubah!');
+      showSuccessToast({ title: 'Password Diubah!', message: 'Silahkan login dengan password baru.' });
       setTimeout(() => router.push('/login'), 1500);
     }
 
