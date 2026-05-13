@@ -3,7 +3,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase/client';
-import { toast } from 'react-hot-toast';
+import { showInfoToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
@@ -19,10 +19,10 @@ export default function ForgotPasswordForm() {
     });
 
     if (error) {
-      toast.error('Gagal mengirim email: ' + error.message);
+      showErrorToast({ title: 'Gagal', message: 'Gagal mengirim email reset.' });
     } else {
       setSent(true);
-      toast.success('Email reset password telah dikirim!');
+      showInfoToast({ title: 'Email Terkirim!', message: 'Cek inbox untuk reset password.' });
     }
 
     setLoading(false);
