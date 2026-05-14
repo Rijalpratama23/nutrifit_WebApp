@@ -33,7 +33,12 @@ export default function CallbackPage() {
       }
 
       // Query role dari tabel users
-      const { data: userData } = await supabase.from('users').select('role').eq('email', session.user.email).single();
+      const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('id', session.user.id).single();
+
+      console.log('=== CALLBACK DEBUG ===');
+      console.log('Email dicari:', session.user.email);
+      console.log('userData:', userData);
+      console.log('roleError:', roleError);
 
       const role = userData?.role ?? 'user';
       setStatus(`Login berhasil sebagai ${role}, mengalihkan...`);
@@ -48,5 +53,5 @@ export default function CallbackPage() {
       <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500" />
       <p className="text-gray-600 text-sm">{status}</p>
     </div>
-  ); 
+  );
 }
