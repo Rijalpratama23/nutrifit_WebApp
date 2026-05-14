@@ -1,8 +1,10 @@
 'use client';
 
 import { useSidebar } from '@/hooks/useSidebar';
-import { Users, Phone, ClipboardList, FileText, TrendingUp } from 'lucide-react';
+import { supabase } from '@/utils/supabase/client'; 
+import { Users, Phone, ClipboardList, FileText, TrendingUp, Wifi, WifiOff } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface Props {
   totalPengguna: number;
@@ -11,7 +13,7 @@ interface Props {
   totalArtikel: number;
 }
 
-// ─── Donut Chart (sama seperti sebelumnya) ────────────────────
+// ─── Donut Chart ───────────────────────────────────────────────
 function DonutChart({ data }: { data: { pct: number; color: string }[] }) {
   const size = 200;
   const cx = size / 2;
@@ -58,10 +60,85 @@ function DonutChart({ data }: { data: { pct: number; color: string }[] }) {
   );
 }
 
-export default function ContainerDashboardAdmin({ totalPengguna, totalAhli, totalKonsultasi, totalArtikel }: Props) {
+// ─── Realtime Status Indicator ─────────────────────────────────
+function RealtimeBadge({ connected }: { connected: boolean }) {
+  return (
+    <div className={`flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full transition-all duration-500 ${connected ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}>
+      {connected ? (
+        <>
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+          </span>
+          <Wifi size={12} />
+          Realtime
+        </>
+      ) : (
+        <>
+          <WifiOff size={12} />
+          Menghubungkan...
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────
+export default function ContainerDashboardAdmin({ totalPengguna: initPengguna, totalAhli: initAhli, totalKonsultasi: initKonsultasi, totalArtikel: initArtikel }: Props) {
   const { isCollapsed, isMobile } = useSidebar();
 
-  // ── Data dinamis ──────────────────────────────────────────
+  // ── State: mulai dari data server (SSR), lalu update realtime ──
+  const [totalPengguna, setTotalPengguna] = useState(initPengguna);
+  const [totalAhli, setTotalAhli] = useState(initAhli);
+  const [totalKonsultasi, setTotalKonsultasi] = useState(initKonsultasi);
+  const [totalArtikel, setTotalArtikel] = useState(initArtikel);
+  const [isConnected, setIsConnected] = useState(false);
+
+  // ── Helper: fetch ulang count dari supabase ──────────────────
+  const refetchCounts = async () => {
+    const [{ count: pengguna }, { count: ahli }, { count: konsultasi }, { count: artikel }] = await Promise.all([
+      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'user'),
+      supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ahli'),
+      supabase.from('consultations').select('*', { count: 'exact', head: true }),
+      supabase.from('articles').select('*', { count: 'exact', head: true }).eq('status', 'published'),
+    ]);
+
+    if (pengguna !== null) setTotalPengguna(pengguna);
+    if (ahli !== null) setTotalAhli(ahli);
+    if (konsultasi !== null) setTotalKonsultasi(konsultasi);
+    if (artikel !== null) setTotalArtikel(artikel);
+  };
+
+  // ── Supabase Realtime Subscription ──────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel('dashboard-admin-realtime')
+
+      // Tabel: users (INSERT / UPDATE / DELETE)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+        refetchCounts();
+      })
+
+      // Tabel: consultations
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'consultations' }, () => {
+        refetchCounts();
+      })
+
+      // Tabel: articles
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
+        refetchCounts();
+      })
+
+      .subscribe((status) => {
+        setIsConnected(status === 'SUBSCRIBED');
+      });
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // ── Data cards ───────────────────────────────────────────────
   const STATS = [
     {
       label: 'Pengguna',
@@ -126,9 +203,13 @@ export default function ContainerDashboardAdmin({ totalPengguna, totalAhli, tota
     <div className={`flex-1 min-w-0 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
         {/* Header */}
-        <div className="mb-6 sm:mb-8 mt-5 sm:mt-0">
-          <h1 className="text-2xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
-          <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Kelola user &amp; Filter User</p>
+        <div className="mb-6 sm:mb-8 mt-5 sm:mt-0 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
+            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Kelola user &amp; Filter User</p>
+          </div>
+          {/* Realtime status badge */}
+          <RealtimeBadge connected={isConnected} />
         </div>
 
         {/* Stat Cards */}
@@ -139,9 +220,9 @@ export default function ContainerDashboardAdmin({ totalPengguna, totalAhli, tota
                 <span className={`text-sm sm:text-[15px] font-semibold ${card.textColor}`}>{card.label}</span>
                 <div className={`${card.iconBg} p-2 rounded-lg ${card.textColor}`}>{card.icon}</div>
               </div>
-              <div className={`text-3xl sm:text-4xl font-bold ${card.textColor} leading-none`}>
+              <div className={`text-3xl sm:text-4xl font-bold ${card.textColor} leading-none transition-all duration-300`}>
                 {card.value.toLocaleString()}
-                <span className={`text-xs sm:text-sm font-medium ml-1.5 opacity-80`}>{card.unit}</span>
+                <span className="text-xs sm:text-sm font-medium ml-1.5 opacity-80">{card.unit}</span>
               </div>
               <Link href={card.href} className={`text-xs sm:text-sm font-medium transition-colors ${card.linkColor}`}>
                 Lihat Semua
