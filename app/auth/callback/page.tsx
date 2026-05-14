@@ -21,7 +21,6 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Supabase otomatis baca hash fragment & set session
       const {
         data: { session },
         error,
@@ -34,7 +33,7 @@ export default function CallbackPage() {
       }
 
       // Query role dari tabel users
-      const { data: userData } = await supabase.from('users').select('role').eq('id', session.user.id).single();
+      const { data: userData } = await supabase.from('users').select('role').eq('email', session.user.email).single();
 
       const role = userData?.role ?? 'user';
       setStatus(`Login berhasil sebagai ${role}, mengalihkan...`);
