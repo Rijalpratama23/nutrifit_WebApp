@@ -58,7 +58,12 @@ export function useLoginForm() {
       localStorage.removeItem('rememberedEmail');
     }
 
-    const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('email', data.user.email).single();
+    const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('id', data.user.id).single();
+
+    console.log('=== LOGIN DEBUG ===');
+    console.log('Email dicari:', data.user.email);
+    console.log('userData:', userData);
+    console.log('roleError:', roleError);
 
     if (roleError || !userData) {
       showErrorToast({ title: 'Login Gagal', message: 'Email atau password salah.' });
@@ -67,7 +72,7 @@ export function useLoginForm() {
       return;
     }
 
-    showSuccessToast({ title: 'Login Berhasil!', message: 'Selamat datang kembali 👋' })
+    showSuccessToast({ title: 'Login Berhasil!', message: 'Selamat datang kembali 👋' });
     router.push(getRedirectByRole(userData.role));
     setLoading(false);
   };
