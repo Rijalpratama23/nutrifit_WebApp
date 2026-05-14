@@ -58,7 +58,7 @@ export function useLoginForm() {
       localStorage.removeItem('rememberedEmail');
     }
 
-    const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('id', data.user.id).single();
+    const { data: userData, error: roleError } = await supabase.from('users').select('role').eq('email', data.user.email).single();
 
     if (roleError || !userData) {
       showErrorToast({ title: 'Login Gagal', message: 'Email atau password salah.' });
