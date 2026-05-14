@@ -239,7 +239,6 @@ export default function ContainerArtikel() {
           </div>
         </div>
 
-        {/* ── Stat Cards ── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <StatCard label="Total Artikel" count={200} unit="Artikel" icon={<Users size={18} />} bg="bg-green-500" textColor="text-green-500" />
           <StatCard label="Berhasil Publish" count={204} unit="Artikel" icon={<Stethoscope size={18} />} bg="bg-blue-500" textColor="text-blue-500" />
@@ -247,7 +246,6 @@ export default function ContainerArtikel() {
           <StatCard label="Draft" count={200} unit="Artikel" icon={<FileText size={18} />} bg="" textColor="text-blue-500" border />
         </div>
 
-        {/* ── Table Card ── */}
         <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6">
           {/* Tabs */}
           <div className="flex gap-0 border-b border-gray-100 mb-4 overflow-x-auto">
@@ -264,7 +262,6 @@ export default function ContainerArtikel() {
             ))}
           </div>
 
-          {/* Filter Bar */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

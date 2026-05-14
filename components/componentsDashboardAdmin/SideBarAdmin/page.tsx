@@ -12,8 +12,8 @@ export default function SideBarAdmin() {
 
   const navItems = [
     { href: '/admin/dashboard', icon: <House size={24} />, label: 'Dashboard' },
-    { href: '/admin/totalPengguna', icon: <UsersRound size={24} />, label: 'Total Pengguna', badge: 6 },
-    { href: '/admin/totalAhli', icon: <Stethoscope size={24} />, label: 'Total Ahli', badge: 6 },
+    { href: '/admin/totalPengguna', icon: <UsersRound size={24} />, label: 'Total Pengguna'},
+    { href: '/admin/totalAhli', icon: <Stethoscope size={24} />, label: 'Total Ahli'},
     { href: '/admin/totalKonsultasi', icon: <ClipboardList size={24} />, label: 'Total Konsultasi' },
     { href: '/admin/artikel', icon: <Newspaper size={24} />, label: 'Artikel' },
   ];
