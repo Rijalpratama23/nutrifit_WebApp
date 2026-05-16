@@ -1,11 +1,16 @@
+'use client';
+
 import { Bell, User } from 'lucide-react';
 import Link from 'next/link';
+import { useUser } from '@/hooks/useUser';
 
 export default function HeaderKomponents() {
+  const { user, loading } = useUser();
+
   return (
     <div className="flex justify-between items-center mb-8">
-      <div className='md:mt-0 mt-10'>
-        <h1 className="text-2xl font-bold text-slate-800">Selamat Datang Doctor @ahli</h1>
+      <div className="md:mt-0 mt-10">
+        <h1 className="text-2xl font-bold text-slate-800">Selamat Datang Doctor {user?.nama ? `@${user.nama}` : '@Ahli'}</h1>
         <p className="text-slate-500 text-sm">Pemberitahuan dan informasi menyeluruh</p>
       </div>
 
@@ -16,14 +21,14 @@ export default function HeaderKomponents() {
         </div>
 
         {/* link ke hal profile */}
-        <Link href="/ahli/profile" >
+        <Link href="/ahli/profile">
           <div className="flex items-center cursor-pointer gap-3 bg-primary text-white pr-6 pl-1.5 py-1.5 rounded-full shadow-lg">
             <div className="bg-white p-2 rounded-full text-primary">
               <User size={18} fill="currentColor" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold leading-none">Ahli</span>
-              <span className="text-[10px] opacity-80 font-medium">ahli@gmail.com</span>
+              <span className="text-xs font-bold leading-none">{loading ? 'Loading...' : user?.nama || 'Ahli'}</span>
+              <span className="text-[10px] opacity-80 font-medium">{loading ? '...' : user?.email || 'ahli@gmail.com'}</span>
             </div>
           </div>
         </Link>
@@ -31,5 +36,3 @@ export default function HeaderKomponents() {
     </div>
   );
 }
-
-

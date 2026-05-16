@@ -12,8 +12,8 @@ export default function SideBar() {
 
   const navItems = [
     { href: '/ahli/home', icon: <House size={24} />, label: 'Dashboard' },
-    { href: '/ahli/permintaan', icon: <Users size={24} />, label: 'Permintaan', badge: 6 },
-    { href: '/ahli/konsultasi', icon: <HeartHandshake size={24} />, label: 'Konsultasi', badge: 6 },
+    { href: '/ahli/permintaan', icon: <Users size={24} />, label: 'Permintaan'},
+    { href: '/ahli/konsultasi', icon: <HeartHandshake size={24} />, label: 'Konsultasi'},
     { href: '/ahli/riwayat', icon: <ScrollText size={24} />, label: 'Riwayat' },
     { href: '/ahli/jadwal', icon: <CalendarCheck size={24} />, label: 'Jadwal' },
   ];
