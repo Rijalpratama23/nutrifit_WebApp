@@ -1,35 +1,45 @@
 'use client';
 
 import { useSidebar } from '@/hooks/useSidebar';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, ChevronDown,User, MessageCircle } from 'lucide-react';
+import { Search, ChevronDown, User, MessageCircle, Loader2 } from 'lucide-react';
 import Header from './header/page';
+import { supabase } from '@/utils/supabase/client';
 
 // ─── Types ───────────────────────────────────────────────────
 type StatusType = 'aktif' | 'menunggu' | 'selesai';
-
-interface Konsultasi {
-  id: number;
-  nama: string;
-  tujuan: string;
-  status: StatusType;
-  waktu: string;
-}
-
 type FilterType = 'semua' | StatusType;
 
-// ─── Dummy Data ───────────────────────────────────────────────
-const DUMMY_DATA: Konsultasi[] = [
-  { id: 1, nama: 'Dadan Sugandi', tujuan: 'Menaikan berat badan', status: 'aktif', waktu: '10-03-06 | 10:00' },
-  { id: 2, nama: 'Siti Rahayu', tujuan: 'Menurunkan berat badan', status: 'menunggu', waktu: '10-03-07 | 09:00' },
-  { id: 3, nama: 'Budi Santoso', tujuan: 'Diet seimbang', status: 'selesai', waktu: '10-03-05 | 14:00' },
-  { id: 4, nama: 'Dewi Lestari', tujuan: 'Menjaga berat badan', status: 'aktif', waktu: '10-03-06 | 11:00' },
-  { id: 5, nama: 'Rizky Fauzan', tujuan: 'Menaikan berat badan', status: 'menunggu', waktu: '10-03-07 | 13:00' },
-  { id: 6, nama: 'Maya Indah', tujuan: 'Program gizi harian', status: 'aktif', waktu: '10-03-06 | 15:00' },
-  { id: 7, nama: 'Andi Pratama', tujuan: 'Menurunkan berat badan', status: 'selesai', waktu: '10-03-04 | 10:00' },
-  { id: 8, nama: 'Farhan Adi', tujuan: 'Menaikan berat badan', status: 'aktif', waktu: '10-03-06 | 16:30' },
-];
+interface Konsultasi {
+  id: string;
+  nama: string;
+  email: string;
+  status: StatusType;
+  waktu: string;
+  db_status: string;
+}
+
+// ─── Status Mapping dari DB → Display ────────────────────────
+function mapStatus(dbStatus: string): StatusType {
+  switch (dbStatus) {
+    case 'confirmed':
+    case 'ongoing':
+      return 'aktif';
+    case 'pending':
+      return 'menunggu';
+    case 'completed':
+    case 'cancelled':
+      return 'selesai';
+    default:
+      return 'menunggu';
+  }
+}
+
+function formatWaktu(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' }) + ' | ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+}
 
 // ─── Status Config ────────────────────────────────────────────
 const STATUS_CONFIG: Record<StatusType, { label: string; pill: string; dot: string }> = {
@@ -50,54 +60,124 @@ export default function ContainerKonsultasi() {
   const { isCollapsed, isMobile } = useSidebar();
   const router = useRouter();
 
+  const [data, setData] = useState<Konsultasi[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<FilterType>('semua');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // ── Fetch Data ──────────────────────────────────────────────
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
+
+    const { data: konsultasi, error } = await supabase
+      .from('consultations')
+      .select(
+        `
+        id,
+        status,
+        created_at,
+        scheduled_at,
+        users!consultations_user_id_fkey(full_name, email)
+      `,
+      )
+      .eq('ahli_id', session.user.id)
+      .order('created_at', { ascending: false });
+
+    if (!error && konsultasi) {
+      setData(
+        konsultasi.map((item: any) => ({
+          id: item.id,
+          nama: item.users?.full_name ?? 'User',
+          email: item.users?.email ?? '',
+          status: mapStatus(item.status),
+          db_status: item.status,
+          waktu: formatWaktu(item.created_at),
+        })),
+      );
+    }
+
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // ── Close dropdown on outside click ────────────────────────
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false);
     }
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filtered = DUMMY_DATA.filter((row) => {
+  // ── Filter ──────────────────────────────────────────────────
+  const filtered = data.filter((row) => {
     const matchFilter = filter === 'semua' || row.status === filter;
-    const matchSearch = row.nama.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = row.nama.toLowerCase().includes(search.toLowerCase()) || row.email.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
   });
 
   const activeFilterLabel = filter === 'semua' ? 'Filter' : STATUS_CONFIG[filter as StatusType].label;
 
-  function handleChat(id: number) {
+  function handleChat(id: string) {
     router.push(`/ahli/konsultasi/${id}/chat`);
   }
+
+  // ── Empty & Loading State ────────────────────────────────────
+  const EmptyRow = ({ colSpan }: { colSpan: number }) => (
+    <tr>
+      <td colSpan={colSpan} className="text-center py-14">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+            <MessageCircle size={22} className="text-gray-300" />
+          </div>
+          <p className="text-sm font-medium text-gray-400">Belum ada konsultasi</p>
+          <p className="text-xs text-gray-300">Data konsultasi akan muncul di sini</p>
+        </div>
+      </td>
+    </tr>
+  );
+
+  const LoadingRow = ({ colSpan }: { colSpan: number }) => (
+    <tr>
+      <td colSpan={colSpan} className="text-center py-12">
+        <div className="flex justify-center items-center gap-2 text-gray-400">
+          <Loader2 size={18} className="animate-spin" />
+          <span className="text-sm">Memuat data...</span>
+        </div>
+      </td>
+    </tr>
+  );
 
   return (
     <div className={`flex-1 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
-        {/* ── Header ── */}
         <Header />
 
-        {/* ── Toolbar ── */}
+        {/* Toolbar */}
         <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
-          {/* Search — flex-1 on mobile, capped on sm+ */}
           <div className="relative flex-1 sm:flex-none sm:w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} strokeWidth={1.8} />
             <input
               type="text"
-              placeholder="Search user..."
+              placeholder="Cari nama atau email..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-8 pr-4 py-2 sm:py-2.5 text-sm bg-white border border-gray-200 rounded-xl text-gray-700 placeholder-gray-400 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition"
             />
           </div>
 
-          {/* Filter dropdown */}
           <div className="relative flex-shrink-0" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen((prev) => !prev)}
@@ -130,20 +210,19 @@ export default function ContainerKonsultasi() {
           </div>
         </div>
 
-        {/* ── Table Card ── */}
+        {/* Table Card */}
         <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-          {/* Card Header */}
           <div className="px-4 sm:px-6 pt-4 sm:pt-5">
-            <h2 className="text-sm sm:text-[15px] font-medium text-gray-900 pb-3 sm:pb-4 border-b-2 border-primary w-full inline-block">Permintaan Konsultasi Terbaru</h2>
+            <h2 className="text-sm sm:text-[15px] font-medium text-gray-900 pb-3 sm:pb-4 border-b-2 border-primary w-full inline-block">Daftar Konsultasi</h2>
           </div>
 
-          {/* ── DESKTOP / TABLET (sm+): tabel dengan thead fixed ── */}
+          {/* Desktop */}
           <div className="hidden sm:block">
             <table className="w-full text-sm table-fixed">
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="w-[25%] text-left text-xs font-medium text-gray-400 px-4 lg:px-6 py-3">User</th>
-                  <th className="w-[28%] text-left text-xs font-medium text-gray-400 px-4 lg:px-6 py-3">Tujuan</th>
+                  <th className="w-[28%] text-left text-xs font-medium text-gray-400 px-4 lg:px-6 py-3">Email</th>
                   <th className="w-[17%] text-left text-xs font-medium text-gray-400 px-4 lg:px-6 py-3">Status</th>
                   <th className="w-[18%] text-left text-xs font-medium text-gray-400 px-4 lg:px-6 py-3">Waktu</th>
                   <th className="w-[12%] text-right text-xs font-medium text-gray-400 px-4 lg:px-6 py-3">Aksi</th>
@@ -154,18 +233,15 @@ export default function ContainerKonsultasi() {
             <div className="max-h-[372px] overflow-y-auto">
               <table className="w-full text-sm table-fixed">
                 <tbody>
-                  {filtered.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="text-center py-12 text-gray-400 text-sm">
-                        Tidak ada data konsultasi ditemukan.
-                      </td>
-                    </tr>
+                  {loading ? (
+                    <LoadingRow colSpan={5} />
+                  ) : filtered.length === 0 ? (
+                    <EmptyRow colSpan={5} />
                   ) : (
                     filtered.map((row) => {
                       const cfg = STATUS_CONFIG[row.status];
                       return (
                         <tr key={row.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-                          {/* User */}
                           <td className="w-[25%] px-4 lg:px-6 py-3">
                             <div className="flex items-center gap-2 lg:gap-2.5">
                               <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
@@ -174,30 +250,24 @@ export default function ContainerKonsultasi() {
                               <span className="font-medium text-gray-800 text-xs lg:text-sm truncate">{row.nama}</span>
                             </div>
                           </td>
-
-                          {/* Tujuan */}
-                          <td className="w-[28%] px-4 lg:px-6 py-3 text-gray-500 text-xs lg:text-sm truncate">{row.tujuan}</td>
-
-                          {/* Status */}
+                          <td className="w-[28%] px-4 lg:px-6 py-3 text-gray-500 text-xs lg:text-sm truncate">{row.email}</td>
                           <td className="w-[17%] px-4 lg:px-6 py-3">
                             <span className={`inline-flex items-center gap-1 lg:gap-1.5 px-2 lg:px-2.5 py-1 rounded-full text-[11px] lg:text-xs font-medium ${cfg.pill}`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                               {cfg.label}
                             </span>
                           </td>
-
-                          {/* Waktu */}
                           <td className="w-[18%] px-4 lg:px-6 py-3 text-gray-400 text-[11px] lg:text-xs">{row.waktu}</td>
-
-                          {/* Aksi */}
                           <td className="w-[12%] px-4 lg:px-6 py-3 text-right">
-                            <button
-                              onClick={() => handleChat(row.id)}
-                              className="inline-flex items-center gap-1 lg:gap-1.5 px-2.5 lg:px-3.5 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-[11px] lg:text-xs font-medium rounded-full transition-colors active:scale-95"
-                            >
-                              <MessageCircle size={11} strokeWidth={2} />
-                              chat
-                            </button>
+                            {row.status !== 'selesai' && (
+                              <button
+                                onClick={() => handleChat(row.id)}
+                                className="inline-flex items-center gap-1 lg:gap-1.5 px-2.5 lg:px-3.5 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-[11px] lg:text-xs font-medium rounded-full transition-colors active:scale-95"
+                              >
+                                <MessageCircle size={11} strokeWidth={2} />
+                                Chat
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -208,25 +278,34 @@ export default function ContainerKonsultasi() {
             </div>
           </div>
 
-          {/* ── MOBILE (<sm): card list layout ── */}
+          {/* Mobile */}
           <div className="sm:hidden">
-            {filtered.length === 0 ? (
-              <div className="text-center py-12 text-gray-400 text-sm">Tidak ada data konsultasi ditemukan.</div>
+            {loading ? (
+              <div className="flex justify-center items-center py-12 gap-2 text-gray-400">
+                <Loader2 size={18} className="animate-spin" />
+                <span className="text-sm">Memuat data...</span>
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="flex flex-col items-center py-12 gap-2">
+                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                  <MessageCircle size={20} className="text-gray-300" />
+                </div>
+                <p className="text-sm text-gray-400 font-medium">Belum ada konsultasi</p>
+              </div>
             ) : (
               <div className="max-h-[440px] overflow-y-auto divide-y divide-gray-100">
                 {filtered.map((row) => {
                   const cfg = STATUS_CONFIG[row.status];
                   return (
                     <div key={row.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors gap-3">
-                      {/* Left: avatar + info */}
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
                           <User size={15} strokeWidth={1.5} className="text-gray-400" />
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-800 truncate">{row.nama}</p>
-                          <p className="text-xs text-gray-500 truncate">{row.tujuan}</p>
-                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <p className="text-xs text-gray-500 truncate">{row.email}</p>
+                          <div className="flex items-center gap-2 mt-1">
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${cfg.pill}`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                               {cfg.label}
@@ -235,15 +314,15 @@ export default function ContainerKonsultasi() {
                           </div>
                         </div>
                       </div>
-
-                      {/* Right: chat button */}
-                      <button
-                        onClick={() => handleChat(row.id)}
-                        className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium rounded-full transition-colors active:scale-95"
-                      >
-                        <MessageCircle size={11} strokeWidth={2} />
-                        chat
-                      </button>
+                      {row.status !== 'selesai' && (
+                        <button
+                          onClick={() => handleChat(row.id)}
+                          className="flex-shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-xs font-medium rounded-full transition-colors active:scale-95"
+                        >
+                          <MessageCircle size={11} strokeWidth={2} />
+                          Chat
+                        </button>
+                      )}
                     </div>
                   );
                 })}

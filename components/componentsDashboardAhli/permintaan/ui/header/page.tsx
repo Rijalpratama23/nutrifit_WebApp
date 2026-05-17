@@ -1,8 +1,13 @@
+"user client"
+
 import Link from "next/link";
 import { Bell, User } from "lucide-react";
+import { useUser } from "@/hooks/useUser";
 
 
 export default function HeaderPermin() {
+  const { user, loading } = useUser();
+
   return (
     <div className="flex justify-between items-center mb-8">
       <div>
@@ -22,8 +27,8 @@ export default function HeaderPermin() {
               <User size={18} fill="currentColor" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold leading-none">Ahli</span>
-              <span className="text-[10px] opacity-80 font-medium">ahli@gmail.com</span>
+              <span className="text-xs font-bold leading-none">{loading ? 'Loadiing...' : user?.nama || 'Ahli'}</span>
+              <span className="text-[10px] opacity-80 font-medium">{loading ? '...' : user?.email || 'ahli@gmail.com '}</span>
             </div>
           </div>
         </Link>

@@ -1,7 +1,12 @@
+"use client"
+
 import { Bell, User } from "lucide-react";
 import Link from "next/link";
+import { useUser } from "@/hooks/useUser";
 
 export default function Header() {
+  const { user, loading }= useUser();
+
   return (
     <div className="flex justify-between items-start sm:items-center mb-6 sm:mb-8 gap-3">
       <div className="mt-8 sm:mt-0">
@@ -23,8 +28,8 @@ export default function Header() {
               <User size={15} fill="currentColor" />
             </div>
             <div className="hidden sm:flex flex-col">
-              <span className="text-xs font-bold leading-none">Ahli</span>
-              <span className="text-[10px] opacity-80 font-medium">ahli@gmail.com</span>
+              <span className="text-xs font-bold leading-none">{loading ? 'Loading...' : user?.nama || 'Ahli'}</span>
+              <span className="text-[10px] opacity-80 font-medium">{loading ? '...' : user?.email || 'ahli@gmail.com'}</span>
             </div>
           </div>
         </Link>
