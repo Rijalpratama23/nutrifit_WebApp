@@ -1,34 +1,25 @@
 'use client';
 
 import { useSidebar } from '@/hooks/useSidebar';
-import { Bell, User, Calendar, MessageCircle } from 'lucide-react';
+import { Bell, User, Calendar, MessageCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/utils/supabase/client';
+import { useUser } from '@/hooks/useUser';
 
-// ─── Types ───────────────────────────────────────────────────
+
 type StatusJadwal = 'hari_ini' | 'besok' | 'selesai';
 type FilterType = 'semua' | StatusJadwal;
 
 interface Jadwal {
-  id: number;
+  id: string;
   nama: string;
   email: string;
-  keluhan: string;
-  tujuan: string;
   tanggal: string;
   status: StatusJadwal;
+  db_status: string;
 }
-
-// ─── Dummy Data ───────────────────────────────────────────────
-const DUMMY_JADWAL: Jadwal[] = [
-  { id: 1, nama: 'Dadan Sugandi', email: 'dadan@gmail.com', keluhan: 'Keluhan', tujuan: 'Menaikan berat badan', tanggal: 'Selasa, 8 Maret', status: 'hari_ini' },
-  { id: 2, nama: 'Dadan Sugandi', email: 'dadan@gmail.com', keluhan: 'Keluhan', tujuan: 'Menaikan berat badan', tanggal: 'Selasa, 8 Maret', status: 'besok' },
-  { id: 3, nama: 'Dadan Sugandi', email: 'dadan@gmail.com', keluhan: 'Keluhan', tujuan: 'Menaikan berat badan', tanggal: 'Selasa, 8 Maret', status: 'hari_ini' },
-  { id: 4, nama: 'Dadan Sugandi', email: 'dadan@gmail.com', keluhan: 'Keluhan', tujuan: 'Menaikan berat badan', tanggal: 'Selasa, 8 Maret', status: 'selesai' },
-  { id: 5, nama: 'Siti Rahayu', email: 'siti@gmail.com', keluhan: 'Keluhan', tujuan: 'Menurunkan berat badan', tanggal: 'Rabu, 9 Maret', status: 'hari_ini' },
-  { id: 6, nama: 'Budi Santoso', email: 'budi@gmail.com', keluhan: 'Keluhan', tujuan: 'Diet seimbang', tanggal: 'Kamis, 10 Maret', status: 'selesai' },
-];
 
 // ─── Status Config ────────────────────────────────────────────
 const STATUS_CONFIG: Record<StatusJadwal, { label: string; pill: string }> = {
@@ -43,6 +34,34 @@ const FILTERS: { value: FilterType; label: string }[] = [
   { value: 'besok', label: 'Besok' },
   { value: 'selesai', label: 'Selesai' },
 ];
+
+// ─── Helpers ─────────────────────────────────────────────────
+function toDateOnly(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+function mapStatus(dbStatus: string, scheduledAt: string | null): StatusJadwal {
+  if (dbStatus === 'completed') return 'selesai';
+
+  if (scheduledAt) {
+    const schedDate = toDateOnly(new Date(scheduledAt));
+    const today = toDateOnly(new Date());
+    const tomorrow = toDateOnly(new Date(Date.now() + 86400000));
+    if (schedDate === tomorrow) return 'besok';
+    if (schedDate <= today) return 'hari_ini';
+    return 'besok';
+  }
+
+  return 'hari_ini';
+}
+
+function formatTanggal(dateStr: string | null): string {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  const HARI = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  return `${HARI[d.getDay()]}, ${d.getDate()} ${BULAN[d.getMonth()]}`;
+}
 
 function AvatarIcon({ size = 'md' }: { size?: 'sm' | 'md' }) {
   const dim = size === 'sm' ? 'w-9 h-9' : 'w-11 h-11';
@@ -60,19 +79,70 @@ function AvatarIcon({ size = 'md' }: { size?: 'sm' | 'md' }) {
 // ─── Component ────────────────────────────────────────────────
 export default function ContainerJadwal() {
   const { isCollapsed, isMobile } = useSidebar();
+  const { user } = useUser();
   const router = useRouter();
+
+  const [data, setData] = useState<Jadwal[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterType>('semua');
 
-  const filtered = DUMMY_JADWAL.filter((item) => (activeFilter === 'semua' ? true : item.status === activeFilter));
+  // ── Fetch Data ──────────────────────────────────────────────
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
 
-  function handleChat(id: number) {
+    const { data: konsultasi, error } = await supabase
+      .from('consultations')
+      .select(
+        `
+        id,
+        status,
+        scheduled_at,
+        created_at,
+        users!consultations_user_id_fkey(full_name, email)
+      `,
+      )
+      .eq('ahli_id', session.user.id)
+      .in('status', ['confirmed', 'ongoing', 'completed'])
+      .order('scheduled_at', { ascending: true, nullsFirst: false });
+
+    if (!error && konsultasi) {
+      setData(
+        konsultasi.map((item: any) => ({
+          id: item.id,
+          nama: item.users?.full_name ?? 'User',
+          email: item.users?.email ?? '',
+          tanggal: formatTanggal(item.scheduled_at ?? item.created_at),
+          status: mapStatus(item.status, item.scheduled_at),
+          db_status: item.status,
+        })),
+      );
+    }
+
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // ── Filter ──────────────────────────────────────────────────
+  const filtered = data.filter((item) => (activeFilter === 'semua' ? true : item.status === activeFilter));
+
+  function handleChat(id: string) {
     router.push(`/ahli/jadwal/${id}/chat`);
   }
 
   return (
     <div className={`flex-1 min-w-0 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
-        {/* ── Header ── */}
+        {/* Header */}
         <div className="flex justify-between items-center mb-6 sm:mb-8">
           <div className="md:mt-0 mt-10">
             <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Jadwal Konsultasi</h1>
@@ -81,23 +151,20 @@ export default function ContainerJadwal() {
 
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative p-2 sm:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
-              <Bell size={18} className="text-slate-600 sm:hidden" />
-              <Bell size={20} className="text-slate-600 hidden sm:block" />
+              <Bell size={20} className="text-slate-600" />
               <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
             </div>
 
             <Link href="/ahli/profile">
-              {/* Desktop & Tablet — full pill */}
               <div className="hidden sm:flex items-center cursor-pointer gap-3 bg-primary text-white pr-6 pl-1.5 py-1.5 rounded-full shadow-lg">
                 <div className="bg-white p-2 rounded-full text-primary">
                   <User size={18} fill="currentColor" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold leading-none">Ahli</span>
-                  <span className="text-[10px] opacity-80 font-medium">ahli@gmail.com</span>
+                  <span className="text-xs font-bold leading-none">{user?.nama || 'Ahli'}</span>
+                  <span className="text-[10px] opacity-80 font-medium">{user?.email || 'ahli@gmail.com'}</span>
                 </div>
               </div>
-              {/* Mobile — icon only */}
               <div className="sm:hidden bg-primary p-2 rounded-full shadow-lg">
                 <User size={16} className="text-white" fill="white" />
               </div>
@@ -105,7 +172,7 @@ export default function ContainerJadwal() {
           </div>
         </div>
 
-        {/* ── Filter Tabs ── */}
+        {/* Filter Tabs */}
         <div className="flex items-center gap-2 flex-wrap mb-4 sm:mb-5">
           {FILTERS.map((f) => (
             <button
@@ -119,16 +186,29 @@ export default function ContainerJadwal() {
           ))}
         </div>
 
-        {/* ── Card List ── */}
-        {filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center text-gray-400 text-sm">Tidak ada jadwal untuk filter ini.</div>
+        {/* Card List */}
+        {loading ? (
+          <div className="bg-white rounded-2xl border border-gray-200 py-16 flex justify-center items-center gap-2 text-gray-400">
+            <Loader2 size={20} className="animate-spin" />
+            <span className="text-sm">Memuat jadwal...</span>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-white rounded-2xl border border-gray-200 py-16 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                <Calendar size={22} className="text-gray-300" />
+              </div>
+              <p className="text-sm font-medium text-gray-400">Tidak ada jadwal</p>
+              <p className="text-xs text-gray-300">Jadwal konsultasi akan muncul di sini</p>
+            </div>
+          </div>
         ) : (
           <div className="flex flex-col gap-3">
             {filtered.map((item) => {
               const cfg = STATUS_CONFIG[item.status];
               return (
                 <div key={item.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-150">
-                  {/* ── DESKTOP & TABLET (sm ke atas) — satu baris ── */}
+                  {/* Desktop */}
                   <div className="hidden sm:flex items-center gap-3 lg:gap-4 px-4 sm:px-5 lg:px-6 py-4">
                     <AvatarIcon />
 
@@ -138,13 +218,13 @@ export default function ContainerJadwal() {
                       <p className="text-[10px] lg:text-[11px] text-gray-400 truncate">{item.email}</p>
                     </div>
 
-                    {/* Keluhan + Tujuan */}
+                    {/* Status DB */}
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] lg:text-[13px] font-medium text-gray-700 truncate">{item.keluhan}</p>
-                      <p className="text-[10px] lg:text-[11px] text-gray-400 truncate">{item.tujuan}</p>
+                      <p className="text-[12px] lg:text-[13px] font-medium text-gray-700">Konsultasi</p>
+                      <p className="text-[10px] lg:text-[11px] text-gray-400 capitalize">{item.db_status}</p>
                     </div>
 
-                    {/* Tanggal — muncul md ke atas */}
+                    {/* Tanggal */}
                     <div className="hidden md:flex items-center gap-1.5 text-gray-500 flex-shrink-0 min-w-[120px]">
                       <Calendar size={13} className="text-gray-400 flex-shrink-0" strokeWidth={1.8} />
                       <span className="text-[11px] lg:text-[12px] whitespace-nowrap">{item.tanggal}</span>
@@ -153,19 +233,22 @@ export default function ContainerJadwal() {
                     {/* Status pill */}
                     <span className={`flex-shrink-0 text-[10px] lg:text-[11px] font-medium px-2 lg:px-2.5 py-1 rounded-full whitespace-nowrap ${cfg.pill}`}>{cfg.label}</span>
 
-                    {/* Chat button */}
-                    <button
-                      onClick={() => handleChat(item.id)}
-                      className="flex-shrink-0 flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3.5 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-[11px] lg:text-xs font-medium rounded-full transition-colors active:scale-95"
-                    >
-                      <MessageCircle size={11} strokeWidth={2} />
-                      chat
-                    </button>
+                    {/* Chat button — hanya jika belum selesai */}
+                    {item.status !== 'selesai' ? (
+                      <button
+                        onClick={() => handleChat(item.id)}
+                        className="flex-shrink-0 flex items-center gap-1 lg:gap-1.5 px-3 lg:px-3.5 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-[11px] lg:text-xs font-medium rounded-full transition-colors active:scale-95"
+                      >
+                        <MessageCircle size={11} strokeWidth={2} />
+                        chat
+                      </button>
+                    ) : (
+                      <div className="w-[60px]" />
+                    )}
                   </div>
 
-                  {/* ── MOBILE (di bawah sm) — card 2 baris ── */}
+                  {/* Mobile */}
                   <div className="sm:hidden px-4 py-3.5">
-                    {/* Baris 1: avatar + nama + status pill */}
                     <div className="flex items-center gap-3 mb-2">
                       <AvatarIcon size="sm" />
                       <div className="flex-1 min-w-0">
@@ -174,25 +257,23 @@ export default function ContainerJadwal() {
                       </div>
                       <span className={`flex-shrink-0 text-[10px] font-medium px-2.5 py-1 rounded-full ${cfg.pill}`}>{cfg.label}</span>
                     </div>
-
-                    {/* Baris 2: tujuan + tanggal + chat */}
                     <div className="flex items-center justify-between gap-2 pl-12">
                       <div className="min-w-0 flex-1">
-                        <p className="text-[11px] text-gray-600 truncate">
-                          {item.keluhan} · {item.tujuan}
-                        </p>
+                        <p className="text-[11px] text-gray-600 truncate">Konsultasi · {item.db_status}</p>
                         <div className="flex items-center gap-1 mt-0.5">
                           <Calendar size={10} className="text-gray-400 flex-shrink-0" strokeWidth={1.8} />
                           <span className="text-[10px] text-gray-400">{item.tanggal}</span>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleChat(item.id)}
-                        className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-[11px] font-medium rounded-full transition-colors active:scale-95"
-                      >
-                        <MessageCircle size={10} strokeWidth={2} />
-                        chat
-                      </button>
+                      {item.status !== 'selesai' && (
+                        <button
+                          onClick={() => handleChat(item.id)}
+                          className="flex-shrink-0 flex items-center gap-1 px-3 py-1.5 bg-green-100 hover:bg-green-200 text-green-700 text-[11px] font-medium rounded-full transition-colors active:scale-95"
+                        >
+                          <MessageCircle size={10} strokeWidth={2} />
+                          chat
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
