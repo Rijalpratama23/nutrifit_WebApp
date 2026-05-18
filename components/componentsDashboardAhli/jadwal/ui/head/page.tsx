@@ -1,26 +1,23 @@
-'use client';
-
-import { Bell, User } from 'lucide-react';
 import Link from 'next/link';
+import { User, Bell } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 
-export default function HeaderKomponents() {
+export default function HeadJadwal() {
   const { user, loading } = useUser();
 
   return (
-    <div className="flex justify-between items-center mb-6 sm:mb-8 mt-10 sm:mt-0">
+    <div className="flex justify-between items-center mb-6 sm:mb-8 gap-3 mt-10 sm:mt-0">
       <div className="min-w-0 flex-1">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 break-words">Selamat Datang Doctor {user?.nama ? `@${user.nama}` : '@Ahli'}</h1>
-        <p className="text-slate-500 text-xs sm:text-sm mt-1">Pemberitahuan dan informasi menyeluruh</p>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 break-words">Jadwal Konsultasi</h1>
+        <p className="text-slate-500 text-xs sm:text-sm mt-1">Lihat jadwal yang tersedia</p>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 ml-2 sm:ml-4">
         <div className="relative p-1.5 sm:p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
           <Bell size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-slate-600" />
-          <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+          <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
         </div>
 
-        {/* link ke hal profile */}
         <Link href="/ahli/profile">
           <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
             <div className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full text-primary flex-shrink-0">

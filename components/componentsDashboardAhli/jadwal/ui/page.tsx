@@ -1,12 +1,12 @@
 'use client';
 
 import { useSidebar } from '@/hooks/useSidebar';
-import { Bell, User, Calendar, MessageCircle, Loader2 } from 'lucide-react';
-import Link from 'next/link';
+import { Calendar, MessageCircle, Loader2 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import HeadJadwal from './head/page';
 
 
 type StatusJadwal = 'hari_ini' | 'besok' | 'selesai';
@@ -143,34 +143,7 @@ export default function ContainerJadwal() {
     <div className={`flex-1 min-w-0 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 sm:mb-8">
-          <div className="md:mt-0 mt-10">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Jadwal Konsultasi</h1>
-            <p className="text-slate-500 text-xs sm:text-sm">Lihat jadwal yang tersedia</p>
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className="relative p-2 sm:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
-              <Bell size={20} className="text-slate-600" />
-              <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
-            </div>
-
-            <Link href="/ahli/profile">
-              <div className="hidden sm:flex items-center cursor-pointer gap-3 bg-primary text-white pr-6 pl-1.5 py-1.5 rounded-full shadow-lg">
-                <div className="bg-white p-2 rounded-full text-primary">
-                  <User size={18} fill="currentColor" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold leading-none">{user?.nama || 'Ahli'}</span>
-                  <span className="text-[10px] opacity-80 font-medium">{user?.email || 'ahli@gmail.com'}</span>
-                </div>
-              </div>
-              <div className="sm:hidden bg-primary p-2 rounded-full shadow-lg">
-                <User size={16} className="text-white" fill="white" />
-              </div>
-            </Link>
-          </div>
-        </div>
+        <HeadJadwal />
 
         {/* Filter Tabs */}
         <div className="flex items-center gap-2 flex-wrap mb-4 sm:mb-5">

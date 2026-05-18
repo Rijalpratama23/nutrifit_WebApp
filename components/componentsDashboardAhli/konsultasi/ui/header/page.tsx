@@ -1,35 +1,35 @@
-"use client"
+'use client';
 
-import { Bell, User } from "lucide-react";
-import Link from "next/link";
-import { useUser } from "@/hooks/useUser";
+import { Bell, User } from 'lucide-react';
+import Link from 'next/link';
+import { useUser } from '@/hooks/useUser';
 
 export default function Header() {
-  const { user, loading }= useUser();
+  const { user, loading } = useUser();
 
   return (
-    <div className="flex justify-between items-start sm:items-center mb-6 sm:mb-8 gap-3">
-      <div className="mt-8 sm:mt-0">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">Konsultasi Aktif</h1>
-        <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Lihat &amp; kelola konsultasi aktif</p>
+    <div className="flex justify-between items-center mb-6 sm:mb-8 gap-3 mt-10 sm:mt-0">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 break-words">Konsultasi Aktif</h1>
+        <p className="text-slate-500 text-xs sm:text-sm mt-1">Lihat &amp; kelola konsultasi aktif</p>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+      <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 ml-2 sm:ml-4">
         {/* Bell */}
-        <div className="relative p-2 sm:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
-          <Bell size={18} className="text-slate-600" />
-          <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
+        <div className="relative p-1.5 sm:p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
+          <Bell size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-slate-600" />
+          <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
         </div>
 
         {/* Profile pill — ikon only on mobile, full on sm+ */}
         <Link href="/ahli/profile">
-          <div className="flex items-center cursor-pointer gap-2 sm:gap-3 bg-primary text-white sm:pr-6 pr-3 pl-1.5 py-1.5 rounded-full shadow-lg">
-            <div className="bg-white p-1.5 sm:p-2 rounded-full text-primary flex-shrink-0">
-              <User size={15} fill="currentColor" />
+          <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
+            <div className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full text-primary flex-shrink-0">
+              <User size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" fill="currentColor" />
             </div>
-            <div className="hidden sm:flex flex-col">
+            <div className="hidden sm:flex flex-col whitespace-nowrap">
               <span className="text-xs font-bold leading-none">{loading ? 'Loading...' : user?.nama || 'Ahli'}</span>
-              <span className="text-[10px] opacity-80 font-medium">{loading ? '...' : user?.email || 'ahli@gmail.com'}</span>
+              <span className="text-[10px] opacity-80 font-medium truncate">{loading ? '...' : user?.email || 'ahli@gmail.com'}</span>
             </div>
           </div>
         </Link>

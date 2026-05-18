@@ -168,24 +168,24 @@ export default function ContainerRiwayat() {
     <div className={`flex-1 min-w-0 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
         {/* Header */}
-        <div className="flex justify-between items-start sm:items-center mb-6 sm:mb-8 gap-3">
-          <div className="mt-8 sm:mt-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">Riwayat Konsultasi</h1>
-            <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Lihat Riwayat Konsultasi</p>
+        <div className="flex justify-between items-center mb-6 sm:mb-8 gap-3 mt-10 sm:mt-0">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 break-words">Riwayat Konsultasi</h1>
+            <p className="text-slate-500 text-xs sm:text-sm mt-1">Lihat Riwayat Konsultasi</p>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
-            <div className="relative p-2 sm:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
-              <Bell size={18} className="text-slate-600" />
-              <div className="absolute top-2 right-2 sm:top-2.5 sm:right-2.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
+          <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 ml-2 sm:ml-4">
+            <div className="relative p-1.5 sm:p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
+              <Bell size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-slate-600" />
+              <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
             </div>
             <Link href="/ahli/profile">
-              <div className="flex items-center cursor-pointer gap-2 sm:gap-3 bg-primary text-white sm:pr-6 pr-3 pl-1.5 py-1.5 rounded-full shadow-lg">
-                <div className="bg-white p-1.5 sm:p-2 rounded-full text-primary flex-shrink-0">
-                  <User size={16} fill="currentColor" />
+              <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full text-primary flex-shrink-0">
+                  <User size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" fill="currentColor" />
                 </div>
-                <div className="hidden sm:flex flex-col">
+                <div className="hidden sm:flex flex-col whitespace-nowrap">
                   <span className="text-xs font-bold leading-none">{user?.nama || 'Ahli'}</span>
-                  <span className="text-[10px] opacity-80 font-medium">{user?.email || 'ahli@gmail.com'}</span>
+                  <span className="text-[10px] opacity-80 font-medium truncate">{user?.email || 'ahli@gmail.com'}</span>
                 </div>
               </div>
             </Link>
@@ -276,62 +276,65 @@ export default function ContainerRiwayat() {
 
         {/* Table Card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 w-full overflow-hidden">
-          <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
-            <h2 className="text-sm sm:text-[15px] font-semibold text-gray-800 tracking-wide">Riwayat Konsultasi Terbaru</h2>
+          <div className="px-3 sm:px-4 md:px-6 pt-3 sm:pt-4 md:pt-5 pb-2 sm:pb-3">
+            <h2 className="text-xs sm:text-sm md:text-[15px] font-semibold text-gray-800 tracking-wide">Riwayat Konsultasi Terbaru</h2>
           </div>
           <div className="h-[2px] w-full bg-blue-700" />
 
           {/* Desktop */}
           <div className="hidden sm:block">
-            <table className="w-full text-[13px] lg:text-[13.5px] table-fixed">
+            <table className="w-full text-xs sm:text-[12px] md:text-[13px] lg:text-[13.5px] table-fixed">
               <thead>
                 <tr>
-                  <th className="w-[32%] text-left text-gray-500 font-semibold px-4 lg:px-6 py-3.5 text-xs lg:text-sm">User</th>
-                  <th className="w-[35%] text-left text-gray-500 font-semibold px-3 lg:px-4 py-3.5 text-xs lg:text-sm">Email</th>
-                  <th className="w-[20%] text-left text-gray-500 font-semibold px-3 lg:px-4 py-3.5 text-xs lg:text-sm">Tanggal</th>
-                  <th className="w-[13%] text-center text-gray-500 font-semibold px-4 lg:px-6 py-3.5 text-xs lg:text-sm">Aksi</th>
+                  <th className="w-[32%] text-left text-gray-500 font-semibold px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5 text-[10px] sm:text-xs lg:text-sm">User</th>
+                  <th className="w-[35%] text-left text-gray-500 font-semibold px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-[10px] sm:text-xs lg:text-sm">Email</th>
+                  <th className="w-[20%] text-left text-gray-500 font-semibold px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-[10px] sm:text-xs lg:text-sm">Tanggal</th>
+                  <th className="w-[13%] text-center text-gray-500 font-semibold px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5 text-[10px] sm:text-xs lg:text-sm">Aksi</th>
                 </tr>
               </thead>
             </table>
 
             <div style={{ maxHeight: `${MAX_HEIGHT}px` }} className="overflow-y-auto">
-              <table className="w-full text-[13px] lg:text-[13.5px] table-fixed">
+              <table className="w-full text-xs sm:text-[12px] md:text-[13px] lg:text-[13.5px] table-fixed">
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={4} className="text-center py-12">
+                      <td colSpan={4} className="text-center py-8 sm:py-12">
                         <div className="flex justify-center items-center gap-2 text-gray-400">
                           <Loader2 size={18} className="animate-spin" />
-                          <span className="text-sm">Memuat data...</span>
+                          <span className="text-xs sm:text-sm">Memuat data...</span>
                         </div>
                       </td>
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="text-center py-12">
+                      <td colSpan={4} className="text-center py-8 sm:py-12">
                         <div className="flex flex-col items-center gap-2">
-                          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                            <Calendar size={20} className="text-gray-300" />
+                          <div className="w-10 sm:w-12 h-10 sm:h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                            <Calendar size={18} className="sm:w-5 sm:h-5 text-gray-300" />
                           </div>
-                          <p className="text-sm text-gray-400 font-medium">Tidak ada riwayat pada tanggal ini</p>
+                          <p className="text-xs sm:text-sm text-gray-400 font-medium">Tidak ada riwayat pada tanggal ini</p>
                         </div>
                       </td>
                     </tr>
                   ) : (
                     filtered.map((item) => (
                       <tr key={item.id} className="border-t border-gray-100 hover:bg-blue-50 transition-colors duration-150">
-                        <td className="w-[32%] px-4 lg:px-6 py-3.5">
-                          <div className="flex items-center gap-2 lg:gap-3">
-                            <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              <User size={14} className="text-gray-400" />
+                        <td className="w-[32%] px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5">
+                          <div className="flex items-center gap-2 md:gap-3">
+                            <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              <User size={12} className="sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-gray-400" />
                             </div>
-                            <span className="text-gray-800 font-medium truncate">{item.user_name}</span>
+                            <span className="text-xs sm:text-sm text-gray-800 font-medium truncate">{item.user_name}</span>
                           </div>
                         </td>
-                        <td className="w-[35%] px-3 lg:px-4 py-3.5 text-gray-500 text-xs truncate">{item.user_email}</td>
-                        <td className="w-[20%] px-3 lg:px-4 py-3.5 text-gray-500 text-xs lg:text-sm">{formatLabel(activeDate)}</td>
-                        <td className="w-[13%] px-4 lg:px-6 py-3.5 text-center">
-                          <button onClick={() => handleDetail(item.id)} className="px-3 lg:px-3.5 py-1.5 text-xs font-medium text-primary border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors active:scale-95">
+                        <td className="w-[35%] px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-gray-500 text-[10px] sm:text-xs truncate">{item.user_email}</td>
+                        <td className="w-[20%] px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-gray-500 text-[10px] sm:text-xs md:text-sm">{formatLabel(activeDate)}</td>
+                        <td className="w-[13%] px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5 text-center">
+                          <button
+                            onClick={() => handleDetail(item.id)}
+                            className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium text-primary border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors active:scale-95 whitespace-nowrap"
+                          >
                             detail
                           </button>
                         </td>
@@ -346,32 +349,32 @@ export default function ContainerRiwayat() {
           {/* Mobile */}
           <div className="sm:hidden">
             {loading ? (
-              <div className="flex justify-center items-center py-12 gap-2 text-gray-400">
-                <Loader2 size={18} className="animate-spin" />
-                <span className="text-sm">Memuat data...</span>
+              <div className="flex justify-center items-center py-8 gap-2 text-gray-400">
+                <Loader2 size={16} className="animate-spin" />
+                <span className="text-xs">Memuat data...</span>
               </div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center py-12 gap-2">
-                <Calendar size={24} className="text-gray-300" />
-                <p className="text-sm text-gray-400">Tidak ada riwayat pada tanggal ini</p>
+              <div className="flex flex-col items-center py-8 gap-2">
+                <Calendar size={20} className="text-gray-300" />
+                <p className="text-xs text-gray-400">Tidak ada riwayat pada tanggal ini</p>
               </div>
             ) : (
               <div style={{ maxHeight: `${MAX_HEIGHT + 60}px` }} className="overflow-y-auto divide-y divide-gray-100">
                 {filtered.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between px-4 py-3 hover:bg-blue-50 transition-colors">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <User size={16} className="text-gray-400" />
+                  <div key={item.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        <User size={14} className="text-gray-400" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-semibold text-gray-800 truncate">{item.user_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{item.user_email}</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">{formatLabelShort(activeDate)}</p>
+                        <p className="text-xs font-semibold text-gray-800 truncate">{item.user_name}</p>
+                        <p className="text-[10px] text-gray-500 truncate">{item.user_email}</p>
+                        <p className="text-[9px] text-gray-400 mt-0.5">{formatLabelShort(activeDate)}</p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleDetail(item.id)}
-                      className="ml-3 flex-shrink-0 px-3 py-1.5 text-xs font-medium text-primary border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors active:scale-95"
+                      className="ml-2 flex-shrink-0 px-2 py-1 text-[10px] font-medium text-primary border border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors active:scale-95 whitespace-nowrap"
                     >
                       detail
                     </button>
