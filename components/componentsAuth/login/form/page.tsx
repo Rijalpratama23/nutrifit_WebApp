@@ -2,20 +2,22 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader } from 'lucide-react';
 import Link from 'next/link';
 import { useLoginForm } from '../useFromLogin/page';
 import { supabase } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
+import { showErrorToast } from '@/components/customeToast/CustomeToast';
 
 export default function Form() {
   const [showPassword, setShowPassword] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const { formData, loading, errorMsg, handleChange, handleLogin, rememberMe, setRememberMe } = useLoginForm();
   const router = useRouter();
 
   // LOGIN LOGICAL OAUTH //
   const handleLoginGoogle = async () => {
+    setLoadingGoogle(true);
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -23,7 +25,8 @@ export default function Form() {
       },
     });
     if (error) {
-      toast.error(`login galgal ${error.message}`);
+      setLoadingGoogle(false);
+      showErrorToast({ title: 'Login Gagal', message: error.message });
       return;
     }
   };
@@ -87,13 +90,27 @@ export default function Form() {
           </div>
 
           {/* Tombol Login */}
-          <button type="submit" disabled={loading} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400 hover:bg-blue-500 cursor-pointer">
+          <button type="submit" disabled={loading || loadingGoogle} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400 hover:bg-blue-500 cursor-pointer">
             {loading ? 'Memproses...' : 'Login'}
           </button>
 
-          <button onClick={handleLoginGoogle} type="button" className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer">
-            <Image src="/authimg/google.png" alt="google" width={20} height={20} />
-            Masuk dengan google
+          <button
+            onClick={handleLoginGoogle}
+            type="button"
+            disabled={loadingGoogle || loading}
+            className="flex w-full gap-3 justify-center items-center border py-2 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer disabled:bg-gray-100 disabled:opacity-60"
+          >
+            {loadingGoogle ? (
+              <>
+                <Loader size={20} className="animate-spin" />
+                Memproses...
+              </>
+            ) : (
+              <>
+                <Image src="/authimg/google.png" alt="google" width={20} height={20} />
+                Masuk dengan google
+              </>
+            )}
           </button>
 
           <div className="text-center mt-4 text-sm">

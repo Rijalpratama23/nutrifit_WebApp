@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
 function getRedirectByRole(role: string): string {
   switch (role) {
@@ -28,6 +29,7 @@ export default function CallbackPage() {
 
       if (error || !session) {
         setStatus('Login gagal, mengalihkan...');
+        showErrorToast({ title: 'Login Gagal', message: 'Terjadi kesalahan saat login dengan OAuth.' });
         setTimeout(() => router.push('/login?error=auth-failed'), 1500);
         return;
       }
@@ -42,7 +44,14 @@ export default function CallbackPage() {
 
       const role = userData?.role ?? 'user';
       setStatus(`Login berhasil sebagai ${role}, mengalihkan...`);
-      router.push(getRedirectByRole(role));
+
+      // Tampilkan toast success seperti login manual
+      showSuccessToast({ title: 'Login Berhasil!', message: 'Selamat datang kembali 👋' });
+
+      // Delay sedikit untuk memberikan waktu toast ditampilkan
+      setTimeout(() => {
+        router.push(getRedirectByRole(role));
+      }, 500);
     };
 
     handleCallback();
