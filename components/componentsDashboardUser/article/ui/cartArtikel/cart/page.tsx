@@ -28,9 +28,7 @@ export default function Cart({ id, gambar, tanggalPublish, deskripsi }: CartProp
       <h3 className="font-semibold text-sm md:text-base line-clamp-2 text-text mb-3 md:mb-4">{deskripsi}</h3>
       <div className="mt-2">
         <Link href={`/user/artikel/${id}`}>
-          <button className="text-secondary hover:text-primary font-medium text-sm md:text-base cursor-pointer transition-all hover:underline">
-            Baca Selengkapnya
-          </button>
+          <button className="text-secondary hover:text-primary font-medium text-sm md:text-base cursor-pointer transition-all hover:underline">Baca Selengkapnya</button>
         </Link>
       </div>
     </div>
