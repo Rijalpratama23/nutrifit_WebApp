@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import Cart from './cart/page';
-import { Loader2 } from 'lucide-react';
+import { Loader2,FileSearch } from 'lucide-react';
 
 interface Artikel {
   id: string;
@@ -68,15 +68,16 @@ export default function CartArtikel({ kategori = 'Semua' }: Props) {
 
   if (articles.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-gray-400">
-        <p className="text-sm font-medium">Belum ada artikel tersedia.</p>
-        <p className="text-xs mt-1">Cek kembali nanti ya!</p>
+      <div className="flex flex-col items-center justify-center py-20 text-gray-300">
+        <FileSearch size={30} />
+        <p className="text-xl font-medium">Belum ada artikel tersedia.</p>
+        <p className="text-sm mt-1">Cek kembali nanti ya!</p>
       </div>
     );
   }
 
   return (
-    <div className="mx-4 md:mx-8 lg:mx-20 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-15 h-180 md:h-200 py-5 md:py-10 overflow-y-auto">
+    <div className="mx-4 md:mx-8 lg:mx-20 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 lg:gap-15 h-180 md:h-100 py-5 md:py-10 overflow-y-auto">
       {articles.map((article) => (
         <Cart key={article.id} id={article.id} gambar={article.image_url ?? '/artikelUser/buahSayur.png'} deskripsi={article.title} tanggalPublish={formatTanggal(article.created_at)} />
       ))}

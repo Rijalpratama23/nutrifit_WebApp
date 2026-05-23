@@ -17,7 +17,7 @@ export default function Cart({ id, gambar, tanggalPublish, deskripsi }: CartProp
           alt={deskripsi}
           width={280}
           height={160}
-          className="w-full h-40 md:h-30 object-cover"
+          className="w-full h-40 md:h-40 object-cover"
           onError={(e) => {
             // Fallback jika gambar gagal load
             (e.target as HTMLImageElement).src = '/artikelUser/buahSayur.png';
