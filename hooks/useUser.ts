@@ -5,7 +5,7 @@ import { supabase } from '@/utils/supabase/client';
 
 export type UserProfile = {
   id: string;
-  nama: string;
+  name: string;
   email: string;
   avatar_url: string | null;
 };
@@ -17,7 +17,7 @@ export function useUser() {
 
   const formatUser = (sessionUser: any): UserProfile => ({
     id: sessionUser.id,
-    nama: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'User',
+    name: sessionUser.user_metadata?.full_name || sessionUser.email?.split('@')[0] || 'User',
     email: sessionUser.email || '',
     avatar_url: sessionUser.user_metadata?.avatar_url || null, // ✅ ambil foto Google
   });
