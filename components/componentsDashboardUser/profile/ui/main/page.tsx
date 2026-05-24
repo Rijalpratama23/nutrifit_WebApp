@@ -1,6 +1,4 @@
-import { Ruler, Calendar, Weight, Target } from "lucide-react";
-
-
+import { Ruler, Calendar, Weight, Target } from 'lucide-react';
 
 export default function Main() {
   return (
