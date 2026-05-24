@@ -1,9 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Upload, Image as ImageIcon, Loader2, Bold, Italic, Underline, List, AlignLeft, Link, Calendar, User, ChevronDown } from 'lucide-react';
+import { X, Upload, Loader2, Bold, Italic, Underline, List, AlignLeft, Link, User, ChevronDown } from 'lucide-react';
 import { supabase } from '@/utils/supabase/client';
 import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import UnderlineExtension from '@tiptap/extension-underline';
+import LinkExtension from '@tiptap/extension-link';
+import TextAlign from '@tiptap/extension-text-align';
 
 interface ModalUploadArtikelProps {
   isOpen: boolean;
@@ -27,6 +32,21 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
   const [imagePreview, setImagePreview] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
+  // ── Tiptap Editor ─────────────────────────────────────────────
+  const editor = useEditor({
+    extensions: [StarterKit, UnderlineExtension, LinkExtension.configure({ openOnClick: false }), TextAlign.configure({ types: ['heading', 'paragraph'] })],
+    content: '',
+    onUpdate: ({ editor }) => {
+      // Sync konten editor ke form.content sebagai HTML
+      setForm((prev) => ({ ...prev, content: editor.getHTML() }));
+    },
+    editorProps: {
+      attributes: {
+        class: 'min-h-[150px] px-3 py-2 text-sm outline-none bg-white prose prose-sm max-w-none focus:outline-none',
+      },
+    },
+  });
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -46,14 +66,18 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
     setImagePreview(URL.createObjectURL(file));
   };
 
-  const wordCount = form.content.trim().split(/\s+/).filter(Boolean).length;
+  // Hitung word count dari plain text editor
+  const wordCount = editor?.getText().trim().split(/\s+/).filter(Boolean).length ?? 0;
 
   const handleSubmit = async (submitStatus: 'draft' | 'published') => {
+    const htmlContent = editor?.getHTML() ?? '';
+    const plainText = editor?.getText().trim() ?? '';
+
     if (!form.title.trim()) {
       showErrorToast({ title: 'Judul Kosong', message: 'Judul artikel wajib diisi.' });
       return;
     }
-    if (!form.content.trim()) {
+    if (!plainText) {
       showErrorToast({ title: 'Konten Kosong', message: 'Isi artikel wajib diisi.' });
       return;
     }
@@ -79,7 +103,7 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
 
       const { error: insertError } = await supabase.from('articles').insert({
         title: form.title.trim(),
-        content: form.content.trim(),
+        content: htmlContent, // ← simpan sebagai HTML dari Tiptap
         category: form.category,
         image_url: image_url || null,
         status: submitStatus,
@@ -93,9 +117,11 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
         message: submitStatus === 'published' ? 'Artikel berhasil dipublish.' : 'Artikel disimpan sebagai draft.',
       });
 
+      // Reset semua state + editor
       setForm({ title: '', summary: '', content: '', category: '', status: 'draft', scheduledAt: '', tags: '' });
       setImageFile(null);
       setImagePreview('');
+      editor?.commands.clearContent();
       onSuccess();
       onClose();
     } catch (error: any) {
@@ -110,6 +136,7 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
     setForm({ title: '', summary: '', content: '', category: '', status: 'draft', scheduledAt: '', tags: '' });
     setImageFile(null);
     setImagePreview('');
+    editor?.commands.clearContent(); // reset editor saat tutup modal
     onClose();
   };
 
@@ -195,45 +222,109 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
                 <p className="text-right text-[10px] text-gray-400 mt-0.5">{form.summary.length}/200</p>
               </div>
 
-              {/* Isi Artikel */}
+              {/* ── Isi Artikel dengan Tiptap ── */}
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
                   Isi Artikel <span className="text-red-500">*</span>
                 </label>
                 <div className="border border-gray-200 rounded-lg overflow-hidden focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
-                  {/* Toolbar */}
-                  <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-b border-gray-100">
+                  {/* Toolbar Tiptap — semua tombol terhubung ke editor */}
+                  <div className="flex items-center gap-1 px-3 py-2 bg-gray-50 border-b border-gray-100 flex-wrap">
+                    {/* Heading dropdown */}
                     <div className="relative">
-                      <select className="text-xs text-gray-600 bg-transparent outline-none cursor-pointer appearance-none pr-4 font-medium">
-                        <option>Paragraf</option>
-                        <option>Heading 1</option>
-                        <option>Heading 2</option>
-                        <option>Heading 3</option>
+                      <select
+                        className="text-xs text-gray-600 bg-transparent outline-none cursor-pointer appearance-none pr-4 font-medium"
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === 'paragraph') {
+                            editor?.chain().focus().setParagraph().run();
+                          } else {
+                            editor
+                              ?.chain()
+                              .focus()
+                              .toggleHeading({ level: Number(val) as 1 | 2 | 3 })
+                              .run();
+                          }
+                        }}
+                      >
+                        <option value="paragraph">Paragraf</option>
+                        <option value="1">Heading 1</option>
+                        <option value="2">Heading 2</option>
+                        <option value="3">Heading 3</option>
                       </select>
                       <ChevronDown size={10} className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                     </div>
+
                     <div className="w-px h-4 bg-gray-200 mx-1" />
-                    {[
-                      { icon: <Bold size={13} />, title: 'Bold' },
-                      { icon: <Italic size={13} />, title: 'Italic' },
-                      { icon: <Underline size={13} />, title: 'Underline' },
-                    ].map((btn) => (
-                      <button key={btn.title} type="button" title={btn.title} className="p-1.5 hover:bg-gray-200 rounded text-gray-500 transition-colors">
-                        {btn.icon}
-                      </button>
-                    ))}
+
+                    {/* Bold */}
+                    <button
+                      type="button"
+                      title="Bold"
+                      onClick={() => editor?.chain().focus().toggleBold().run()}
+                      className={`p-1.5 rounded transition-colors ${editor?.isActive('bold') ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'}`}
+                    >
+                      <Bold size={13} />
+                    </button>
+
+                    {/* Italic */}
+                    <button
+                      type="button"
+                      title="Italic"
+                      onClick={() => editor?.chain().focus().toggleItalic().run()}
+                      className={`p-1.5 rounded transition-colors ${editor?.isActive('italic') ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'}`}
+                    >
+                      <Italic size={13} />
+                    </button>
+
+                    {/* Underline */}
+                    <button
+                      type="button"
+                      title="Underline"
+                      onClick={() => editor?.chain().focus().toggleUnderline().run()}
+                      className={`p-1.5 rounded transition-colors ${editor?.isActive('underline') ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'}`}
+                    >
+                      <Underline size={13} />
+                    </button>
+
                     <div className="w-px h-4 bg-gray-200 mx-1" />
-                    {[
-                      { icon: <List size={13} />, title: 'List' },
-                      { icon: <AlignLeft size={13} />, title: 'Align' },
-                      { icon: <Link size={13} />, title: 'Link' },
-                    ].map((btn) => (
-                      <button key={btn.title} type="button" title={btn.title} className="p-1.5 hover:bg-gray-200 rounded text-gray-500 transition-colors">
-                        {btn.icon}
-                      </button>
-                    ))}
+
+                    {/* Bullet List */}
+                    <button
+                      type="button"
+                      title="Bullet List"
+                      onClick={() => editor?.chain().focus().toggleBulletList().run()}
+                      className={`p-1.5 rounded transition-colors ${editor?.isActive('bulletList') ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'}`}
+                    >
+                      <List size={13} />
+                    </button>
+
+                    {/* Align Left */}
+                    <button
+                      type="button"
+                      title="Align Left"
+                      onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+                      className={`p-1.5 rounded transition-colors ${editor?.isActive({ textAlign: 'left' }) ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'}`}
+                    >
+                      <AlignLeft size={13} />
+                    </button>
+
+                    {/* Link */}
+                    <button
+                      type="button"
+                      title="Insert Link"
+                      onClick={() => {
+                        const url = prompt('Masukkan URL:');
+                        if (url) editor?.chain().focus().setLink({ href: url }).run();
+                      }}
+                      className={`p-1.5 rounded transition-colors ${editor?.isActive('link') ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-200 text-gray-500'}`}
+                    >
+                      <Link size={13} />
+                    </button>
                   </div>
-                  <textarea name="content" placeholder="Tulis isi artikel di sini..." value={form.content} onChange={handleChange} rows={6} className="w-full px-3 py-2 text-sm outline-none resize-none bg-white" />
+
+                  {/* Editor area — menggantikan textarea */}
+                  <EditorContent editor={editor} />
                 </div>
                 <p className="text-[10px] text-gray-400 mt-0.5">{wordCount} Kata</p>
               </div>
@@ -260,14 +351,12 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
                 <label className="block text-xs font-semibold text-gray-700 mb-2">Thumbnail</label>
                 <div className="border-2 border-dashed border-gray-200 rounded-xl p-3 relative">
                   <div className="flex items-start gap-2">
-                    {/* Upload area */}
                     <label className="flex flex-col items-center justify-center w-20 h-20 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors flex-shrink-0 group">
                       <Upload size={18} className="text-blue-400 mb-1" />
                       <p className="text-[9px] text-blue-400 font-medium text-center leading-tight">Upload Gambar</p>
                       <p className="text-[8px] text-gray-400 text-center">JPG, PNG (Max. 2MB)</p>
                       <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
-                    {/* Preview */}
                     {imagePreview && (
                       <div className="relative flex-1">
                         <img src={imagePreview} alt="preview" className="w-full h-20 object-cover rounded-lg" />
@@ -306,9 +395,8 @@ export default function ModalUploadArtikel({ isOpen, onClose, onSuccess }: Modal
                     </label>
                   ))}
                 </div>
-
                 {form.status === 'scheduled' && (
-                  <div className="mt-2 relative">
+                  <div className="mt-2">
                     <input
                       type="datetime-local"
                       name="scheduledAt"
