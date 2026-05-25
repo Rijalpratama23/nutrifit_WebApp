@@ -92,25 +92,29 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
     try {
       let photoUrl: string | null = null;
 
-      // Upload foto jika ada file baru
+      // Upload foto — jika gagal, lanjut simpan data lain
       if (photoFile) {
-        const ext = photoFile.name.split('.').pop();
-        const fileName = `user-${userId}-${Date.now()}.${ext}`;
+        try {
+          const ext = photoFile.name.split('.').pop();
+          const fileName = `user-${userId}-${Date.now()}.${ext}`;
+          const { data: uploadData, error: uploadErr } = await supabase.storage.from('user-photos').upload(fileName, photoFile, { upsert: true });
 
-        const { data: uploadData, error: uploadErr } = await supabase.storage.from('user-photos').upload(fileName, photoFile, { upsert: true });
-
-        if (uploadErr) throw new Error('Gagal upload foto: ' + uploadErr.message);
-
-        const { data: urlData } = supabase.storage.from('user-photos').getPublicUrl(uploadData.path);
-
-        photoUrl = urlData.publicUrl;
+          if (!uploadErr && uploadData) {
+            const { data: urlData } = supabase.storage.from('user-photos').getPublicUrl(uploadData.path);
+            photoUrl = urlData.publicUrl;
+          } else {
+            showErrorToast({ title: 'Foto Gagal', message: 'Foto tidak tersimpan, data lain tetap disimpan.' });
+          }
+        } catch {
+          showErrorToast({ title: 'Foto Gagal', message: 'Foto tidak tersimpan, data lain tetap disimpan.' });
+        }
       }
 
-      // Update nama di tabel users
+      // Update nama
       const { error: userErr } = await supabase.from('users').update({ full_name: form.fullName.trim(), updated_at: new Date().toISOString() }).eq('id', userId);
       if (userErr) throw new Error(userErr.message);
 
-      // Upsert ke user_profiles
+      // Upsert profile
       const upsertData: any = {
         user_id: userId,
         height_cm: form.height ? parseInt(form.height) : null,
