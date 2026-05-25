@@ -13,8 +13,10 @@ export default function AppBar() {
   const pathname = usePathname();
 
   const toggleMenu = () => setIsOpen(!isOpen);
-
   const isActive = (href: string) => pathname === href;
+
+  // ── Ambil nama dari hook (sudah sinkron dengan tabel users) ──
+  const displayName = loading ? 'Loading...' : (user?.nama || 'User');
 
   return (
     <>
@@ -23,7 +25,7 @@ export default function AppBar() {
           <Image src="/Logo.png" alt="logo" width={150} height={50} />
         </div>
 
-        {/* Tombol Hamburger/X - Mobile Only */}
+        {/* Hamburger Mobile */}
         <div className="md:hidden flex items-center z-[1002]">
           <button onClick={toggleMenu} className="text-gray-700 focus:outline-none transition-colors hover-text-primary">
             {isOpen ? <X size={30} /> : <Menu size={30} />}
@@ -33,31 +35,19 @@ export default function AppBar() {
         {/* Navigasi Desktop */}
         <nav className="hidden md:flex">
           <ul className="flex justify-between md:gap-10">
-            <li className={`font-semibold md:font-bold ${isActive('/user/dashboardUser') ? 'text-primary' : 'text-gray-700'}`}>
-              <Link href="/user/dashboardUser" className="cursor-pointer hover:text-primary transition-all duration-300 block">
-                Dashboard
-              </Link>
-            </li>
-            <li className={`font-semibold md:font-bold ${isActive('/user/konsultasi') ? 'text-primary' : 'text-gray-700'}`}>
-              <Link href="/user/konsultasi" className="cursor-pointer hover:text-primary transition-all duration-300 block">
-                Konsultasi
-              </Link>
-            </li>
-            <li className={`font-semibold md:font-bold ${isActive('/user/program') ? 'text-primary' : 'text-gray-700'}`}>
-              <Link href="/user/program" className="cursor-pointer hover:text-primary transition-all duration-300 block">
-                Program
-              </Link>
-            </li>
-            <li className={`font-semibold md:font-bold ${isActive('/user/rencanaNutrisi') ? 'text-primary' : 'text-gray-700'}`}>
-              <Link href="/user/rencanaNutrisi" className="cursor-pointer hover:text-primary transition-all duration-300 block">
-                Rencana Nutrisi
-              </Link>
-            </li>
-            <li className={`font-semibold md:font-bold ${isActive('/user/artikel-user') ? 'text-primary' : 'text-gray-700'}`}>
-              <Link href="/user/artikel-user" className="cursor-pointer hover:text-primary transition-all duration-300 block">
-                Artikel & Edukasi
-              </Link>
-            </li>
+            {[
+              { href: '/user/dashboardUser', label: 'Dashboard' },
+              { href: '/user/konsultasi', label: 'Konsultasi' },
+              { href: '/user/program', label: 'Program' },
+              { href: '/user/rencanaNutrisi', label: 'Rencana Nutrisi' },
+              { href: '/user/artikel-user', label: 'Artikel & Edukasi' },
+            ].map((item) => (
+              <li key={item.href} className={`font-semibold md:font-bold ${isActive(item.href) ? 'text-primary' : 'text-gray-700'}`}>
+                <Link href={item.href} className="cursor-pointer hover:text-primary transition-all duration-300 block">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
         </nav>
 
@@ -71,16 +61,21 @@ export default function AppBar() {
               <div className="bg-white rounded-full p-1.5 text-primary">
                 <UserRound size={18} strokeWidth={2.5} />
               </div>
-              <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
+              {/* ← Ganti user?.name menjadi user?.nama */}
+              <p className="text-white font-semibold text-sm">{displayName}</p>
               <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
             </div>
           </Link>
         </div>
       </header>
 
-      {/* --- MOBILE SIDEBAR & OVERLAY --- */}
-      <div className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={() => setIsOpen(false)} />
+      {/* Mobile Overlay */}
+      <div
+        className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
+        onClick={() => setIsOpen(false)}
+      />
 
+      {/* Mobile Sidebar */}
       <div className={`fixed top-0 left-0 bottom-0 w-[75%] bg-white z-[1001] shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex flex-col h-full">
           <div className="mb-10 pt-2">
@@ -89,34 +84,21 @@ export default function AppBar() {
 
           <nav className="flex flex-col gap-8 flex-1">
             <ul className="flex flex-col gap-6">
-              <li className={`font-medium ${isActive('/user/dashboardUser') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
-                <Link href="/user/dashboardUser" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
-                  Beranda
-                </Link>
-              </li>
-              <li className={`font-medium ${isActive('/user/konsultasi') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
-                <Link href="/user/konsultasi" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
-                  Konsultasi
-                </Link>
-              </li>
-              <li className={`font-medium ${isActive('/user/program') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
-                <Link href="/user/program" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
-                  Program
-                </Link>
-              </li>
-              <li className={`font-medium ${isActive('/user/rencanaNutrisi') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
-                <Link href="/user/rencanaNutrisi" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
-                  Rencana Nutrisi
-                </Link>
-              </li>
-              <li className={`font-medium ${isActive('/user/artikel-user') ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
-                <Link href="/user/artikel-user" className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
-                  Artikel Kesehatan
-                </Link>
-              </li>
+              {[
+                { href: '/user/dashboardUser', label: 'Beranda' },
+                { href: '/user/konsultasi', label: 'Konsultasi' },
+                { href: '/user/program', label: 'Program' },
+                { href: '/user/rencanaNutrisi', label: 'Rencana Nutrisi' },
+                { href: '/user/artikel-user', label: 'Artikel Kesehatan' },
+              ].map((item) => (
+                <li key={item.href} className={`font-medium ${isActive(item.href) ? 'text-primary' : 'text-gray-700'}`} onClick={() => setIsOpen(false)}>
+                  <Link href={item.href} className="cursor-pointer hover:text-primary transition-all duration-300 block w-full">
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
 
-            {/* Bagian Profil Mobile */}
             <div className="mt-4 pt-8 border-t border-gray-100 flex flex-col gap-6">
               <div className="flex items-center gap-4 text-gray-600 hover-text-primary transition-colors cursor-pointer group" onClick={() => setIsOpen(false)}>
                 <Bell size={22} className="group-hover:hover-text-primary" />
@@ -129,7 +111,8 @@ export default function AppBar() {
                     <div className="bg-white rounded-full p-1.5 text-primary">
                       <UserRound size={18} strokeWidth={2.5} />
                     </div>
-                    <p className="text-white font-semibold text-sm">{loading ? 'Loading...' : user?.name || 'User'}</p>
+                    {/* ← Ganti user?.name menjadi user?.nama */}
+                    <p className="text-white font-semibold text-sm">{displayName}</p>
                   </div>
                   <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={22} />
                 </div>

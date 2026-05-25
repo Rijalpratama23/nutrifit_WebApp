@@ -32,7 +32,7 @@ export default function ConfirmationLogoutModal({
 
     return(
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[9999]">
-            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm mx-4 animate-in fade-in zoom-in-95 duration-200 ">
+            <div className="bg-blue-50 rounded-lg shadow-lg p-6 w-full max-w-sm mx-4 animate-in fade-in zoom-in-95 duration-200 ">
                 <h2 className="text-lg font-semibold text-gray-800 mb-2 text-center">{title}</h2>
                 <p className="text-gray-600 mb-6 text-center">{message}</p>
 
