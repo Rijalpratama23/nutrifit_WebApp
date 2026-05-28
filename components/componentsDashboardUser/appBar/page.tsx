@@ -3,20 +3,59 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Bell, CircleArrowLeft, UserRound, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useUser } from '@/hooks/useUser';
+import { supabase } from '@/utils/supabase/client';
 
 export default function AppBar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, loading } = useUser();
   const pathname = usePathname();
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const isActive = (href: string) => pathname === href;
 
   // ── Ambil nama dari hook (sudah sinkron dengan tabel users) ──
-  const displayName = loading ? 'Loading...' : (user?.nama || 'User');
+  const displayName = loading ? 'Loading...' : user?.nama || 'User';
+
+  // ── Fetch photo profile dari database ──
+  useEffect(() => {
+    setIsMounted(true);
+    const fetchPhotoUrl = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
+      const uid = session.user.id;
+      const { data: profile } = await supabase.from('user_profiles').select('photo_url').eq('user_id', uid).single();
+
+      setPhotoUrl(profile?.photo_url || null);
+    };
+
+    fetchPhotoUrl();
+  }, []);
+
+  // ── Setup realtime subscription untuk sync otomatis ──
+  useEffect(() => {
+    if (!isMounted || !user?.id) return;
+
+    const subscription = supabase
+      .channel(`public:user_profiles:user_id=eq.${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles', filter: `user_id=eq.${user.id}` }, (payload) => {
+        if (payload.new?.photo_url) {
+          setPhotoUrl(payload.new.photo_url);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isMounted, user?.id]);
 
   return (
     <>
@@ -58,10 +97,9 @@ export default function AppBar() {
           </Link>
           <Link href="/user/profile">
             <div className="flex items-center gap-3 bg-primary py-1.5 pl-2 pr-2 rounded-full shadow-md hover:brightness-110 transition-all cursor-pointer">
-              <div className="bg-white rounded-full p-1.5 text-primary">
-                <UserRound size={18} strokeWidth={2.5} />
+              <div className="bg-white rounded-full p-1 text-primary overflow-hidden w-10 h-10 flex items-center justify-center">
+                {photoUrl ? <img src={photoUrl} alt="profile" className="w-full h-full object-cover rounded-full" /> : <UserRound size={18} strokeWidth={2.5} />}
               </div>
-              {/* ← Ganti user?.name menjadi user?.nama */}
               <p className="text-white font-semibold text-sm">{displayName}</p>
               <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
             </div>
@@ -70,10 +108,7 @@ export default function AppBar() {
       </header>
 
       {/* Mobile Overlay */}
-      <div
-        className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`}
-        onClick={() => setIsOpen(false)}
-      />
+      <div className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={() => setIsOpen(false)} />
 
       {/* Mobile Sidebar */}
       <div className={`fixed top-0 left-0 bottom-0 w-[75%] bg-white z-[1001] shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
@@ -108,10 +143,9 @@ export default function AppBar() {
               <Link href="/user/profile" onClick={() => setIsOpen(false)} className="cursor-pointer">
                 <div className="flex items-center justify-between bg-primary p-2 rounded-2xl w-full pr-4 shadow-sm hover:brightness-110 transition-all">
                   <div className="flex items-center gap-3">
-                    <div className="bg-white rounded-full p-1.5 text-primary">
-                      <UserRound size={18} strokeWidth={2.5} />
+                    <div className="bg-white rounded-full p-1 text-primary overflow-hidden w-10 h-10 flex items-center justify-center">
+                      {photoUrl ? <img src={photoUrl} alt="profile" className="w-full h-full object-cover rounded-full" /> : <UserRound size={18} strokeWidth={2.5} />}
                     </div>
-                    {/* ← Ganti user?.name menjadi user?.nama */}
                     <p className="text-white font-semibold text-sm">{displayName}</p>
                   </div>
                   <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={22} />

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, Camera, Save, Loader2 } from 'lucide-react';
 import { supabase } from '@/utils/supabase/client';
+import Image from 'next/image';
 import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
 interface EditIdentityModalProps {
@@ -180,15 +181,9 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-green-500 rounded-full flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                <polyline points="22 4 12 14.01 9 11.01" />
-              </svg>
-            </div>
-            <h2 className="text-sm font-black text-gray-800 tracking-widest uppercase">Edit Identity</h2>
+            <Image src="/Logo.png" alt='picture' height={150} width={150}  />
           </div>
-          <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500">
+          <button onClick={handleClose} className="p-1.5 cursor-pointer hover:bg-gray-100 rounded-full transition-colors text-gray-500">
             <X size={18} />
           </button>
         </div>
@@ -203,18 +198,14 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
               <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-full">
                 <Camera size={20} className="text-white" />
               </div>
-              {/* Camera badge */}
-              <div className="absolute bottom-0 right-0 w-7 h-7 bg-white border-2 border-green-400 rounded-full flex items-center justify-center shadow-sm">
-                <Camera size={12} className="text-green-600" />
-              </div>
             </div>
-            <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Tap to update visual id</p>
+            <p className="text-[10px] font-bold text-gray-400 tracking-widest uppercase">Klik untuk edit poto</p>
             <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
           </div>
 
           {/* Full Name */}
           <div>
-            <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Full Name</label>
+            <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Nama Lengkap</label>
             <input
               type="text"
               value={form.fullName}
@@ -227,7 +218,7 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
           {/* Age & Email */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Age</label>
+              <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Usia</label>
               <input
                 type="number"
                 value={form.age}
@@ -247,7 +238,7 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
           {/* Height & Weight */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Height (CM)</label>
+              <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Tinggi Badan (CM)</label>
               <div className="relative">
                 <input
                   type="number"
@@ -262,7 +253,7 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
               </div>
             </div>
             <div>
-              <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Weight (KG)</label>
+              <label className="text-[10px] font-bold text-gray-500 tracking-widest uppercase block mb-1.5">Berat Badan (KG)</label>
               <div className="relative">
                 <input
                   type="number"
@@ -280,13 +271,13 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
 
           {/* Buttons */}
           <div className="flex gap-3 pt-1">
-            <button onClick={handleClose} disabled={loading} className="flex-1 py-3 text-sm font-bold text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest disabled:opacity-50">
+            <button onClick={handleClose} disabled={loading} className="flex-1 cursor-pointer py-3 text-sm font-bold text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest disabled:opacity-50">
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={loading}
-              className="flex-1 py-3 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-green-200"
+              className="flex-1 cursor-pointer py-3 text-sm font-bold text-white bg-secondary hover:bg-green-100 rounded-xl transition-colors flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-green-200"
             >
               {loading ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
               Save Data
