@@ -86,50 +86,78 @@ export default function EditIdentityModal({ isOpen, onClose, onSaved }: EditIden
       showErrorToast({ title: 'Gagal', message: 'Nama lengkap tidak boleh kosong.' });
       return;
     }
-    if (!userId) return;
+    if (!userId) {
+      console.log('❌ userId null!');
+      return;
+    }
 
     setLoading(true);
     try {
-      let photoUrl: string | null = null;
-
-      // Upload foto — jika gagal, lanjut simpan data lain
-      if (photoFile) {
-        try {
-          const ext = photoFile.name.split('.').pop();
-          const fileName = `user-${userId}-${Date.now()}.${ext}`;
-          const { data: uploadData, error: uploadErr } = await supabase.storage.from('user-photos').upload(fileName, photoFile, { upsert: true });
-
-          if (!uploadErr && uploadData) {
-            const { data: urlData } = supabase.storage.from('user-photos').getPublicUrl(uploadData.path);
-            photoUrl = urlData.publicUrl;
-          } else {
-            showErrorToast({ title: 'Foto Gagal', message: 'Foto tidak tersimpan, data lain tetap disimpan.' });
-          }
-        } catch {
-          showErrorToast({ title: 'Foto Gagal', message: 'Foto tidak tersimpan, data lain tetap disimpan.' });
-        }
-      }
+      console.log('▶ userId:', userId);
+      console.log('▶ form:', form);
 
       // Update nama
       const { error: userErr } = await supabase.from('users').update({ full_name: form.fullName.trim(), updated_at: new Date().toISOString() }).eq('id', userId);
-      if (userErr) throw new Error(userErr.message);
 
-      // Upsert profile
+      console.log('▶ update users error:', userErr);
+      if (userErr) throw new Error('Update nama gagal: ' + userErr.message);
+
+      // Upload foto jika ada file baru
+      let photoUrl: string | null = null;
+      if (photoFile) {
+        console.log('▶ uploading photo file:', photoFile.name);
+
+        // Hapus file lama jika ada
+        const { data: oldProfile } = await supabase.from('user_profiles').select('photo_url').eq('user_id', userId).single();
+
+        if (oldProfile?.photo_url) {
+          const oldPath = oldProfile.photo_url.split('/').pop();
+          if (oldPath) {
+            await supabase.storage.from('user-photo').remove([`${userId}/${oldPath}`]);
+          }
+        }
+
+        // Upload foto baru
+        const fileExt = photoFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${userId}/${fileName}`;
+
+        const { error: uploadErr, data } = await supabase.storage.from('user-photo').upload(filePath, photoFile, { upsert: true });
+
+        console.log('▶ upload error:', uploadErr);
+        if (uploadErr) throw new Error('Upload foto gagal: ' + uploadErr.message);
+
+        // Dapatkan public URL
+        const { data: publicUrlData } = supabase.storage.from('user-photo').getPublicUrl(filePath);
+
+        photoUrl = publicUrlData?.publicUrl || null;
+        console.log('▶ photoUrl:', photoUrl);
+      }
+
+      // Upsert profile (dengan photo_url jika ada)
       const upsertData: any = {
         user_id: userId,
         height_cm: form.height ? parseInt(form.height) : null,
         weight_kg: form.weight ? parseInt(form.weight) : null,
         age: form.age ? parseInt(form.age) : null,
       };
-      if (photoUrl) upsertData.photo_url = photoUrl;
+
+      if (photoUrl) {
+        upsertData.photo_url = photoUrl;
+      }
+
+      console.log('▶ upsert data:', upsertData);
 
       const { error: profileErr } = await supabase.from('user_profiles').upsert(upsertData, { onConflict: 'user_id' });
-      if (profileErr) throw new Error(profileErr.message);
 
-      showSuccessToast({ title: 'Profil Diperbarui!', message: 'Data identitas berhasil disimpan.' });
-      onSaved();
+      console.log('▶ upsert profile error:', profileErr);
+      if (profileErr) throw new Error('Upsert profil gagal: ' + profileErr.message);
+
+      showSuccessToast({ title: 'Profil Diperbarui!', message: 'Data berhasil disimpan.' });
+      onSaved(); // ← ini trigger fetchProfile di parent
       onClose();
     } catch (err: any) {
+      console.log('❌ CATCH ERROR:', err);
       showErrorToast({ title: 'Gagal Menyimpan', message: err.message });
     } finally {
       setLoading(false);
