@@ -1,6 +1,45 @@
-import { Target, PencilLine, PersonStanding, Weight, Vegan } from "lucide-react";
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { Target, PencilLine, PersonStanding, Weight, Vegan } from 'lucide-react';
+import { supabase } from '@/utils/supabase/client';
+import EditTargetModal from '../editModalTarget/page';
+
+interface TargetData {
+  target_fitness: string;
+  target_weight_kg: number | null;
+  diet_type: string;
+}
 
 export default function TargetPage() {
+  const [targetData, setTargetData] = useState<TargetData>({
+    target_fitness: '-',
+    target_weight_kg: null,
+    diet_type: '-',
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const fetchTarget = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) return;
+
+    const { data } = await supabase.from('user_profiles').select('target_fitness, target_weight_kg, diet_type').eq('user_id', session.user.id).single();
+
+    if (data) {
+      setTargetData({
+        target_fitness: data.target_fitness ?? '-',
+        target_weight_kg: data.target_weight_kg ?? null,
+        diet_type: data.diet_type ?? '-',
+      });
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTarget();
+  }, [fetchTarget]);
+
   return (
     <>
       <div className="mt-8 sm:mt-10 md:mt-12 rounded-lg sm:rounded-xl shadow-md sm:shadow-lg p-4 sm:p-6 md:p-8 bg-white hover:shadow-xl transition-shadow w-full">
@@ -9,7 +48,7 @@ export default function TargetPage() {
             <Target size={32} className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-red-600 flex-shrink-0" />
             <h3 className="font-bold text-base sm:text-lg md:text-xl">TARGET</h3>
           </div>
-          <button className="p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={() => setIsModalOpen(true)} className="p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <PencilLine size={20} className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
@@ -20,27 +59,31 @@ export default function TargetPage() {
             <PersonStanding size={32} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 font-bold text-primary flex-shrink-0" />
             <div className="min-w-0">
               <h1 className="text-xs sm:text-sm font-semibold text-gray-700 truncate">TARGET KEBUGARAN</h1>
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-600 line-clamp-2">Menambah masa otot</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-600 line-clamp-2">{targetData.target_fitness}</p>
             </div>
           </div>
+
           {/* Target Berat Badan */}
           <div className="flex gap-3 sm:gap-4 items-start sm:items-center p-3 sm:p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
             <Weight size={32} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 font-bold text-secondary flex-shrink-0" />
             <div className="min-w-0">
               <h1 className="text-xs sm:text-sm font-semibold text-gray-700 truncate">TARGET BERAT BADAN</h1>
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-600 line-clamp-2">Menambah masa otot</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-600 line-clamp-2">{targetData.target_weight_kg ? `${targetData.target_weight_kg} KG` : '-'}</p>
             </div>
           </div>
+
           {/* Konsumsi Makan */}
           <div className="flex gap-3 sm:gap-4 items-start sm:items-center p-3 sm:p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors sm:col-span-2 lg:col-span-1">
             <Vegan size={32} className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 font-bold text-primary flex-shrink-0" />
             <div className="min-w-0">
               <h1 className="text-xs sm:text-sm font-semibold text-gray-700 truncate">KONSUMSI MAKAN</h1>
-              <p className="text-[10px] sm:text-xs font-semibold text-gray-600 line-clamp-2">Vegetarian</p>
+              <p className="text-[10px] sm:text-xs font-semibold text-gray-600 line-clamp-2">{targetData.diet_type}</p>
             </div>
           </div>
         </div>
       </div>
+
+      <EditTargetModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSaved={fetchTarget} />
     </>
   );
 }

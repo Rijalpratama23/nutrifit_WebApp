@@ -2,7 +2,7 @@
 
 import { Settings } from 'lucide-react';
 import { useState } from 'react';
-import EditIdentityModal from '../editModal/page';
+import EditIdentityModal from '../editModalSideCart/page';
 
 interface BtnSetProps {
   onSaved: () => void; // ← terima callback dari parent
