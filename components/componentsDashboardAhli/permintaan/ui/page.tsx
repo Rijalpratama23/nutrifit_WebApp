@@ -46,17 +46,26 @@ export default function ContainerPermintaan() {
       return;
     }
 
+    // Step 1: ambil ahli_profiles.id berdasarkan auth user_id
+    const { data: ahliProfile } = await supabase.from('ahli_profiles').select('id').eq('user_id', session.user.id).eq('is_verified', true).maybeSingle();
+
+    if (!ahliProfile) {
+      setLoading(false);
+      return;
+    }
+
+    // Step 2: query consultations pakai ahli_profiles.id
     const { data: konsultasi, error } = await supabase
       .from('consultations')
       .select(
         `
-        id,
-        created_at,
-        scheduled_at,
-        users!consultations_user_id_fkey(full_name, email)
-      `,
+      id,
+      created_at,
+      scheduled_at,
+      users!consultations_user_id_fkey(full_name, email)
+    `,
       )
-      .eq('ahli_id', session.user.id)
+      .eq('ahli_id', ahliProfile.id) // ✅ pakai ahli_profiles.id
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 

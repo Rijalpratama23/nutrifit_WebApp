@@ -47,11 +47,11 @@ export default function CardKonsul({ consultation, onRefresh }: CardKonsulProps)
   const router = useRouter();
 
   const handleChat = () => {
-    router.push(`/konsultasi/chat/${consultation.id}`);
+    router.push(`/user/konsultasi/chat/${consultation.id}`);
   };
 
-  const showChat = consultation.status === 'active';
-  const showSchedule = consultation.status === 'scheduled' || consultation.status === 'pending';
+  const showChat = consultation.status === 'confirmed' || consultation.status === 'ongoing';
+  const showSchedule = consultation.status === 'pending';
 
   return (
     <div className="flex flex-col sm:flex-row sm:justify-between gap-4 sm:gap-6 bg-white shadow-lg hover:shadow-xl transition-shadow duration-200 p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl">
