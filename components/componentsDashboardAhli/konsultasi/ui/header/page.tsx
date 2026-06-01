@@ -24,8 +24,8 @@ export default function Header() {
         {/* Profile pill — ikon only on mobile, full on sm+ */}
         <Link href="/ahli/profile">
           <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full text-primary flex-shrink-0">
-              <User size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" fill="currentColor" />
+            <div className="w-7 h-7 sm:w-8 rounded-full overflow-hidden bg-white flex-shrink-0 flex items-center justify-center">
+              {!loading && user?.avatar_url ? <img src={user.avatar_url} alt={user.nama} className="w-full h-full object-cover" /> : <User size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" fill="currentColor" />}
             </div>
             <div className="hidden sm:flex flex-col whitespace-nowrap">
               <span className="text-xs font-bold leading-none">{loading ? 'Loading...' : user?.nama || 'Ahli'}</span>

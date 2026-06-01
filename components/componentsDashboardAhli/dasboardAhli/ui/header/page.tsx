@@ -15,17 +15,20 @@ export default function HeaderKomponents() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 ml-2 sm:ml-4">
+        {/* Notifikasi */}
         <div className="relative p-1.5 sm:p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
           <Bell size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-slate-600" />
-          <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white"></div>
+          <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
         </div>
 
-        {/* link ke hal profile */}
+        {/* Link ke profile */}
         <Link href="/ahli/profile">
           <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
-            <div className="bg-white p-1 sm:p-1.5 md:p-2 rounded-full text-primary flex-shrink-0">
-              <User size={14} className="sm:w-4 sm:h-4 md:w-[18px] md:h-[18px]" fill="currentColor" />
+            {/* Avatar — foto jika ada, icon jika tidak */}
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-white flex-shrink-0 flex items-center justify-center">
+              {!loading && user?.avatar_url ? <img src={user.avatar_url} alt={user.nama} className="w-full h-full object-cover" /> : <User size={14} className="sm:w-4 sm:h-4 text-primary" fill="currentColor" />}
             </div>
+
             <div className="hidden sm:flex flex-col whitespace-nowrap">
               <span className="text-xs font-bold leading-none">{loading ? 'Loading...' : user?.nama || 'Ahli'}</span>
               <span className="text-[10px] opacity-80 font-medium truncate">{loading ? '...' : user?.email || 'ahli@gmail.com'}</span>

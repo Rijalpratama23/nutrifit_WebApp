@@ -561,7 +561,7 @@ export default function ContainerProfile() {
 
       setUserId(user.id);
 
-      const [{ data: userData }, { data: profileData }] = await Promise.all([supabase.from('users').select('full_name, email').eq('id', user.id).single(), supabase.from('ahli_profiles').select('*').eq('user_id', user.id).single()]);
+      const [{ data: userData }, { data: profileData }] = await Promise.all([supabase.from('users').select('full_name, email').eq('id', user.id).single(), supabase.from('ahli_profiles').select('*').eq('user_id', user.id).maybeSingle()]);
 
       setUserName(userData?.full_name ?? user.email ?? 'Ahli');
       setUserEmail(userData?.email ?? user.email ?? '');

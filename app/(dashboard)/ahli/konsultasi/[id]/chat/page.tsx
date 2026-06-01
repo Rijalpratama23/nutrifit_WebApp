@@ -63,27 +63,38 @@ export default function ChatPageAhli() {
     }
     setCurrentUserId(session.user.id);
 
+    // Ambil info konsultasi + data user
     const { data: consult } = await supabase
       .from('consultations')
       .select(
         `
         status,
-        users!consultations_user_id_fkey ( full_name, email )
+        users!consultations_user_id_fkey (
+          id,
+          full_name,
+          email
+        )
       `,
       )
       .eq('id', consultationId)
       .single();
 
     if (consult) {
+      const userId = (consult as any).users?.id;
+
+      // Ambil foto user dari user_profiles
+      const { data: userProfile } = await supabase.from('user_profiles').select('photo_url').eq('user_id', userId).maybeSingle();
+
       setConsultInfo({
         user_name: (consult as any).users?.full_name ?? 'User',
-        user_photo: null,
+        user_photo: userProfile?.photo_url ?? null,
         user_email: (consult as any).users?.email ?? '',
         status: consult.status,
       });
       setIsEnded(consult.status === 'completed' || consult.status === 'cancelled');
     }
 
+    // Ambil pesan
     const { data } = await supabase.from('consultation_messages').select('id, sender_id, message_text, sent_at').eq('consultation_id', consultationId).order('sent_at', { ascending: true });
 
     if (data) setMessages(data);
@@ -159,11 +170,9 @@ export default function ChatPageAhli() {
   const handleAkhiriKonsultasi = async () => {
     setEnding(true);
     const { error } = await supabase.from('consultations').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', consultationId);
-
     setEnding(false);
     setShowConfirm(false);
     setShowMenu(false);
-
     if (!error) {
       setIsEnded(true);
       setConsultInfo((prev) => (prev ? { ...prev, status: 'completed' } : prev));
@@ -195,6 +204,7 @@ export default function ChatPageAhli() {
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
 
+        {/* Avatar user — foto jika ada */}
         {consultInfo?.user_photo ? (
           <img src={consultInfo.user_photo} alt={consultInfo.user_name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-100" />
         ) : (
@@ -217,7 +227,6 @@ export default function ChatPageAhli() {
             <button onClick={() => setShowMenu((prev) => !prev)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
               <MoreVertical className="w-5 h-5 text-gray-500" />
             </button>
-
             {showMenu && (
               <div className="absolute right-0 top-11 bg-white border border-gray-100 rounded-xl shadow-lg py-1.5 min-w-[180px] z-50">
                 <button

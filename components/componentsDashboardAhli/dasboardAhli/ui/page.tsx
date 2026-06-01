@@ -16,17 +16,25 @@ export default function ContainerDashboard() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) { setLoading(false); return; }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
 
-    const ahliId = session.user.id;
+    // ✅ Ambil ahli_profiles.id dulu
+    const { data: ahliProfile } = await supabase.from('ahli_profiles').select('id').eq('user_id', session.user.id).eq('is_verified', true).maybeSingle();
 
-    const [
-      { count: permintaanBaru },
-      { count: konsultasiAktif },
-      { count: selesai },
-      { data: terbaru },
-    ] = await Promise.all([
+    if (!ahliProfile) {
+      setLoading(false);
+      return;
+    }
+
+    const ahliId = ahliProfile.id; // ✅ pakai ahli_profiles.id
+
+    const [{ count: permintaanBaru }, { count: konsultasiAktif }, { count: selesai }, { data: terbaru }] = await Promise.all([
       supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('ahli_id', ahliId).eq('status', 'pending'),
       supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('ahli_id', ahliId).in('status', ['confirmed', 'ongoing']),
       supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('ahli_id', ahliId).eq('status', 'completed'),
@@ -39,34 +47,30 @@ export default function ContainerDashboard() {
       selesai: selesai ?? 0,
     });
 
-    setKonsultasiTerbaru((terbaru ?? []).map((item: any) => ({
-      id: item.id,
-      user_name: item.users?.full_name ?? 'User',
-      user_email: item.users?.email ?? '',
-      status: item.status,
-      created_at: item.created_at,
-      scheduled_at: item.scheduled_at,
-    })));
+    setKonsultasiTerbaru(
+      (terbaru ?? []).map((item: any) => ({
+        id: item.id,
+        user_name: item.users?.full_name ?? 'User',
+        user_email: item.users?.email ?? '',
+        status: item.status,
+        created_at: item.created_at,
+        scheduled_at: item.scheduled_at,
+      })),
+    );
 
     setLoading(false);
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   return (
     <div className={`flex-1 min-h-screen transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-[72px]' : 'ml-64'}`}>
       <div className="p-4 sm:p-6 lg:p-10">
         <HeaderKomponents />
-        <StatisticCard
-          permintaanBaru={stats.permintaanBaru}
-          konsultasiAktif={stats.konsultasiAktif}
-          selesai={stats.selesai}
-        />
-        <TdataUser
-          data={konsultasiTerbaru}
-          loading={loading}
-          onRefresh={fetchData}
-        />
+        <StatisticCard permintaanBaru={stats.permintaanBaru} konsultasiAktif={stats.konsultasiAktif} selesai={stats.selesai} />
+        <TdataUser data={konsultasiTerbaru} loading={loading} onRefresh={fetchData} />
       </div>
     </div>
   );

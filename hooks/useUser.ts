@@ -17,7 +17,6 @@ export function useUser() {
 
   const fetchUser = async () => {
     try {
-      // 1. Ambil session
       const {
         data: { session },
         error: sessionError,
@@ -31,15 +30,18 @@ export function useUser() {
 
       const authUser = session.user;
 
-      // 2. Ambil nama terbaru dari tabel users (bukan dari auth metadata)
-      const { data: userData } = await supabase.from('users').select('full_name').eq('id', authUser.id).single();
+      // Ambil nama dari tabel users & foto dari ahli_profiles sekaligus
+      const [{ data: userData }, { data: ahliData }] = await Promise.all([
+        supabase.from('users').select('full_name').eq('id', authUser.id).single(),
+        supabase.from('ahli_profiles').select('profile_photo_url').eq('user_id', authUser.id).eq('is_verified', true).maybeSingle(),
+      ]);
 
       setUser({
         id: authUser.id,
-        // Prioritas: tabel users → auth metadata → email prefix
         nama: userData?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
         email: authUser.email ?? '',
-        avatar_url: authUser.user_metadata?.avatar_url ?? null,
+        // Prioritas: ahli_profiles → user_profiles → auth metadata (Google)
+        avatar_url: ahliData?.profile_photo_url ?? authUser.user_metadata?.avatar_url ?? null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch user');
@@ -52,12 +54,11 @@ export function useUser() {
   useEffect(() => {
     fetchUser();
 
-    // Listen perubahan auth state
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        fetchUser(); // re-fetch dari DB setiap auth change
+        fetchUser();
       } else {
         setUser(null);
         setLoading(false);
@@ -67,6 +68,5 @@ export function useUser() {
     return () => subscription?.unsubscribe();
   }, []);
 
-  // Expose refetch agar bisa dipanggil manual setelah update nama
   return { user, loading, error, refetch: fetchUser };
 }
