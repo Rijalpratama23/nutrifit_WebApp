@@ -68,7 +68,7 @@ export default function ChatPageAhli() {
   const [ending, setEnding] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
-  const [isTyping, setIsTyping] = useState(false); // user sedang mengetik
+  const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
