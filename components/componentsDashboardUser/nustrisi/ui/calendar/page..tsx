@@ -39,7 +39,7 @@ export default function DatePicker({ onDateSelect }: DatePickerProps) {
 
       {/* Modal kalender */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-red-400 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-lg p-4">
             <CalendarComponent onDateSelect={handleDateSelect} />
             <button

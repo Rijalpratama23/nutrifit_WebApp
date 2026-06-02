@@ -28,7 +28,7 @@ export default function SelectArtikel({ aktif, onChange }: Props) {
             className={`py-1 px-3 rounded-2xl border text-sm transition-all cursor-pointer ${
               aktif === kat
                 ? 'bg-primary text-white border-primary'
-                : 'border-blue-400 text-blue-600 hover:bg-primary hover:text-white'
+                : 'border-blue-400 text-blue-600 hover:bg-primary hover:bg-blue-200 hover:text-white'
             }`}
           >
             {kat}

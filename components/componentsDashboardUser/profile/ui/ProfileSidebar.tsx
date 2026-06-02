@@ -2,8 +2,12 @@
 
 import Link from 'next/link';
 import { User, Mail, ShieldCheck, LogOut } from 'lucide-react';
+import { useState } from 'react';
 
 export default function ProfileSidebar() {
+
+
+
   return (
     <div className="w-full sm:w-60 lg:w-64 flex-shrink-0 md:mt-20">
       <div className="mt-6 bg-profile-gradient sm:mt-8 md:mt-10 w-full py-6 sm:py-7 px-4 sm:px-5 shadow-md sm:shadow-lg rounded-lg sm:rounded-xl h-auto bg-white">
