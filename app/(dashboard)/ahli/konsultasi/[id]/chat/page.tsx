@@ -3,13 +3,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
-import { ArrowLeft, Send, User, MoreVertical, PhoneOff } from 'lucide-react';
+import { ArrowLeft, Send, User, MoreVertical, PhoneOff, Check, CheckCheck } from 'lucide-react';
 
 interface Message {
   id: string;
   sender_id: string;
   message_text: string;
   sent_at: string;
+  is_delivered: boolean;
+  is_read: boolean;
 }
 
 interface ConsultationInfo {
@@ -33,6 +35,24 @@ function formatDateLabel(dateStr: string) {
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
+function MessageStatus({ is_delivered, is_read }: { is_delivered: boolean; is_read: boolean }) {
+  if (is_read) return <CheckCheck className="w-3.5 h-3.5 text-blue-400 inline-block ml-1" />;
+  if (is_delivered) return <CheckCheck className="w-3.5 h-3.5 text-white/60 inline-block ml-1" />;
+  return <Check className="w-3.5 h-3.5 text-white/60 inline-block ml-1" />;
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex justify-start mb-2">
+      <div className="bg-white border border-gray-100 shadow-sm rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1">
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+      </div>
+    </div>
+  );
+}
+
 export default function ChatPageAhli() {
   const params = useParams();
   const router = useRouter();
@@ -48,6 +68,8 @@ export default function ChatPageAhli() {
   const [ending, setEnding] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isEnded, setIsEnded] = useState(false);
+  const [isTyping, setIsTyping] = useState(false); // user sedang mengetik
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -63,17 +85,12 @@ export default function ChatPageAhli() {
     }
     setCurrentUserId(session.user.id);
 
-    // Ambil info konsultasi + data user
     const { data: consult } = await supabase
       .from('consultations')
       .select(
         `
         status,
-        users!consultations_user_id_fkey (
-          id,
-          full_name,
-          email
-        )
+        users!consultations_user_id_fkey ( id, full_name, email )
       `,
       )
       .eq('id', consultationId)
@@ -81,8 +98,6 @@ export default function ChatPageAhli() {
 
     if (consult) {
       const userId = (consult as any).users?.id;
-
-      // Ambil foto user dari user_profiles
       const { data: userProfile } = await supabase.from('user_profiles').select('photo_url').eq('user_id', userId).maybeSingle();
 
       setConsultInfo({
@@ -94,17 +109,30 @@ export default function ChatPageAhli() {
       setIsEnded(consult.status === 'completed' || consult.status === 'cancelled');
     }
 
-    // Ambil pesan
-    const { data } = await supabase.from('consultation_messages').select('id, sender_id, message_text, sent_at').eq('consultation_id', consultationId).order('sent_at', { ascending: true });
+    const { data } = await supabase.from('consultation_messages').select('id, sender_id, message_text, sent_at, is_delivered, is_read').eq('consultation_id', consultationId).order('sent_at', { ascending: true });
 
-    if (data) setMessages(data);
+    if (data) {
+      setMessages(data);
+      // Mark pesan dari user sebagai dibaca
+      const unread = data.filter((m) => m.sender_id !== session.user.id && !m.is_read);
+      if (unread.length > 0) {
+        await supabase
+          .from('consultation_messages')
+          .update({ is_read: true, is_delivered: true })
+          .in(
+            'id',
+            unread.map((m) => m.id),
+          );
+      }
+    }
+
     setLoading(false);
   }, [consultationId]);
 
   useEffect(() => {
     init();
 
-    const channel = supabase
+    const msgChannel = supabase
       .channel(`chat:${consultationId}`)
       .on(
         'postgres_changes',
@@ -114,49 +142,97 @@ export default function ChatPageAhli() {
           table: 'consultation_messages',
           filter: `consultation_id=eq.${consultationId}`,
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as Message;
           setMessages((prev) => {
             if (prev.find((m) => m.id === newMsg.id)) return prev;
             return [...prev, newMsg];
           });
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (newMsg.sender_id !== session?.user?.id) {
+            await supabase.from('consultation_messages').update({ is_read: true, is_delivered: true }).eq('id', newMsg.id);
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'consultation_messages',
+          filter: `consultation_id=eq.${consultationId}`,
+        },
+        (payload) => {
+          const updated = payload.new as Message;
+          setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
         },
       )
       .subscribe();
 
+    // Typing channel
+    const typingChannel = supabase
+      .channel(`typing:${consultationId}`)
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        if (payload.payload?.role === 'user') {
+          setIsTyping(true);
+          setTimeout(() => setIsTyping(false), 3000);
+        }
+      })
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(msgChannel);
+      supabase.removeChannel(typingChannel);
     };
   }, [consultationId, init]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, isTyping]);
 
-  // Close menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setShowMenu(false);
     }
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
+
+  const handleInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    if (typingTimeout) clearTimeout(typingTimeout);
+    await supabase.channel(`typing:${consultationId}`).send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { role: 'ahli' },
+    });
+    const timeout = setTimeout(() => {}, 3000);
+    setTypingTimeout(timeout);
+  };
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || !currentUserId || sending || isEnded) return;
     setSending(true);
     setInput('');
-    const { error } = await supabase.from('consultation_messages').insert({
-      consultation_id: consultationId,
-      sender_id: currentUserId,
-      message_text: text,
-      sent_at: new Date().toISOString(),
-    });
+
+    const { data: newMsg } = await supabase
+      .from('consultation_messages')
+      .insert({
+        consultation_id: consultationId,
+        sender_id: currentUserId,
+        message_text: text,
+        sent_at: new Date().toISOString(),
+        is_delivered: false,
+        is_read: false,
+      })
+      .select()
+      .single();
+
     setSending(false);
-    if (error) setInput(text);
+    if (!newMsg) setInput(text);
     inputRef.current?.focus();
   };
 
@@ -179,7 +255,6 @@ export default function ChatPageAhli() {
     }
   };
 
-  // Group pesan by tanggal
   const groupedMessages: { label: string; messages: Message[] }[] = [];
   messages.forEach((msg) => {
     const label = formatDateLabel(msg.sent_at);
@@ -204,7 +279,6 @@ export default function ChatPageAhli() {
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
 
-        {/* Avatar user — foto jika ada */}
         {consultInfo?.user_photo ? (
           <img src={consultInfo.user_photo} alt={consultInfo.user_name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-100" />
         ) : (
@@ -216,12 +290,17 @@ export default function ChatPageAhli() {
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-gray-800 text-sm truncate">{consultInfo?.user_name ?? 'User'}</p>
           <div className="flex items-center gap-1.5">
-            <span className={`w-2 h-2 rounded-full ${isEnded ? 'bg-gray-400' : 'bg-green-400'}`} />
-            <p className="text-xs text-gray-400">{isEnded ? 'Konsultasi selesai' : consultInfo?.user_email}</p>
+            {isTyping ? (
+              <p className="text-xs text-primary italic">sedang mengetik...</p>
+            ) : (
+              <>
+                <span className={`w-2 h-2 rounded-full ${isEnded ? 'bg-gray-400' : 'bg-green-400'}`} />
+                <p className="text-xs text-gray-400">{isEnded ? 'Konsultasi selesai' : consultInfo?.user_email}</p>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Menu Dropdown */}
         {!isEnded && (
           <div className="relative" ref={menuRef}>
             <button onClick={() => setShowMenu((prev) => !prev)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
@@ -252,30 +331,36 @@ export default function ChatPageAhli() {
 
       {/* Area Pesan */}
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
-        {messages.length === 0 ? (
+        {messages.length === 0 && !isTyping ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2">
             <p className="text-4xl">💬</p>
             <p className="text-sm">Belum ada pesan. Mulai konsultasi!</p>
           </div>
         ) : (
-          groupedMessages.map((group) => (
-            <div key={group.label}>
-              <div className="flex justify-center my-4">
-                <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{group.label}</span>
-              </div>
-              {group.messages.map((msg) => {
-                const isMe = msg.sender_id === currentUserId;
-                return (
-                  <div key={msg.id} className={`flex mb-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-sm'}`}>
-                      <p className="whitespace-pre-wrap break-words">{msg.message_text}</p>
-                      <p className={`text-[10px] mt-1 text-right ${isMe ? 'text-white/70' : 'text-gray-400'}`}>{formatTime(msg.sent_at)}</p>
+          <>
+            {groupedMessages.map((group) => (
+              <div key={group.label}>
+                <div className="flex justify-center my-4">
+                  <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{group.label}</span>
+                </div>
+                {group.messages.map((msg) => {
+                  const isMe = msg.sender_id === currentUserId;
+                  return (
+                    <div key={msg.id} className={`flex mb-2 ${isMe ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-primary text-white rounded-br-sm' : 'bg-white text-gray-800 shadow-sm border border-gray-100 rounded-bl-sm'}`}>
+                        <p className="whitespace-pre-wrap break-words">{msg.message_text}</p>
+                        <div className={`flex items-center justify-end gap-0.5 mt-1 ${isMe ? 'text-white/70' : 'text-gray-400'}`}>
+                          <span className="text-[10px]">{formatTime(msg.sent_at)}</span>
+                          {isMe && <MessageStatus is_delivered={msg.is_delivered} is_read={msg.is_read} />}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          ))
+                  );
+                })}
+              </div>
+            ))}
+            {isTyping && <TypingIndicator />}
+          </>
         )}
         <div ref={bottomRef} />
       </div>
@@ -291,7 +376,7 @@ export default function ChatPageAhli() {
             <textarea
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Tulis pesan Anda..."
               rows={1}
