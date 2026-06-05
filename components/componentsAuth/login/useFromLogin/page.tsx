@@ -47,10 +47,11 @@ export function useLoginForm() {
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem('rememberedEmail');
-    if (savedEmail) {
-      setFormData((prev) => ({ ...prev, email: savedEmail }));
-      setRememberMe(true);
+    // Cek error dari URL params
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get('error');
+    if (errorParam === 'email-exists') {
+      setErrorMsg('Email sudah terdaftar dengan metode lain. Coba login dengan cara berbeda.');
     }
   }, []);
 

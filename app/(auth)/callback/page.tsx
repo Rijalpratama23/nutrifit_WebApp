@@ -21,10 +21,33 @@ export default function CallbackPage() {
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error || !session) {
-        setStatus('Login gagal, mengalihkan...');
-        setTimeout(() => router.push('/login?error=auth-failed'), 1500);
+        // jika error karena duplikast email
+        if(error?.message.includes('already')) {
+          router.push('/login?error=email-exist');
+        }else {
+          router.push('/login?error=auth-failed')
+        }
         return;
       }
+
+      if(!session) {
+        router.push('/login?error=no-session');
+        return;
+      }
+
+      const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', session.user.id)
+      .single();
+
+    const role = userData?.role ?? 'user';
+    router.push(getRedirectByRole(role));
+  };
+
+  handleCallback();
+}, [router]);
+      
 
       const user = session.user;
 
