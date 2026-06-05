@@ -65,17 +65,13 @@ export default function CallbackPage() {
           (id: any) => id.provider === 'google'
         );
 
-        // Jika punya KEDUA identity (email + google) — ini akun yang merge
-        // Kita cek apakah akun ini awalnya dibuat via email (bukan via Google)
         if (hasEmailIdentity && hasGoogleIdentity) {
-          // Cek di tabel users apakah akun ini sudah ada sebelum Google login
           const { data: existingUser } = await supabase
             .from('users')
             .select('id, role')
             .eq('id', user.id)
             .single();
 
-          // Akun sudah ada — lanjutkan login normal (ini bukan duplikat baru)
           if (existingUser) {
             const role = existingUser.role ?? 'user';
             setStatus(`Login berhasil, mengalihkan...`);
@@ -84,7 +80,6 @@ export default function CallbackPage() {
           }
         }
 
-        // Cek apakah email Google sudah terdaftar di tabel users dengan ID berbeda
         const { data: existingByEmail } = await supabase
           .from('users')
           .select('id, role')
@@ -92,7 +87,6 @@ export default function CallbackPage() {
           .single();
 
         if (existingByEmail && existingByEmail.id !== user.id) {
-          // Email sudah terdaftar dengan akun berbeda — tolak & logout
           setStatus('Email sudah terdaftar, mengalihkan...');
           await supabase.auth.signOut();
           setTimeout(() => {

@@ -4,7 +4,6 @@ import { supabase } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
-// ─── Helper: Redirect by role ─────────────────────────────────────────────────
 
 function getRedirectByRole(role: string): string {
   switch (role) {
@@ -16,8 +15,6 @@ function getRedirectByRole(role: string): string {
       return '/user/dashboardUser';
   }
 }
-
-// ─── Helper: Translate error Supabase → Bahasa Indonesia ─────────────────────
 
 function translateLoginError(message: string): string {
   const msg = message.toLowerCase();
@@ -65,19 +62,14 @@ export function useLoginForm() {
     setLoading(true);
     setErrorMsg('');
 
-    // ── Cek apakah email terdaftar via Google OAuth ─────────────────────────
-    // Jika user daftar via Google, mereka tidak punya password
-    // Kita beri pesan yang lebih helpful
     const { data: userData } = await supabase.from('users').select('id').eq('email', formData.email.toLowerCase().trim()).maybeSingle();
 
-    // ── Login dengan email + password ───────────────────────────────────────
     const { data, error } = await supabase.auth.signInWithPassword({
       email: formData.email.trim(),
       password: formData.password,
     });
 
     if (error) {
-      // Jika akun ada di users tapi login gagal → kemungkinan akun OAuth
       if (userData && (error.message.includes('Invalid login credentials') || error.message.includes('invalid credentials'))) {
         const msg = 'Akun ini terdaftar melalui Google. Silakan gunakan tombol "Masuk dengan Google".';
         setErrorMsg(msg);
@@ -106,7 +98,7 @@ export function useLoginForm() {
     const { data: userRole, error: roleError } = await supabase.from('users').select('role').eq('id', data.user.id).single();
 
     if (roleError || !userRole) {
-      showErrorToast({ title: 'Login Gagal', message: 'Gagal mengambil data pengguna.' });
+      showErrorToast({ title: 'Login Gagal', message: 'Gagal mengambil data pengguna' });
       setErrorMsg('Gagal mengambil data pengguna.');
       setLoading(false);
       return;
