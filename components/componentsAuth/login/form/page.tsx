@@ -2,12 +2,18 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Eye, EyeOff, Loader } from 'lucide-react';
+import { Eye, EyeOff, Loader, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useLoginForm } from '../useFromLogin/page';
 import { supabase } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation'; // ✅ tambah useSearchParams
 import { showErrorToast } from '@/components/customeToast/CustomeToast';
+
+// ─── Pesan error dari URL params ─────────────────────────────────────────────
+const ERROR_MESSAGES: Record<string, string> = {
+  'auth-failed': 'Login gagal. Silakan coba lagi.',
+  'email-exists': 'Email ini sudah terdaftar melalui email & password. Silakan login dengan email & password, bukan Google.',
+};
 
 export default function Form() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,23 +21,25 @@ export default function Form() {
   const { formData, loading, errorMsg, handleChange, handleLogin, rememberMe, setRememberMe } = useLoginForm();
   const router = useRouter();
 
-  // LOGIN LOGICAL OAUTH //
+  // ✅ Ambil error dari URL params (dari callback redirect)
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get('error');
+  const urlErrorMsg = urlError ? ERROR_MESSAGES[urlError] : null;
+
   const handleLoginGoogle = async () => {
     setLoadingGoogle(true);
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `http://localhost:3000/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     if (error) {
       setLoadingGoogle(false);
       showErrorToast({ title: 'Login Gagal', message: error.message });
-      return;
     }
   };
 
-  // KOMPONEN UI //
   return (
     <div className="flex items-center justify-center bg-white px-4">
       <div className="w-full max-w-md bg-white p-6 rounded-xl">
@@ -44,7 +52,21 @@ export default function Form() {
           <p className="text-sm text-gray-600">Silahkan masuk untuk mengakses fitur</p>
         </div>
 
-        {errorMsg && <p className="text-red-500 text-xs mb-4 italic">*{errorMsg}</p>}
+        {/* ✅ Error dari URL (callback redirect) */}
+        {urlErrorMsg && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
+            <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-red-600">{urlErrorMsg}</p>
+          </div>
+        )}
+
+        {/* Error dari form */}
+        {errorMsg && !urlErrorMsg && (
+          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
+            <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-red-600">{errorMsg}</p>
+          </div>
+        )}
 
         <form onSubmit={handleLogin} className="w-full">
           <div className="mb-4">
@@ -82,17 +104,24 @@ export default function Form() {
 
           <div className="flex justify-between items-center mb-4 text-sm">
             <label className="flex items-center gap-1 text-gray-600 cursor-pointer">
-              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} /> Ingat saya
+              <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
+              Ingat saya
             </label>
             <Link href="/forgot-password" className="text-primary hover:underline">
               Lupa kata sandi?
             </Link>
           </div>
 
-          {/* Tombol Login */}
           <button type="submit" disabled={loading || loadingGoogle} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400 hover:bg-blue-500 cursor-pointer">
             {loading ? 'Memproses...' : 'Login'}
           </button>
+
+          {/* Divider */}
+          <div className="flex items-center gap-3 my-3">
+            <hr className="flex-1 border-gray-200" />
+            <span className="text-xs text-gray-400">atau</span>
+            <hr className="flex-1 border-gray-200" />
+          </div>
 
           <button
             onClick={handleLoginGoogle}
@@ -108,7 +137,7 @@ export default function Form() {
             ) : (
               <>
                 <Image src="/authimg/google.png" alt="google" width={20} height={20} />
-                Masuk dengan google
+                Masuk dengan Google
               </>
             )}
           </button>
