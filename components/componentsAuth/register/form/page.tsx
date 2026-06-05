@@ -6,7 +6,6 @@ import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRegisterForm } from '../useRegisterForm/page';
 import { supabase } from '@/utils/supabase/client';
-import { toast } from 'react-hot-toast';
 import { showErrorToast } from '@/components/customeToast/CustomeToast';
 
 export default function FormRegister() {
@@ -20,7 +19,7 @@ export default function FormRegister() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?source=register`,
       },
     });
 

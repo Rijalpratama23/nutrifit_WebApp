@@ -6,7 +6,7 @@ import { Eye, EyeOff, Loader, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useLoginForm } from '../useFromLogin/page';
 import { supabase } from '@/utils/supabase/client';
-import { useRouter, useSearchParams } from 'next/navigation'; // ✅ tambah useSearchParams
+import { useSearchParams } from 'next/navigation';
 import { showErrorToast } from '@/components/customeToast/CustomeToast';
 
 // ─── Pesan error dari URL params ─────────────────────────────────────────────
@@ -19,7 +19,6 @@ export default function Form() {
   const [showPassword, setShowPassword] = useState(false);
   const [loadingGoogle, setLoadingGoogle] = useState(false);
   const { formData, loading, errorMsg, handleChange, handleLogin, rememberMe, setRememberMe } = useLoginForm();
-  const router = useRouter();
 
   // ✅ Ambil error dari URL params (dari callback redirect)
   const searchParams = useSearchParams();
@@ -31,7 +30,7 @@ export default function Form() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo: `${window.location.origin}/auth/callback?source=login`,
       },
     });
     if (error) {
