@@ -1,8 +1,21 @@
-import Image from "next/image";
-import { Utensils } from "lucide-react";
+import Image from 'next/image';
+import { Utensils } from 'lucide-react';
 
+type CartMealProps = {
+  plan: {
+    breakfast: string;
+    lunch: string;
+    dinner: string;
+    snack: string;
+  } | null;
+};
 
-export default function CartMeal() {
+export default function CartMeal({ plan }: CartMealProps) {
+  const breakfast = plan?.breakfast || 'Belum ada rencana nutrisi';
+  const lunch = plan?.lunch || 'Belum ada rencana nutrisi';
+  const dinner = plan?.dinner || 'Belum ada rencana nutrisi';
+  const snack = plan?.snack || 'Belum ada rencana nutrisi';
+
   return (
     <div className="w-full shadow-2xl mt-5 sm:mt-8 md:mt-15 p-3 sm:p-4 md:p-5 rounded-2xl ">
       <div>
@@ -14,29 +27,28 @@ export default function CartMeal() {
         </div>
 
         <div className="flex gap-2 sm:gap-3 md:gap-20 md:justify-center flex-wrap">
-          {/* card */}
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
             <p className="bg-orange-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Breakfast</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
-            <p className="font-semibold p-3 text-center text-xs sm:text-sm">Oatmeal + Telor rebus</p>
+            <p className="font-semibold p-3 text-center text-xs sm:text-sm">{breakfast}</p>
           </div>
 
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
             <p className="bg-blue-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Lunch</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
-            <p className="font-semibold p-3 text-center text-xs sm:text-sm">Oatmeal + Telor rebus</p>
+            <p className="font-semibold p-3 text-center text-xs sm:text-sm">{lunch}</p>
           </div>
 
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
             <p className="bg-green-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Dinner</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
-            <p className="font-semibold p-3 text-center text-xs sm:text-sm">Oatmeal + Telor rebus</p>
+            <p className="font-semibold p-3 text-center text-xs sm:text-sm">{dinner}</p>
           </div>
 
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
             <p className="bg-yellow-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Snack</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
-            <p className="font-semibold p-3 text-center text-xs sm:text-sm">Oatmeal + Telor rebus</p>
+            <p className="font-semibold p-3 text-center text-xs sm:text-sm">{snack}</p>
           </div>
         </div>
       </div>

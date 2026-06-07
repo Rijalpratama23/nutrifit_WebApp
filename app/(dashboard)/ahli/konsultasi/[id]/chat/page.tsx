@@ -3,7 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import { Flame } from 'lucide-react';
 import { ArrowLeft, Send, User, MoreVertical, PhoneOff, Check, CheckCheck } from 'lucide-react';
+import ModalNutrisiPlan from '@/components/componentsDashboardAhli/konsultasi/ModalNutrisiPlan';
 
 interface Message {
   id: string;
@@ -57,6 +59,9 @@ export default function ChatPageAhli() {
   const params = useParams();
   const router = useRouter();
   const consultationId = params?.id as string;
+  // state untuk rencana nutrisi
+  const [showNutrisiModal, setShowNutrisiModal] = useState(false);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -98,6 +103,8 @@ export default function ChatPageAhli() {
 
     if (consult) {
       const userId = (consult as any).users?.id;
+      setTargetUserId(userId);
+
       const { data: userProfile } = await supabase.from('user_profiles').select('photo_url').eq('user_id', userId).maybeSingle();
 
       setConsultInfo({
@@ -301,25 +308,34 @@ export default function ChatPageAhli() {
           </div>
         </div>
 
-        {!isEnded && (
-          <div className="relative" ref={menuRef}>
-            <button onClick={() => setShowMenu((prev) => !prev)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
-              <MoreVertical className="w-5 h-5 text-gray-500" />
+        <button onClick={() => setShowMenu((prev) => !prev)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" aria-label="Menu chat">
+          <MoreVertical className="w-5 h-5 text-gray-600" />
+        </button>
+
+        {showMenu && (
+          <div className="absolute right-0 top-11 bg-white border border-gray-100 rounded-xl shadow-lg py-1.5 min-w-[200px] z-50">
+            {/* Tombol baru */}
+            <button
+              onClick={() => {
+                setShowNutrisiModal(true);
+                setShowMenu(false);
+              }}
+              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+            >
+              <Flame className="w-4 h-4" />
+              Buat Rencana Nutrisi
             </button>
-            {showMenu && (
-              <div className="absolute right-0 top-11 bg-white border border-gray-100 rounded-xl shadow-lg py-1.5 min-w-[180px] z-50">
-                <button
-                  onClick={() => {
-                    setShowConfirm(true);
-                    setShowMenu(false);
-                  }}
-                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <PhoneOff className="w-4 h-4" />
-                  Akhiri Konsultasi
-                </button>
-              </div>
-            )}
+            <div className="mx-3 border-t border-gray-100 my-1" />
+            <button
+              onClick={() => {
+                setShowConfirm(true);
+                setShowMenu(false);
+              }}
+              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <PhoneOff className="w-4 h-4" />
+              Akhiri Konsultasi
+            </button>
           </div>
         )}
       </div>
@@ -416,6 +432,8 @@ export default function ChatPageAhli() {
           </div>
         </div>
       )}
+      {/* Modal Rencana Nutrisi */}
+      {showNutrisiModal && targetUserId && <ModalNutrisiPlan isOpen={showNutrisiModal} onClose={() => setShowNutrisiModal(false)} consultationId={consultationId} userId={targetUserId} userName={consultInfo?.user_name ?? 'User'} />}
     </div>
   );
 }
