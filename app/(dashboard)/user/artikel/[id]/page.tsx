@@ -104,6 +104,35 @@ export default function PageBacaArtikel() {
     fetchArticle();
   }, [artikelId]);
 
+  useEffect(() => {
+    if (!article) return;
+
+    const saveReadHistory = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session?.user) return;
+
+        await supabase.from('user_article_reads').upsert(
+          {
+            user_id: session.user.id,
+            article_id: article.id,
+            article_title: article.title,
+            article_category: article.category,
+            article_image_url: article.image_url,
+            last_read_at: new Date().toISOString(),
+          },
+          { onConflict: ['user_id', 'article_id'] },
+        );
+      } catch (saveError) {
+        console.error('Error saving article read history:', saveError);
+      }
+    };
+
+    saveReadHistory();
+  }, [article]);
+
   const handleSaveArticle = async () => {
     setIsSaved(!isSaved);
   };
