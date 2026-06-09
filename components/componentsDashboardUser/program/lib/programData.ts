@@ -4,6 +4,18 @@ export interface ProgramContent {
   description: string;
   guideDetail: string[];
   expertTarget: string[];
+  slug?: string;
+  category?: string;
+}
+
+export interface ProgramRecord {
+  id?: string;
+  slug?: string | null;
+  title?: string | null;
+  description?: string | null;
+  guide_detail?: string[] | string | null;
+  expert_target?: string[] | string | null;
+  category?: string | null;
 }
 
 const PROGRAM_LIBRARY: Record<string, ProgramContent> = {
@@ -37,18 +49,61 @@ const PROGRAM_LIBRARY: Record<string, ProgramContent> = {
   },
 };
 
-export function getProgramContent(category: string): ProgramContent {
-  const normalized = category.toLowerCase();
+function normalizeText(value: string | null | undefined) {
+  return (value || '').toLowerCase().trim();
+}
 
-  if (normalized.includes('diet') || normalized.includes('nutrisi') || normalized.includes('makan')) {
+function parseStringArray(value: string[] | string | null | undefined): string[] {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).map((item) => String(item).trim());
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(/\n|;/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+export function getProgramContent(category: string, remotePrograms: ProgramRecord[] = []): ProgramContent {
+  const normalizedCategory = normalizeText(category);
+
+  const matchedProgram = remotePrograms.find((program) => {
+    const slug = normalizeText(program.slug);
+    const title = normalizeText(program.title);
+    const categoryName = normalizeText(program.category);
+
+    return (
+      Boolean(slug && (normalizedCategory.includes(slug) || slug.includes(normalizedCategory))) ||
+      Boolean(title && (normalizedCategory.includes(title) || title.includes(normalizedCategory))) ||
+      Boolean(categoryName && (normalizedCategory.includes(categoryName) || categoryName.includes(normalizedCategory)))
+    );
+  });
+
+  if (matchedProgram) {
+    return {
+      id: matchedProgram.id || 'remote-program',
+      title: matchedProgram.title || 'Program',
+      description: matchedProgram.description || 'Program yang disesuaikan dari data dinamis.',
+      guideDetail: parseStringArray(matchedProgram.guide_detail),
+      expertTarget: parseStringArray(matchedProgram.expert_target),
+      slug: matchedProgram.slug || undefined,
+      category: matchedProgram.category || undefined,
+    };
+  }
+
+  if (normalizedCategory.includes('diet') || normalizedCategory.includes('nutrisi') || normalizedCategory.includes('makan')) {
     return PROGRAM_LIBRARY.diet;
   }
 
-  if (normalized.includes('olahraga') || normalized.includes('fitness') || normalized.includes('kebugaran')) {
+  if (normalizedCategory.includes('olahraga') || normalizedCategory.includes('fitness') || normalizedCategory.includes('kebugaran')) {
     return PROGRAM_LIBRARY.fitness;
   }
 
-  if (normalized.includes('tidur') || normalized.includes('stress') || normalized.includes('wellness')) {
+  if (normalizedCategory.includes('tidur') || normalizedCategory.includes('stress') || normalizedCategory.includes('wellness')) {
     return PROGRAM_LIBRARY.wellness;
   }
 

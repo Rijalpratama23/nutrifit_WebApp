@@ -6,7 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Loader2, FileSearch, Sparkles, BookOpen, Target, ExternalLink } from 'lucide-react';
 import { showErrorToast, showSuccessToast } from '@/components/customeToast/CustomeToast';
-import { getProgramContent } from '../../lib/programData';
+import { getProgramContent, type ProgramRecord } from '../../lib/programData';
 import { getStoredReadArticles, mergeReadArticles, removeStoredReadArticle, type ReadArticle } from '../../lib/readHistory';
 import type { ProgramTab } from '../../page';
 
@@ -29,6 +29,7 @@ interface ContainerProps {
 
 export default function Container({ activeTab }: ContainerProps) {
   const [articles, setArticles] = useState<ReadArticle[]>(() => getStoredReadArticles());
+  const [programRecords, setProgramRecords] = useState<ProgramRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchReadHistory = async () => {
@@ -66,8 +67,26 @@ export default function Container({ activeTab }: ContainerProps) {
     }
   };
 
+  const fetchProgramData = async () => {
+    try {
+      const { data, error } = await supabase.from('programs').select('id, slug, title, description, guide_detail, expert_target, category');
+
+      if (error) {
+        console.warn('Program data unavailable, using fallback content:', error.message);
+        setProgramRecords([]);
+        return;
+      }
+
+      setProgramRecords((data as ProgramRecord[]) || []);
+    } catch (err) {
+      console.warn('Program data fetch failed:', err);
+      setProgramRecords([]);
+    }
+  };
+
   useEffect(() => {
     fetchReadHistory();
+    fetchProgramData();
 
     const channel = supabase
       .channel('user_article_reads_program')
@@ -107,7 +126,7 @@ export default function Container({ activeTab }: ContainerProps) {
   const programs: ProgramSummary[] = Array.from(
     articles
       .reduce((map, article) => {
-        const program = getProgramContent(article.article_category);
+        const program = getProgramContent(article.article_category, programRecords);
         const existing = map.get(program.id);
 
         if (existing) {
