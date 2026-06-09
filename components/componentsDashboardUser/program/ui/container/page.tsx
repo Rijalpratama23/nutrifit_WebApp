@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase/client';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Loader2, FileSearch, Sparkles, BookOpen, Target, ExternalLink } from 'lucide-react';
+import { Loader2, FileSearch, Sparkles, BookOpen, Target, ExternalLink, Trash2 } from 'lucide-react';
 import { showErrorToast, showSuccessToast } from '@/components/customeToast/CustomeToast';
 import { getProgramContent, type ProgramRecord } from '../../lib/programData';
 import { getStoredReadArticles, mergeReadArticles, removeStoredReadArticle, type ReadArticle } from '../../lib/readHistory';
@@ -31,6 +31,7 @@ export default function Container({ activeTab }: ContainerProps) {
   const [articles, setArticles] = useState<ReadArticle[]>(() => getStoredReadArticles());
   const [programRecords, setProgramRecords] = useState<ProgramRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   const fetchReadHistory = async () => {
     setLoading(true);
@@ -99,9 +100,15 @@ export default function Container({ activeTab }: ContainerProps) {
   }, []);
 
   const handleRemove = async (articleId: string) => {
-    const confirmed = window.confirm('Apakah Anda yakin ingin menghapus program ini dari daftar yang diminati?');
+    if (!pendingDeleteId) {
+      setPendingDeleteId(articleId);
+      showErrorToast({ title: 'Konfirmasi hapus', message: 'Klik kembali tombol hapus untuk mengonfirmasi.' });
+      return;
+    }
 
-    if (!confirmed) {
+    if (pendingDeleteId !== articleId) {
+      setPendingDeleteId(articleId);
+      showErrorToast({ title: 'Konfirmasi hapus', message: 'Klik kembali tombol hapus untuk mengonfirmasi.' });
       return;
     }
 
@@ -116,9 +123,11 @@ export default function Container({ activeTab }: ContainerProps) {
 
       removeStoredReadArticle(articleId);
       setArticles((prev) => prev.filter((item) => item.article_id !== articleId));
+      setPendingDeleteId(null);
       showSuccessToast({ title: 'Berhasil dihapus', message: 'Program berhasil dihapus dari daftar yang diminati.' });
     } catch (err) {
       console.error('Error removing saved article:', err);
+      setPendingDeleteId(null);
       showErrorToast({ title: 'Gagal menghapus', message: 'Terjadi kesalahan saat menghapus program.' });
     }
   };
@@ -217,8 +226,15 @@ export default function Container({ activeTab }: ContainerProps) {
                   <ExternalLink size={16} />
                   Lihat artikel
                 </Link>
-                <button type="button" onClick={() => handleRemove(program.articleId)} className="rounded-xl bg-red-500 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-600">
-                  Hapus
+                <button
+                  type="button"
+                  onClick={() => handleRemove(program.articleId)}
+                  className={`rounded-xl px-4 py-2 text-sm font-medium text-white transition-colors ${pendingDeleteId === program.articleId ? 'bg-red-700' : 'bg-red-500 hover:bg-red-600'}`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Trash2 size={16} />
+                    {pendingDeleteId === program.articleId ? 'Konfirmasi hapus' : 'Hapus'}
+                  </span>
                 </button>
               </div>
             </div>
