@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { supabase } from '@/utils/supabase/client';
 import { ArrowLeft, Bookmark, Share2, Loader2 } from 'lucide-react';
+import { upsertStoredReadArticle } from '@/components/componentsDashboardUser/program/lib/readHistory';
 
 interface Article {
   id: string;
@@ -50,7 +51,7 @@ function ReadingProgressBar({ totalParagraf }: { totalParagraf: number }) {
   return (
     <div className="flex items-center gap-3 w-full">
       {/* Label kiri */}
-      <span className="text-xs font-semibold text-primary whitespace-nowrap flex-shrink-0">{persen}% Dibaca</span>
+      <span className="text-xs font-semibold text-primary whitespace-nowrap shrink-0">{persen}% Dibaca</span>
 
       {/* Progress bar */}
       <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -58,7 +59,7 @@ function ReadingProgressBar({ totalParagraf }: { totalParagraf: number }) {
       </div>
 
       {/* Label kanan */}
-      <span className="text-xs text-gray-500 whitespace-nowrap flex-shrink-0">
+      <span className="text-xs text-gray-500 whitespace-nowrap shrink-0">
         {paragrafDibaca}/{totalParagraf} telah di baca
       </span>
     </div>
@@ -114,17 +115,33 @@ export default function PageBacaArtikel() {
         } = await supabase.auth.getSession();
         if (!session?.user) return;
 
-        await supabase.from('user_article_reads').upsert(
-          {
-            user_id: session.user.id,
-            article_id: article.id,
-            article_title: article.title,
-            article_category: article.category,
-            article_image_url: article.image_url,
-            last_read_at: new Date().toISOString(),
-          },
-          { onConflict: ['user_id', 'article_id'] },
-        );
+        const readRecord = {
+          id: `${session.user.id}-${article.id}`,
+          user_id: session.user.id,
+          article_id: article.id,
+          article_title: article.title,
+          article_category: article.category,
+          article_image_url: article.image_url,
+          last_read_at: new Date().toISOString(),
+        };
+
+        try {
+          await supabase.from('user_article_reads').upsert(
+            {
+              user_id: readRecord.user_id,
+              article_id: readRecord.article_id,
+              article_title: readRecord.article_title,
+              article_category: readRecord.article_category,
+              article_image_url: readRecord.article_image_url,
+              last_read_at: readRecord.last_read_at,
+            },
+            { onConflict: 'user_id,article_id' },
+          );
+        } catch (supabaseError) {
+          console.error('Error saving article read history to Supabase:', supabaseError);
+        }
+
+        upsertStoredReadArticle(readRecord);
       } catch (saveError) {
         console.error('Error saving article read history:', saveError);
       }
@@ -234,7 +251,7 @@ export default function PageBacaArtikel() {
         {/* Konten */}
         <article className="prose prose-sm md:prose-base max-w-none text-gray-800 leading-relaxed">
           <div
-            className="whitespace-pre-wrap break-words"
+            className="whitespace-pre-wrap wrap-break-word"
             dangerouslySetInnerHTML={{
               __html: article.content
                 .replace(/\n\n/g, '</p><p>')
