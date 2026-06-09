@@ -21,7 +21,7 @@ export default function CartHead({ plan }: CartHeadProps) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mr-1 sm:mr-3">
+      <div className="md:flex md:justify-center gap-20  flex-wrap sm:gap-3 md:gap-4 mr-1 sm:mr-3">
         <div className="bg-orange-200 w-full sm:w-1/2 lg:w-60 mt-4 sm:mt-5 md:mt-7 p-3 rounded-xl">
           <div>
             <h4 className="font-bold text-xs sm:text-sm text-orange-500 tracking-widest">Kalori</h4>
