@@ -425,7 +425,7 @@ export default function ChatPageAhli() {
       {showNutrisiModal && targetUserId && <ModalNutrisiPlan isOpen={showNutrisiModal} onClose={() => setShowNutrisiModal(false)} consultationId={consultationId} userId={targetUserId} userName={consultInfo?.user_name ?? 'User'} />}
 
       {/* ── Modal Profil User ────────────────────────────────────────────── */}
-      {consultInfo?.user_id && <ModalProfilUser isOpen={showProfilUser} onClose={() => setShowProfilUser(false)} userId={consultInfo.user_id} />}
+      {consultInfo?.user_id && <ModalProfilUser isOpen={showProfilUser} onClose={() => setShowProfilUser(false)} userId={consultInfo.user_id}  />}
     </div>
   );
 }

@@ -229,7 +229,6 @@ export default function ModalProfilAhli({ isOpen, onClose, ahliId, onConsult }: 
             </>
           )}
         </div>
-
         {/* Footer tombol */}
         {onConsult && (
           <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
