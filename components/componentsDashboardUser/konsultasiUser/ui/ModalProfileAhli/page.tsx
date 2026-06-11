@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabase/client';
-import { X, BadgeCheck, Briefcase, GraduationCap, Star } from 'lucide-react';
+import { X, BadgeCheck, Briefcase, GraduationCap } from 'lucide-react';
 
 interface AhliProfile {
   id: string;
@@ -19,92 +19,106 @@ interface AhliProfile {
 
 interface AhliEducation {
   id: string;
-  degree: string;
-  institution: string;
-  start_year: string;
-  end_year: string | null;
-  field_of_study: string | null;
+  judul: string;
+  institusi: string;
+  jenjang: string;
+  gelar: string | null;
+  tahun_mulai: string;
+  tahun_selesai: string | null;
 }
 
 interface AhliExperience {
   id: string;
-  position: string;
-  company: string;
-  start_date: string;
-  end_date: string | null;
-}
-
-interface ConsultationStats {
-  total: number;
+  judul: string;
+  tempat: string;
+  tahun_mulai: string;
+  tahun_selesai: string | null;
 }
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   ahliId: string;
+  onConsult?: () => void; // opsional: tombol "Mulai Konsultasi"
 }
 
 function formatPeriod(start: string, end: string | null) {
   const fmt = (d: string) => {
-    const [year, month] = d.split('-');
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    return `${months[parseInt(month) - 1]} ${year}`;
+    const parts = d.split('-');
+    return `${parts[0]}-${parts[1] ?? '01'}`;
   };
   return `${fmt(start)} – ${end ? fmt(end) : 'Sekarang'}`;
 }
 
-export default function ModalProfilAhli({ isOpen, onClose, ahliId }: Props) {
+function StatCard({ value, unit, label }: { value: React.ReactNode; unit?: string; label: string }) {
+  return (
+    <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-100">
+      <p className="text-xl font-bold text-gray-900 leading-tight truncate">
+        {value}
+        {unit && <span className="text-xs font-normal text-gray-400 ml-0.5">{unit}</span>}
+      </p>
+      <p className="text-[10px] text-gray-400 mt-0.5 uppercase tracking-widest font-medium">{label}</p>
+    </div>
+  );
+}
+
+function TimelineItem({ title, subtitle, period }: { title: string; subtitle: string; period: string }) {
+  return (
+    <div className="flex gap-3">
+      <div className="flex flex-col items-center">
+        <div className="w-2 h-2 rounded-full bg-emerald-500 mt-1.5 flex-shrink-0" />
+        <div className="w-px flex-1 bg-gray-100 mt-1" />
+      </div>
+      <div className="pb-4 last:pb-0">
+        <p className="text-xs text-gray-400 mb-0.5">{period}</p>
+        <p className="text-sm font-semibold text-gray-800 leading-snug">{title}</p>
+        <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>
+      </div>
+    </div>
+  );
+}
+
+export default function ModalProfilAhli({ isOpen, onClose, ahliId, onConsult }: Props) {
   const [profile, setProfile] = useState<AhliProfile | null>(null);
   const [education, setEducation] = useState<AhliEducation[]>([]);
   const [experience, setExperience] = useState<AhliExperience[]>([]);
-  const [stats, setStats] = useState<ConsultationStats>({ total: 0 });
+  const [totalConsultasi, setTotalConsultasi] = useState(0);
+  const [imgError, setImgError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!isOpen || !ahliId) return;
+    setImgError(false);
 
     const fetchData = async () => {
       setLoading(true);
 
-      // Profil ahli + data user
       const { data: profileData } = await supabase
         .from('ahli_profiles')
-        .select(`
+        .select(
+          `
           id, specialization, experience_years, description,
           profile_photo_url, is_verified,
           users ( full_name, email )
-        `)
+        `,
+        )
         .eq('id', ahliId)
         .single();
 
       if (profileData) setProfile(profileData as unknown as AhliProfile);
 
-      // Pendidikan
-      const { data: eduData } = await supabase
-        .from('ahli_education')
-        .select('id, degree, institution, start_year, end_year, field_of_study')
-        .eq('ahli_id', ahliId)
-        .order('start_year', { ascending: false });
+      const { data: eduData } = await supabase.from('ahli_education').select('id, judul, institusi, jenjang, gelar, tahun_mulai, tahun_selesai').eq('ahli_id', ahliId).order('tahun_mulai', { ascending: false });
 
+      console.log('[ahli_education] ahliId:', ahliId, 'data:', eduData);
       if (eduData) setEducation(eduData);
 
-      // Pengalaman
-      const { data: expData } = await supabase
-        .from('ahli_experience')
-        .select('id, position, company, start_date, end_date')
-        .eq('ahli_id', ahliId)
-        .order('start_date', { ascending: false });
+      const { data: expData } = await supabase.from('ahli_experience').select('id, judul, tempat, tahun_mulai, tahun_selesai').eq('ahli_id', ahliId).order('tahun_mulai', { ascending: false });
 
       if (expData) setExperience(expData);
 
-      // Jumlah konsultasi selesai
-      const { count } = await supabase
-        .from('consultations')
-        .select('id', { count: 'exact', head: true })
-        .eq('ahli_id', ahliId)
-        .eq('status', 'completed');
+      const { count } = await supabase.from('consultations').select('id', { count: 'exact', head: true }).eq('ahli_id', ahliId).eq('status', 'completed');
 
-      setStats({ total: count ?? 0 });
+      setTotalConsultasi(count ?? 0);
       setLoading(false);
     };
 
@@ -113,32 +127,31 @@ export default function ModalProfilAhli({ isOpen, onClose, ahliId }: Props) {
 
   if (!isOpen) return null;
 
-  const initials = profile?.users?.full_name
-    ?.split(' ')
+  const fullName = profile?.users?.full_name ?? '-';
+  const initials = fullName
+    .split(' ')
     .map((n) => n[0])
     .slice(0, 2)
     .join('')
-    .toUpperCase() ?? 'A';
+    .toUpperCase();
+
+  const showPhoto = !!profile?.profile_photo_url && !imgError;
+
+  // Ambil gelar dari field_of_study atau degree pendidikan terakhir
+  const gelar = education[0]?.gelar ?? '-';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden border border-gray-100">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
-          <h2 className="text-base font-semibold text-gray-800">Profil Ahli</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-            aria-label="Tutup modal"
-          >
-            <X className="w-4 h-4 text-gray-500" />
+          <h2 className="text-sm font-semibold text-gray-700 tracking-wide">Profil Ahli</h2>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" aria-label="Tutup modal">
+            <X className="w-4 h-4 text-gray-400" />
           </button>
         </div>
 
@@ -146,87 +159,54 @@ export default function ModalProfilAhli({ isOpen, onClose, ahliId }: Props) {
         <div className="overflow-y-auto flex-1 px-5 py-4">
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <div className="w-8 h-8 border-2 border-gray-200 border-t-primary rounded-full animate-spin" />
+              <div className="w-7 h-7 border-2 border-gray-200 border-t-emerald-500 rounded-full animate-spin" />
             </div>
           ) : (
             <>
-              {/* Info utama */}
-              <div className="flex items-center gap-4 mb-5">
-                {profile?.profile_photo_url ? (
-                  <img
-                    src={profile.profile_photo_url}
-                    alt={profile.users?.full_name}
-                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-100 flex-shrink-0"
-                  />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary font-semibold text-lg">{initials}</span>
+              {/* Avatar + nama */}
+              <div className="flex items-center gap-3.5 mb-5">
+                <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-emerald-200">
+                  {showPhoto ? <img src={profile!.profile_photo_url!} alt={fullName} className="w-full h-full object-cover" onError={() => setImgError(true)} /> : <span className="text-emerald-600 font-bold text-base">{initials}</span>}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-semibold text-gray-900 text-base leading-tight">{fullName}</p>
+                    {profile?.is_verified && <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />}
                   </div>
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="font-semibold text-gray-800 text-base">
-                      {profile?.users?.full_name ?? '-'}
-                    </span>
-                    {profile?.is_verified && (
-                      <BadgeCheck className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-500 truncate">{profile?.users?.email}</p>
-                  <span className="inline-flex items-center gap-1 mt-1 text-xs font-medium text-green-700 bg-green-50 px-2.5 py-0.5 rounded-full">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  <p className="text-xs text-gray-400 mt-0.5 truncate max-w-[180px]">{profile?.users?.email}</p>
+                  <span className="inline-flex items-center gap-1 mt-1.5 text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                     Online
                   </span>
                 </div>
               </div>
 
-              {/* Stat cards */}
-              <div className="grid grid-cols-3 gap-2.5 mb-5">
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-lg font-semibold text-gray-800">
-                    {profile?.experience_years ?? 0}
-                    <span className="text-xs font-normal text-gray-500 ml-0.5">thn</span>
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-0.5 uppercase tracking-wide">Pengalaman</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-lg font-semibold text-gray-800">{stats.total}</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5 uppercase tracking-wide">Konsultasi</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3 text-center">
-                  <p className="text-lg font-semibold text-gray-800 truncate text-sm">
-                    {profile?.specialization ?? '-'}
-                  </p>
-                  <p className="text-[11px] text-gray-500 mt-0.5 uppercase tracking-wide">Spesialis</p>
-                </div>
+              {/* Stat cards: gelar, pengalaman, konsultasi */}
+              <div className="grid grid-cols-3 gap-2 mb-5">
+                <StatCard value={gelar} label="Gelar" />
+                <StatCard value={profile?.experience_years ?? 0} unit="thn" label="Pengalaman" />
+                <StatCard value={totalConsultasi} label="Konsultasi" />
               </div>
 
-              {/* Deskripsi */}
-              {profile?.description && (
-                <div className="mb-5">
-                  <p className="text-sm text-gray-600 leading-relaxed">{profile.description}</p>
+              {/* Spesialisasi */}
+              <div className="flex items-center justify-between py-3 border-y border-gray-100 mb-5">
+                <div className="flex items-center gap-2 text-gray-400">
+                  <BadgeCheck className="w-4 h-4" />
+                  <span className="text-sm text-gray-600">Spesialis</span>
                 </div>
-              )}
+                <span className="text-sm font-semibold text-gray-800">{profile?.specialization ?? '-'}</span>
+              </div>
 
               {/* Pengalaman Profesional */}
               {experience.length > 0 && (
                 <div className="mb-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <Briefcase className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-gray-700">Pengalaman Profesional</h3>
+                    <Briefcase className="w-4 h-4 text-emerald-500" />
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Pengalaman Profesional</p>
                   </div>
-                  <div className="space-y-3">
+                  <div>
                     {experience.map((exp) => (
-                      <div key={exp.id} className="flex gap-3">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">{exp.position}</p>
-                          <p className="text-xs text-gray-500">{exp.company}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {formatPeriod(exp.start_date, exp.end_date)}
-                          </p>
-                        </div>
-                      </div>
+                      <TimelineItem key={exp.id} period={`${exp.tahun_mulai} – ${exp.tahun_selesai ?? 'Sekarang'}`} title={exp.judul} subtitle={exp.tempat} />
                     ))}
                   </div>
                 </div>
@@ -236,24 +216,12 @@ export default function ModalProfilAhli({ isOpen, onClose, ahliId }: Props) {
               {education.length > 0 && (
                 <div className="mb-2">
                   <div className="flex items-center gap-2 mb-3">
-                    <GraduationCap className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-gray-700">Pendidikan</h3>
+                    <GraduationCap className="w-4 h-4 text-emerald-500" />
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest">Pendidikan</p>
                   </div>
-                  <div className="space-y-3">
+                  <div>
                     {education.map((edu) => (
-                      <div key={edu.id} className="flex gap-3">
-                        <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                        <div>
-                          <p className="text-sm font-medium text-gray-800">{edu.degree}</p>
-                          <p className="text-xs text-gray-500">
-                            {edu.institution}
-                            {edu.field_of_study && ` · ${edu.field_of_study}`}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
-                            {edu.start_year} – {edu.end_year ?? 'Sekarang'}
-                          </p>
-                        </div>
-                      </div>
+                      <TimelineItem key={edu.id} period={`${edu.tahun_mulai} – ${edu.tahun_selesai ?? 'Sekarang'}`} title={edu.judul} subtitle={`${edu.institusi} · ${edu.jenjang}${edu.gelar ? ` · ${edu.gelar}` : ''}`} />
                     ))}
                   </div>
                 </div>
@@ -261,6 +229,15 @@ export default function ModalProfilAhli({ isOpen, onClose, ahliId }: Props) {
             </>
           )}
         </div>
+
+        {/* Footer tombol */}
+        {onConsult && (
+          <div className="px-5 py-4 border-t border-gray-100 flex-shrink-0">
+            <button onClick={onConsult} className="w-full flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold py-3 rounded-xl transition-colors">
+              Mulai Konsultasi
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

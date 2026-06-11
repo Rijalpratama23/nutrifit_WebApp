@@ -31,7 +31,7 @@ export default function SideBar({ profileData }: Props) {
   };
 
   // ── Prioritas foto: dari user_profiles → dari Google OAuth → default avatar
-  const photoUrl = profileData.photoUrl || user?.avatar_url || null;
+  const photoUrl = profileData.photoUrl || user?.phoro_url || null;
 
   return (
     <>

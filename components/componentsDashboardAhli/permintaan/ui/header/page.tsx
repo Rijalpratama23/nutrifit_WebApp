@@ -26,7 +26,7 @@ export default function HeaderKomponents() {
           <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
             {/* Avatar — foto jika ada, icon jika tidak */}
             <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-white flex-shrink-0 flex items-center justify-center">
-              {!loading && user?.avatar_url ? <img src={user.avatar_url} alt={user.nama} className="w-full h-full object-cover" /> : <User size={14} className="sm:w-4 sm:h-4 text-primary" fill="currentColor" />}
+              {!loading && user?.phoro_url ? <img src={user.phoro_url} alt={user.nama} className="w-full h-full object-cover" /> : <User size={14} className="sm:w-4 sm:h-4 text-primary" fill="currentColor" />}
             </div>
 
             <div className="hidden sm:flex flex-col whitespace-nowrap">

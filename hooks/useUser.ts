@@ -7,7 +7,7 @@ export type UserProfile = {
   id: string;
   nama: string;
   email: string;
-  avatar_url: string | null;
+  phoro_url: string | null;
 };
 
 export function useUser() {
@@ -41,7 +41,7 @@ export function useUser() {
         nama: userData?.full_name || authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'User',
         email: authUser.email ?? '',
         // Prioritas: ahli_profiles → user_profiles → auth metadata (Google)
-        avatar_url: ahliData?.profile_photo_url ?? authUser.user_metadata?.avatar_url ?? null,
+        phoro_url: ahliData?.profile_photo_url ?? authUser.user_metadata?.phoro_url ?? null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch user');
