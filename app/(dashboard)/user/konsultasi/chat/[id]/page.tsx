@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
-import { ArrowLeft, Send, User, Check, CheckCheck } from 'lucide-react';
-
+import { ArrowLeft, Send, User, Check, CheckCheck, Info } from 'lucide-react';
+import ModalProfilAhli from '@/components/componentsDashboardUser/konsultasiUser/ui/ModalProfileAhli/page';
 
 interface Message {
   id: string;
@@ -16,13 +16,12 @@ interface Message {
 }
 
 interface ConsultationInfo {
+  ahli_id: string;
   ahli_name: string;
   ahli_photo: string | null;
   ahli_specialization: string;
   status: string;
 }
-
-
 
 function formatTime(dateStr: string) {
   return new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -38,19 +37,11 @@ function formatDateLabel(dateStr: string) {
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-// ─── Komponen Status Centang ──────────────────────────────────────────────────
-
 function MessageStatus({ is_delivered, is_read }: { is_delivered: boolean; is_read: boolean }) {
-  if (is_read) {
-    return <CheckCheck className="w-3.5 h-3.5 text-blue-400 inline-block ml-1" />;
-  }
-  if (is_delivered) {
-    return <CheckCheck className="w-3.5 h-3.5 text-white/60 inline-block ml-1" />;
-  }
+  if (is_read) return <CheckCheck className="w-3.5 h-3.5 text-blue-400 inline-block ml-1" />;
+  if (is_delivered) return <CheckCheck className="w-3.5 h-3.5 text-white/60 inline-block ml-1" />;
   return <Check className="w-3.5 h-3.5 text-white/60 inline-block ml-1" />;
 }
-
-// ─── Typing Indicator ─────────────────────────────────────────────────────────
 
 function TypingIndicator() {
   return (
@@ -64,8 +55,6 @@ function TypingIndicator() {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export default function ChatPage() {
   const params = useParams();
   const router = useRouter();
@@ -77,8 +66,11 @@ export default function ChatPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [consultInfo, setConsultInfo] = useState<ConsultationInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isTyping, setIsTyping] = useState(false); // ahli sedang mengetik
+  const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // ── State modal profil ahli ──────────────────────────────────────────────
+  const [showProfilAhli, setShowProfilAhli] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -98,7 +90,9 @@ export default function ChatPage() {
       .select(
         `
         status,
+        ahli_id,
         ahli_profiles (
+          id,
           specialization,
           profile_photo_url,
           users ( full_name )
@@ -110,6 +104,7 @@ export default function ChatPage() {
 
     if (consult) {
       setConsultInfo({
+        ahli_id: (consult as any).ahli_id,
         ahli_name: (consult as any).ahli_profiles?.users?.full_name ?? 'Ahli',
         ahli_photo: (consult as any).ahli_profiles?.profile_photo_url ?? null,
         ahli_specialization: (consult as any).ahli_profiles?.specialization ?? '',
@@ -121,7 +116,6 @@ export default function ChatPage() {
 
     if (data) {
       setMessages(data);
-      // Mark semua pesan dari ahli sebagai sudah dibaca
       const unread = data.filter((m) => m.sender_id !== session.user.id && !m.is_read);
       if (unread.length > 0) {
         await supabase
@@ -137,53 +131,30 @@ export default function ChatPage() {
     setLoading(false);
   }, [consultationId]);
 
-  // ─── Realtime: pesan baru + typing ───────────────────────────────────────
-
   useEffect(() => {
     init();
 
-    // Channel pesan
     const msgChannel = supabase
       .channel(`chat:${consultationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'consultation_messages',
-          filter: `consultation_id=eq.${consultationId}`,
-        },
-        async (payload) => {
-          const newMsg = payload.new as Message;
-          setMessages((prev) => {
-            if (prev.find((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-          // Auto-mark sebagai dibaca jika bukan dari kita
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (newMsg.sender_id !== session?.user?.id) {
-            await supabase.from('consultation_messages').update({ is_read: true, is_delivered: true }).eq('id', newMsg.id);
-          }
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'consultation_messages',
-          filter: `consultation_id=eq.${consultationId}`,
-        },
-        (payload) => {
-          const updated = payload.new as Message;
-          setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
-        },
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'consultation_messages', filter: `consultation_id=eq.${consultationId}` }, async (payload) => {
+        const newMsg = payload.new as Message;
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (newMsg.sender_id !== session?.user?.id) {
+          await supabase.from('consultation_messages').update({ is_read: true, is_delivered: true }).eq('id', newMsg.id);
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'consultation_messages', filter: `consultation_id=eq.${consultationId}` }, (payload) => {
+        const updated = payload.new as Message;
+        setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+      })
       .subscribe();
 
-    // Channel typing (Broadcast)
     const typingChannel = supabase
       .channel(`typing:${consultationId}`)
       .on('broadcast', { event: 'typing' }, (payload) => {
@@ -204,43 +175,24 @@ export default function ChatPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  // ─── Kirim typing event ───────────────────────────────────────────────────
-
   const handleInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
-
-    // Debounce typing broadcast
     if (typingTimeout) clearTimeout(typingTimeout);
-    await supabase.channel(`typing:${consultationId}`).send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { role: 'user' },
-    });
+    await supabase.channel(`typing:${consultationId}`).send({ type: 'broadcast', event: 'typing', payload: { role: 'user' } });
     const timeout = setTimeout(() => {}, 3000);
     setTypingTimeout(timeout);
   };
-
-  // ─── Kirim pesan ─────────────────────────────────────────────────────────
 
   const handleSend = async () => {
     const text = input.trim();
     if (!text || !currentUserId || sending) return;
     setSending(true);
     setInput('');
-
     const { data: newMsg } = await supabase
       .from('consultation_messages')
-      .insert({
-        consultation_id: consultationId,
-        sender_id: currentUserId,
-        message_text: text,
-        sent_at: new Date().toISOString(),
-        is_delivered: false,
-        is_read: false,
-      })
+      .insert({ consultation_id: consultationId, sender_id: currentUserId, message_text: text, sent_at: new Date().toISOString(), is_delivered: false, is_read: false })
       .select()
       .single();
-
     setSending(false);
     if (!newMsg) setInput(text);
     inputRef.current?.focus();
@@ -252,8 +204,6 @@ export default function ChatPage() {
       handleSend();
     }
   };
-
-  // ─── Group pesan by tanggal ───────────────────────────────────────────────
 
   const groupedMessages: { label: string; messages: Message[] }[] = [];
   messages.forEach((msg) => {
@@ -279,27 +229,34 @@ export default function ChatPage() {
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
 
-        {consultInfo?.ahli_photo ? (
-          <img src={consultInfo.ahli_photo} alt={consultInfo.ahli_name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-100" />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-5 h-5 text-primary" />
+        {/* ── Foto + nama ahli: klik untuk buka modal profil ── */}
+        <button onClick={() => setShowProfilAhli(true)} className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-gray-50 rounded-xl px-2 py-1 -mx-2 transition-colors" aria-label="Lihat profil ahli">
+          {consultInfo?.ahli_photo ? (
+            <img src={consultInfo.ahli_photo} alt={consultInfo.ahli_name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-100 flex-shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-800 text-sm truncate">{consultInfo?.ahli_name ?? 'Ahli'}</p>
+            <div className="flex items-center gap-1.5">
+              {isTyping ? (
+                <p className="text-xs text-primary italic">sedang mengetik...</p>
+              ) : (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-green-400" />
+                  <p className="text-xs text-gray-400">{consultInfo?.ahli_specialization}</p>
+                </>
+              )}
+            </div>
           </div>
-        )}
+        </button>
 
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800 text-sm truncate">{consultInfo?.ahli_name ?? 'Ahli'}</p>
-          <div className="flex items-center gap-1.5">
-            {isTyping ? (
-              <p className="text-xs text-primary italic">sedang mengetik...</p>
-            ) : (
-              <>
-                <span className="w-2 h-2 rounded-full bg-green-400" />
-                <p className="text-xs text-gray-400">{consultInfo?.ahli_specialization}</p>
-              </>
-            )}
-          </div>
-        </div>
+        {/* ── Tombol lihat profil (opsional, alternatif trigger) ── */}
+        <button onClick={() => setShowProfilAhli(true)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" aria-label="Lihat profil ahli" title="Lihat profil ahli">
+          <Info className="w-5 h-5 text-gray-500" />
+        </button>
       </div>
 
       {/* Info banner */}
@@ -337,7 +294,6 @@ export default function ChatPage() {
                 })}
               </div>
             ))}
-            {/* Typing indicator */}
             {isTyping && <TypingIndicator />}
           </>
         )}
@@ -367,6 +323,9 @@ export default function ChatPage() {
         </div>
         <p className="text-[10px] text-gray-400 text-center mt-1.5">Enter untuk kirim · Shift+Enter untuk baris baru</p>
       </div>
+
+      {/* ── Modal Profil Ahli ──────────────────────────────────────────────── */}
+      {consultInfo?.ahli_id && <ModalProfilAhli isOpen={showProfilAhli} onClose={() => setShowProfilAhli(false)} ahliId={consultInfo.ahli_id} />}
     </div>
   );
 }

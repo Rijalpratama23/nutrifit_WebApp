@@ -16,7 +16,7 @@ export default function DashboardUser() {
       <section className="konsultasi bg-primary pb-6 md:pb-8">
         <div className="p-5 md:p-8 text-white">
           <div className="px-2 md:px-5">
-            <h1 className="text-xl md:text-3xl font-semibold">Selamat Datang di Nutrifit {user?.name ? `,${user.name}` : '@Users'}</h1>
+            <h1 className="text-xl md:text-3xl font-semibold">Selamat Datang di Nutrifit {user?.nama ? `,${user.nama}` : 'Users'}</h1>
             <p className="text-sm md:text-base text-shadow-white">Mari kita mulai perjalanan sehat anda hari ini!</p>
           </div>
 

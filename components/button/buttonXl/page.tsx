@@ -4,17 +4,30 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmationModal from '../secondaryButton/ConfirmationModal';
 
-export default function ButtonXl({ title }: { title: string }) {
+interface ButtonXlProps {
+  title: string;
+  destinations?: string;
+  onClick?: () => void;
+  showModal?: boolean;
+}
+
+export default function ButtonXl({ title, destinations = '/login', onClick, showModal = true }: ButtonXlProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
 
   const handleButtonClick = () => {
-    setIsModalOpen(true);
+    if (onClick) {
+      onClick();
+    } else if (showModal) {
+      setIsModalOpen(true);
+    } else {
+      router.push(destinations);
+    }
   };
 
   const handleConfirmLogin = () => {
     setIsModalOpen(false);
-    router.push('/login');
+    router.push(destinations); // ✅ tidak ada lagi hardcode /login
   };
 
   const handleCancel = () => {
@@ -27,8 +40,8 @@ export default function ButtonXl({ title }: { title: string }) {
         {title}
       </button>
 
-      {/* Modal Konfirmasi dengan Portal */}
-      <ConfirmationModal isOpen={isModalOpen} onClose={handleCancel} onConfirm={handleConfirmLogin} />
+      {showModal && <ConfirmationModal isOpen={isModalOpen} onClose={handleCancel} onConfirm={handleConfirmLogin} />}
     </>
   );
 }
+  

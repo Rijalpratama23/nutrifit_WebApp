@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { Flame } from 'lucide-react';
-import { ArrowLeft, Send, User, MoreVertical, PhoneOff, Check, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Send, User, MoreVertical, PhoneOff, Check, CheckCheck, UserCircle } from 'lucide-react';
 import ModalNutrisiPlan from '@/components/componentsDashboardAhli/konsultasi/ModalNutrisiPlan';
+import ModalProfilUser from '@/components/componentsDashboardAhli/konsultasi/ui/ModalProfileUser/page';
 
 interface Message {
   id: string;
@@ -17,6 +18,7 @@ interface Message {
 }
 
 interface ConsultationInfo {
+  user_id: string;
   user_name: string;
   user_photo: string | null;
   user_email: string;
@@ -59,7 +61,7 @@ export default function ChatPageAhli() {
   const params = useParams();
   const router = useRouter();
   const consultationId = params?.id as string;
-  // state untuk rencana nutrisi
+
   const [showNutrisiModal, setShowNutrisiModal] = useState(false);
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
 
@@ -75,6 +77,9 @@ export default function ChatPageAhli() {
   const [isEnded, setIsEnded] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // ── State modal profil user ──────────────────────────────────────────────
+  const [showProfilUser, setShowProfilUser] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -95,6 +100,7 @@ export default function ChatPageAhli() {
       .select(
         `
         status,
+        user_id,
         users!consultations_user_id_fkey ( id, full_name, email )
       `,
       )
@@ -108,6 +114,7 @@ export default function ChatPageAhli() {
       const { data: userProfile } = await supabase.from('user_profiles').select('photo_url').eq('user_id', userId).maybeSingle();
 
       setConsultInfo({
+        user_id: userId,
         user_name: (consult as any).users?.full_name ?? 'User',
         user_photo: userProfile?.photo_url ?? null,
         user_email: (consult as any).users?.email ?? '',
@@ -120,7 +127,6 @@ export default function ChatPageAhli() {
 
     if (data) {
       setMessages(data);
-      // Mark pesan dari user sebagai dibaca
       const unread = data.filter((m) => m.sender_id !== session.user.id && !m.is_read);
       if (unread.length > 0) {
         await supabase
@@ -141,44 +147,25 @@ export default function ChatPageAhli() {
 
     const msgChannel = supabase
       .channel(`chat:${consultationId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'consultation_messages',
-          filter: `consultation_id=eq.${consultationId}`,
-        },
-        async (payload) => {
-          const newMsg = payload.new as Message;
-          setMessages((prev) => {
-            if (prev.find((m) => m.id === newMsg.id)) return prev;
-            return [...prev, newMsg];
-          });
-          const {
-            data: { session },
-          } = await supabase.auth.getSession();
-          if (newMsg.sender_id !== session?.user?.id) {
-            await supabase.from('consultation_messages').update({ is_read: true, is_delivered: true }).eq('id', newMsg.id);
-          }
-        },
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'consultation_messages',
-          filter: `consultation_id=eq.${consultationId}`,
-        },
-        (payload) => {
-          const updated = payload.new as Message;
-          setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
-        },
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'consultation_messages', filter: `consultation_id=eq.${consultationId}` }, async (payload) => {
+        const newMsg = payload.new as Message;
+        setMessages((prev) => {
+          if (prev.find((m) => m.id === newMsg.id)) return prev;
+          return [...prev, newMsg];
+        });
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (newMsg.sender_id !== session?.user?.id) {
+          await supabase.from('consultation_messages').update({ is_read: true, is_delivered: true }).eq('id', newMsg.id);
+        }
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'consultation_messages', filter: `consultation_id=eq.${consultationId}` }, (payload) => {
+        const updated = payload.new as Message;
+        setMessages((prev) => prev.map((m) => (m.id === updated.id ? { ...m, ...updated } : m)));
+      })
       .subscribe();
 
-    // Typing channel
     const typingChannel = supabase
       .channel(`typing:${consultationId}`)
       .on('broadcast', { event: 'typing' }, (payload) => {
@@ -210,11 +197,7 @@ export default function ChatPageAhli() {
   const handleInputChange = async (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
     if (typingTimeout) clearTimeout(typingTimeout);
-    await supabase.channel(`typing:${consultationId}`).send({
-      type: 'broadcast',
-      event: 'typing',
-      payload: { role: 'ahli' },
-    });
+    await supabase.channel(`typing:${consultationId}`).send({ type: 'broadcast', event: 'typing', payload: { role: 'ahli' } });
     const timeout = setTimeout(() => {}, 3000);
     setTypingTimeout(timeout);
   };
@@ -224,20 +207,11 @@ export default function ChatPageAhli() {
     if (!text || !currentUserId || sending || isEnded) return;
     setSending(true);
     setInput('');
-
     const { data: newMsg } = await supabase
       .from('consultation_messages')
-      .insert({
-        consultation_id: consultationId,
-        sender_id: currentUserId,
-        message_text: text,
-        sent_at: new Date().toISOString(),
-        is_delivered: false,
-        is_read: false,
-      })
+      .insert({ consultation_id: consultationId, sender_id: currentUserId, message_text: text, sent_at: new Date().toISOString(), is_delivered: false, is_read: false })
       .select()
       .single();
-
     setSending(false);
     if (!newMsg) setInput(text);
     inputRef.current?.focus();
@@ -281,40 +255,54 @@ export default function ChatPageAhli() {
   return (
     <div className="flex flex-col h-screen bg-gray-50">
       {/* Top Bar */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
+      <div className="relative flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 shadow-sm flex-shrink-0">
         <button onClick={() => router.back()} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
 
-        {consultInfo?.user_photo ? (
-          <img src={consultInfo.user_photo} alt={consultInfo.user_name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-100" />
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <User className="w-5 h-5 text-primary" />
+        {/* ── Foto + nama user: klik untuk buka modal profil ── */}
+        <button onClick={() => setShowProfilUser(true)} className="flex items-center gap-3 flex-1 min-w-0 text-left hover:bg-gray-50 rounded-xl px-2 py-1 -mx-2 transition-colors" aria-label="Lihat profil user">
+          {consultInfo?.user_photo ? (
+            <img src={consultInfo.user_photo} alt={consultInfo.user_name} className="w-10 h-10 rounded-full object-cover border-2 border-gray-100 flex-shrink-0" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5 text-primary" />
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-800 text-sm truncate">{consultInfo?.user_name ?? 'User'}</p>
+            <div className="flex items-center gap-1.5">
+              {isTyping ? (
+                <p className="text-xs text-primary italic">sedang mengetik...</p>
+              ) : (
+                <>
+                  <span className={`w-2 h-2 rounded-full ${isEnded ? 'bg-gray-400' : 'bg-green-400'}`} />
+                  <p className="text-xs text-gray-400">{isEnded ? 'Konsultasi selesai' : consultInfo?.user_email}</p>
+                </>
+              )}
+            </div>
           </div>
-        )}
-
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-800 text-sm truncate">{consultInfo?.user_name ?? 'User'}</p>
-          <div className="flex items-center gap-1.5">
-            {isTyping ? (
-              <p className="text-xs text-primary italic">sedang mengetik...</p>
-            ) : (
-              <>
-                <span className={`w-2 h-2 rounded-full ${isEnded ? 'bg-gray-400' : 'bg-green-400'}`} />
-                <p className="text-xs text-gray-400">{isEnded ? 'Konsultasi selesai' : consultInfo?.user_email}</p>
-              </>
-            )}
-          </div>
-        </div>
+        </button>
 
         <button onClick={() => setShowMenu((prev) => !prev)} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors" aria-label="Menu chat">
           <MoreVertical className="w-5 h-5 text-gray-600" />
         </button>
 
+        {/* ── Dropdown menu ── */}
         {showMenu && (
-          <div className="absolute right-0 top-11 bg-white border border-gray-100 rounded-xl shadow-lg py-1.5 min-w-[200px] z-50">
-            {/* Tombol baru */}
+          <div ref={menuRef} className="absolute right-4 top-14 bg-white border border-gray-100 rounded-xl shadow-lg py-1.5 min-w-[200px] z-50">
+            {/* ── Tombol lihat profil user ── */}
+            <button
+              onClick={() => {
+                setShowProfilUser(true);
+                setShowMenu(false);
+              }}
+              className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <UserCircle className="w-4 h-4" />
+              Lihat Profil User
+            </button>
+            <div className="mx-3 border-t border-gray-100 my-1" />
             <button
               onClick={() => {
                 setShowNutrisiModal(true);
@@ -415,7 +403,7 @@ export default function ChatPageAhli() {
       {showConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowConfirm(false)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <div className="flex items-center justify-center w-12 h-12 bg-red-100 rounded-full mx-auto mb-4">
               <PhoneOff className="w-6 h-6 text-red-500" />
             </div>
@@ -432,8 +420,12 @@ export default function ChatPageAhli() {
           </div>
         </div>
       )}
+
       {/* Modal Rencana Nutrisi */}
       {showNutrisiModal && targetUserId && <ModalNutrisiPlan isOpen={showNutrisiModal} onClose={() => setShowNutrisiModal(false)} consultationId={consultationId} userId={targetUserId} userName={consultInfo?.user_name ?? 'User'} />}
+
+      {/* ── Modal Profil User ────────────────────────────────────────────── */}
+      {consultInfo?.user_id && <ModalProfilUser isOpen={showProfilUser} onClose={() => setShowProfilUser(false)} userId={consultInfo.user_id} />}
     </div>
   );
 }

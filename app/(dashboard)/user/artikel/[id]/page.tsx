@@ -25,9 +25,6 @@ function formatTanggal(dateStr: string) {
   return `${String(d.getDate()).padStart(2, '0')}-${BULAN[d.getMonth()]}-${d.getFullYear()}`;
 }
 
-// ─── Reading Progress Toolbar ─────────────────────────────────
-// Menghitung persentase scroll user terhadap konten artikel
-// dan menampilkan progress bar + info "X/total paragraf dibaca"
 function ReadingProgressBar({ totalParagraf }: { totalParagraf: number }) {
   const [persen, setPersen] = useState(0);
   const [paragrafDibaca, setParagrafDibaca] = useState(0);
