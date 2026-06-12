@@ -1,7 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Upload, Calendar, ChevronDown, Users, Stethoscope, ClipboardList, FileText, Search, RotateCcw, Eye, Pencil, MoreVertical, ChevronLeft, ChevronRight, RefreshCw, Loader } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import {
+  Upload,
+  Calendar,
+  ChevronDown,
+  Users,
+  Stethoscope,
+  ClipboardList,
+  FileText,
+  Search,
+  RotateCcw,
+  Eye,
+  Pencil,
+  MoreVertical,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Loader,
+  Archive,
+  Trash2,
+  X,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import ModalUploadArtikel from '../ModalUploadArtikel';
 import { supabase } from '@/utils/supabase/client';
@@ -28,15 +51,147 @@ interface Article {
   categoryColor: string;
   date: string;
   time: string;
-  timestamp: number; // Unix timestamp untuk sorting
+  timestamp: number;
   status: StatusType;
   errorReason?: string;
 }
 
-// Dummy data untuk development (akan diganti dengan data dari database)
-const dummyArticles: Article[] = []; // Data dummy - akan diganti dengan data real dari database
+// ── Toast Types ────────────────────────────────────────────────────────────────
+type ToastVariant = 'confirm-delete' | 'success' | 'error' | 'info';
 
-// Helper functions
+interface ToastState {
+  open: boolean;
+  variant: ToastVariant;
+  title: string;
+  message: string;
+  articleId?: string;
+  articleTitle?: string;
+}
+
+// ── Inline Toast Component ─────────────────────────────────────────────────────
+function ActionToast({ toast, onConfirmDelete, onClose }: { toast: ToastState; onConfirmDelete: (id: string) => void; onClose: () => void }) {
+  if (!toast.open) return null;
+
+  const iconMap: Record<ToastVariant, React.ReactNode> = {
+    'confirm-delete': <AlertTriangle size={20} className="text-red-500 shrink-0" />,
+    success: <CheckCircle size={20} className="text-green-500 shrink-0" />,
+    error: <XCircle size={20} className="text-red-500 shrink-0" />,
+    info: <CheckCircle size={20} className="text-blue-500 shrink-0" />,
+  };
+
+  const borderMap: Record<ToastVariant, string> = {
+    'confirm-delete': 'border-red-200',
+    success: 'border-green-200',
+    error: 'border-red-200',
+    info: 'border-blue-200',
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-300">
+      <div className={`bg-white rounded-2xl shadow-2xl border ${borderMap[toast.variant]} p-4 w-80 max-w-[calc(100vw-3rem)]`}>
+        <div className="flex items-start gap-3">
+          {iconMap[toast.variant]}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-800">{toast.title}</p>
+            <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{toast.message}</p>
+
+            {/* Confirm Delete buttons */}
+            {toast.variant === 'confirm-delete' && toast.articleId && (
+              <div className="flex gap-2 mt-3">
+                <button onClick={onClose} className="flex-1 px-3 py-1.5 text-xs font-semibold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  Batal
+                </button>
+                <button onClick={() => onConfirmDelete(toast.articleId!)} className="flex-1 px-3 py-1.5 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors">
+                  Ya, Hapus
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Close button (only for non-confirm) */}
+          {toast.variant !== 'confirm-delete' && (
+            <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors shrink-0">
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Dropdown Menu Component ────────────────────────────────────────────────────
+function ArticleDropdown({
+  articleId,
+  articleTitle,
+  articleStatus,
+  onArchive,
+  onDelete,
+}: {
+  articleId: string;
+  articleTitle: string;
+  articleStatus: StatusType;
+  onArchive: (id: string, title: string) => void;
+  onDelete: (id: string, title: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const isAlreadyArchived = articleStatus === 'Archived';
+
+  return (
+    <div ref={ref} className="relative">
+      <button onClick={() => setOpen((v) => !v)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Opsi lainnya">
+        <MoreVertical size={15} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+          {/* Arsipkan */}
+          <button
+            onClick={() => {
+              setOpen(false);
+              onArchive(articleId, articleTitle);
+            }}
+            disabled={isAlreadyArchived}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors text-left
+              ${isAlreadyArchived ? 'text-gray-300 cursor-not-allowed' : 'text-yellow-600 hover:bg-yellow-50'}`}
+          >
+            <Archive size={14} />
+            <span>{isAlreadyArchived ? 'Sudah Diarsipkan' : 'Arsipkan Artikel'}</span>
+          </button>
+
+          <div className="border-t border-gray-100" />
+
+          {/* Hapus */}
+          <button
+            onClick={() => {
+              setOpen(false);
+              onDelete(articleId, articleTitle);
+            }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-red-500 hover:bg-red-50 transition-colors text-left"
+          >
+            <Trash2 size={14} />
+            <span>Hapus Artikel</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Helper functions ───────────────────────────────────────────────────────────
 const getCategoryColor = (category: string): string => {
   const colorMap: Record<string, string> = {
     'Gaya Hidup Sehat': 'bg-green-100 text-green-700',
@@ -48,24 +203,13 @@ const getCategoryColor = (category: string): string => {
 
 const mapDatabaseToArticle = (dbArticle: DatabaseArticle): Article => {
   const createdDate = new Date(dbArticle.created_at);
-  const dateFormatter = new Intl.DateTimeFormat('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  const timeFormatter = new Intl.DateTimeFormat('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const dateFormatter = new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+  const timeFormatter = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' });
 
   let statusType: StatusType = 'Draft';
-  if (dbArticle.status === 'published') {
-    statusType = 'Berhasil Publish';
-  } else if (dbArticle.status === 'draft') {
-    statusType = 'Draft';
-  } else if (dbArticle.status === 'archived') {
-    statusType = 'Archived';
-  }
+  if (dbArticle.status === 'published') statusType = 'Berhasil Publish';
+  else if (dbArticle.status === 'draft') statusType = 'Draft';
+  else if (dbArticle.status === 'archived') statusType = 'Archived';
 
   return {
     id: dbArticle.id,
@@ -129,7 +273,7 @@ function Select({ options, value, onChange }: { options: string[]; value: string
   );
 }
 
-function MobileArticleCard({ article }: { article: Article }) {
+function MobileArticleCard({ article, onArchive, onDelete }: { article: Article; onArchive: (id: string, title: string) => void; onDelete: (id: string, title: string) => void }) {
   return (
     <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 space-y-2">
       <div className="flex gap-3 items-start">
@@ -147,7 +291,7 @@ function MobileArticleCard({ article }: { article: Article }) {
         <StatusBadge status={article.status} />
       </div>
       {article.errorReason && <p className="text-[10px] text-red-400 bg-red-50 rounded-lg px-2 py-1 leading-snug">{article.errorReason}</p>}
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2 pt-1 items-center">
         <button className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium">
           <Eye size={13} /> Lihat
         </button>
@@ -155,15 +299,20 @@ function MobileArticleCard({ article }: { article: Article }) {
           <Pencil size={13} /> Edit
         </button>
         {article.status === 'Gagal Publish' && (
-          <button className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-700 font-medium ml-auto">
+          <button className="flex items-center gap-1 text-xs text-orange-500 hover:text-orange-700 font-medium">
             <RefreshCw size={13} /> Coba Publish Ulang
           </button>
         )}
+        {/* Mobile dropdown */}
+        <div className="ml-auto">
+          <ArticleDropdown articleId={article.id} articleTitle={article.title} articleStatus={article.status} onArchive={onArchive} onDelete={onDelete} />
+        </div>
       </div>
     </div>
   );
 }
 
+// ── Main Component ─────────────────────────────────────────────────────────────
 export default function ContainerArtikel() {
   const [activeTab, setActiveTab] = useState<TabType>('Semua Artikel');
   const [search, setSearch] = useState('');
@@ -174,55 +323,134 @@ export default function ContainerArtikel() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({
-    from: null,
-    to: null,
+  const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
+
+  // ── Toast state ──────────────────────────────────────────────────────────────
+  const [toast, setToast] = useState<ToastState>({
+    open: false,
+    variant: 'info',
+    title: '',
+    message: '',
   });
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (state: Omit<ToastState, 'open'>, autoDismiss = true) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ ...state, open: true });
+    if (autoDismiss && state.variant !== 'confirm-delete') {
+      toastTimerRef.current = setTimeout(() => {
+        setToast((prev) => ({ ...prev, open: false }));
+      }, 3500);
+    }
+  };
+
+  const closeToast = () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast((prev) => ({ ...prev, open: false }));
+  };
 
   const { isCollapsed, isMobile } = useSidebar();
 
-  // Fetch articles dari database
+  // ── Fetch articles ───────────────────────────────────────────────────────────
   const fetchArticles = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase.from('articles').select('*').order('created_at', { ascending: false });
-
       if (error) throw error;
-
-      const mappedArticles = (data as DatabaseArticle[]).map(mapDatabaseToArticle);
-      setArticles(mappedArticles);
+      setArticles((data as DatabaseArticle[]).map(mapDatabaseToArticle));
     } catch (error) {
       console.error('Error fetching articles:', error);
-      // Fallback ke dummy data jika error
-      setArticles(dummyArticles);
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch data saat component mount
   useEffect(() => {
     fetchArticles();
-
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('articles-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, () => {
-        fetchArticles();
-      })
-      .subscribe();
-
+    const channel = supabase.channel('articles-changes').on('postgres_changes', { event: '*', schema: 'public', table: 'articles' }, fetchArticles).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
 
-  // Reset pagination ke halaman 1 ketika filter atau sort berubah
   useEffect(() => {
     setCurrentPage(1);
   }, [search, kategori, status, activeTab, sort, dateRange]);
 
+  // ── Archive handler ──────────────────────────────────────────────────────────
+  const handleArchiveRequest = (id: string, title: string) => {
+    handleArchiveConfirm(id, title);
+  };
+
+  const handleArchiveConfirm = async (id: string, title: string) => {
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.from('articles').update({ status: 'archived', updated_at: new Date().toISOString() }).eq('id', id);
+
+      if (error) throw error;
+
+      // Optimistic update
+      setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'Archived' as StatusType } : a)));
+
+      showToast({
+        variant: 'success',
+        title: 'Artikel Diarsipkan',
+        message: `"${title.length > 40 ? title.slice(0, 40) + '...' : title}" berhasil dipindahkan ke arsip.`,
+      });
+    } catch (err: any) {
+      showToast({
+        variant: 'error',
+        title: 'Gagal Mengarsipkan',
+        message: err.message || 'Terjadi kesalahan saat mengarsipkan artikel. Silakan coba lagi.',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ── Delete handlers ──────────────────────────────────────────────────────────
+  const handleDeleteRequest = (id: string, title: string) => {
+    showToast(
+      {
+        variant: 'confirm-delete',
+        title: 'Hapus Artikel?',
+        message: `Artikel "${title.length > 45 ? title.slice(0, 45) + '...' : title}" akan dihapus permanen dan tidak bisa dikembalikan.`,
+        articleId: id,
+        articleTitle: title,
+      },
+      false, // jangan auto-dismiss, tunggu konfirmasi
+    );
+  };
+
+  const handleDeleteConfirm = async (id: string) => {
+    closeToast();
+    setActionLoading(true);
+    try {
+      const { error } = await supabase.from('articles').delete().eq('id', id);
+      if (error) throw error;
+
+      // Optimistic update
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+
+      showToast({
+        variant: 'success',
+        title: 'Artikel Dihapus',
+        message: 'Artikel berhasil dihapus dari sistem.',
+      });
+    } catch (err: any) {
+      showToast({
+        variant: 'error',
+        title: 'Gagal Menghapus',
+        message: err.message || 'Terjadi kesalahan saat menghapus artikel. Silakan coba lagi.',
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // ── Filters & Sorting ────────────────────────────────────────────────────────
   const filteredArticles = articles.filter((a) => {
     const matchTab = activeTab === 'Semua Artikel' || a.status === activeTab;
     const matchSearch = search === '' || a.title.toLowerCase().includes(search.toLowerCase());
@@ -232,7 +460,6 @@ export default function ContainerArtikel() {
     return matchTab && matchSearch && matchKategori && matchStatus && matchDateRange;
   });
 
-  // Sorting logic
   const sortedArticles = [...filteredArticles].sort((a, b) => {
     switch (sort) {
       case 'Urutan Terbaru':
@@ -248,67 +475,45 @@ export default function ContainerArtikel() {
     }
   });
 
-  // Pagination logic
   const ITEMS_PER_PAGE = 5;
   const totalPages = Math.ceil(sortedArticles.length / ITEMS_PER_PAGE);
   const paginatedArticles = sortedArticles.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
-  // Calculate stats dinamis
   const totalArtikel = articles.length;
   const berhasilPublish = articles.filter((a) => a.status === 'Berhasil Publish').length;
   const gagalPublish = articles.filter((a) => a.status === 'Gagal Publish').length;
   const draft = articles.filter((a) => a.status === 'Draft').length;
 
-  // Helper function untuk format tanggal
   const formatDateRange = () => {
     if (!dateRange.from || !dateRange.to) {
-      const today = new Date();
-      const formatter = new Intl.DateTimeFormat('id-ID', {
-        weekday: 'long',
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric',
-      });
-      return formatter.format(today);
+      return new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }).format(new Date());
     }
-    const formatter = new Intl.DateTimeFormat('id-ID', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
-    return `${formatter.format(dateRange.from)} - ${formatter.format(dateRange.to)}`;
+    const fmt = new Intl.DateTimeFormat('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+    return `${fmt.format(dateRange.from)} - ${fmt.format(dateRange.to)}`;
   };
 
   const TABLE_ROW_HEIGHT = 72;
   const MAX_VISIBLE_ROWS = 5;
   const tableMaxHeight = TABLE_ROW_HEIGHT * MAX_VISIBLE_ROWS;
 
-  // Simple Calendar Component
+  // ── Calendar Component ───────────────────────────────────────────────────────
   const SimpleCalendar = () => {
-    const [currentMonth, setCurrentMonth] = useState(new Date(2026, 4, 1)); // Mei 2026
+    const [currentMonth, setCurrentMonth] = useState(new Date(2026, 4, 1));
     const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
     const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
 
-    const days = [];
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    for (let i = 1; i <= daysInMonth; i++) {
-      days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
-    }
+    const days: (Date | null)[] = [];
+    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
+    for (let i = 1; i <= daysInMonth; i++) days.push(new Date(currentMonth.getFullYear(), currentMonth.getMonth(), i));
 
     const handleDateClick = (date: Date | null) => {
       if (!date) return;
       if (!dateRange.from) {
         setDateRange({ from: date, to: null });
       } else if (!dateRange.to) {
-        if (date < dateRange.from) {
-          setDateRange({ from: date, to: dateRange.from });
-        } else {
-          setDateRange({ from: dateRange.from, to: date });
-        }
+        setDateRange(date < dateRange.from ? { from: date, to: dateRange.from } : { from: dateRange.from, to: date });
       } else {
         setDateRange({ from: date, to: null });
       }
@@ -316,10 +521,7 @@ export default function ContainerArtikel() {
 
     const isBetween = (date: Date) => {
       if (!dateRange.from || !dateRange.to) return false;
-      const dateTime = date.getTime();
-      const fromTime = dateRange.from.getTime();
-      const toTime = dateRange.to.getTime();
-      return dateTime >= fromTime && dateTime <= toTime;
+      return date.getTime() >= dateRange.from.getTime() && date.getTime() <= dateRange.to.getTime();
     };
 
     return (
@@ -333,38 +535,25 @@ export default function ContainerArtikel() {
             <ChevronRight size={18} />
           </button>
         </div>
-
         <div className="grid grid-cols-7 gap-1 mb-2">
-          {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((day) => (
-            <div key={day} className="text-center text-xs font-semibold text-gray-500">
-              {day}
+          {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'].map((d) => (
+            <div key={d} className="text-center text-xs font-semibold text-gray-500">
+              {d}
             </div>
           ))}
         </div>
-
         <div className="grid grid-cols-7 gap-1">
-          {days.map((date, index) => (
+          {days.map((date, i) => (
             <button
-              key={index}
+              key={i}
               onClick={() => handleDateClick(date)}
               disabled={!date}
-              className={`p-2 text-xs rounded ${
-                !date
-                  ? 'text-gray-200'
-                  : dateRange.from?.toDateString() === date?.toDateString()
-                    ? 'bg-blue-500 text-white font-semibold'
-                    : dateRange.to?.toDateString() === date?.toDateString()
-                      ? 'bg-blue-500 text-white font-semibold'
-                      : isBetween(date)
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'hover:bg-gray-100 text-gray-700'
-              }`}
+              className={`p-2 text-xs rounded ${!date ? 'text-gray-200' : dateRange.from?.toDateString() === date?.toDateString() || dateRange.to?.toDateString() === date?.toDateString() ? 'bg-blue-500 text-white font-semibold' : isBetween(date) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'}`}
             >
               {date?.getDate()}
             </button>
           ))}
         </div>
-
         <div className="flex gap-2 mt-4">
           <button onClick={() => setDateRange({ from: null, to: null })} className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors">
             Reset
@@ -377,6 +566,7 @@ export default function ContainerArtikel() {
     );
   };
 
+  // ── Render ───────────────────────────────────────────────────────────────────
   return (
     <div className={`flex-1 min-w-0 min-h-screen bg-[#EEF2F7] transition-all duration-300 ${isMobile ? 'ml-0 mt-14' : isCollapsed ? 'ml-18' : 'ml-64'}`}>
       <div className="min-h-screen bg-[#f0f4fb] p-3 sm:p-4 md:p-6 font-sans">
@@ -387,9 +577,8 @@ export default function ContainerArtikel() {
             <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Kelola Seluruh Artikel</p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-500 hover:bg-primary text-white rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm transition-colors cursor-pointer">
-              <Upload size={15} />
-              Upload Artikel
+            <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold shadow-sm transition-colors cursor-pointer">
+              <Upload size={15} /> Upload Artikel
             </button>
             <div className="relative">
               <button
@@ -433,7 +622,7 @@ export default function ContainerArtikel() {
             ))}
           </div>
 
-          {/* Filter */}
+          {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -473,7 +662,7 @@ export default function ContainerArtikel() {
             ) : sortedArticles.length === 0 ? (
               <p className="text-center text-sm text-gray-400 py-8">Tidak ada artikel ditemukan.</p>
             ) : (
-              paginatedArticles.map((a) => <MobileArticleCard key={a.id} article={a} />)
+              paginatedArticles.map((a) => <MobileArticleCard key={a.id} article={a} onArchive={handleArchiveRequest} onDelete={handleDeleteRequest} />)
             )}
           </div>
 
@@ -512,18 +701,21 @@ export default function ContainerArtikel() {
                       <div className="pr-2">
                         <StatusBadge status={article.status} />
                       </div>
+
+                      {/* ── Aksi Column ── */}
                       <div className="flex items-center gap-1 sm:gap-2">
-                        <button className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1">
+                        <button className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors">
                           <Eye size={13} /> Lihat
                         </button>
-                        <button className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1">
+                        <button className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors">
                           <Pencil size={13} /> Edit
                         </button>
-                        <button className="text-gray-400 hover:text-gray-600">
-                          <MoreVertical size={15} />
-                        </button>
+
+                        {/* Dropdown menu */}
+                        <ArticleDropdown articleId={article.id} articleTitle={article.title} articleStatus={article.status} onArchive={handleArchiveRequest} onDelete={handleDeleteRequest} />
                       </div>
                     </div>
+
                     {article.errorReason && (
                       <div className="bg-red-50 px-4 pb-2 -mt-1">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -575,7 +767,7 @@ export default function ContainerArtikel() {
               )}
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
+                disabled={currentPage === totalPages || totalPages === 0}
                 className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 <ChevronRight size={15} />
@@ -585,15 +777,28 @@ export default function ContainerArtikel() {
         </div>
       </div>
 
-      {/* ← MODAL DI SINI */}
+      {/* Modal Upload */}
       <ModalUploadArtikel
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {
           console.log('Artikel berhasil disimpan!');
-          fetchArticles(); // Refresh data
+          fetchArticles();
         }}
       />
+
+      {/* Action Toast (Confirm Delete / Success / Error) */}
+      <ActionToast toast={toast} onConfirmDelete={handleDeleteConfirm} onClose={closeToast} />
+
+      {/* Global action loading overlay */}
+      {actionLoading && (
+        <div className="fixed inset-0 z-[9998] flex items-end justify-end p-6 pointer-events-none">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-4 py-3 flex items-center gap-2.5">
+            <Loader size={16} className="animate-spin text-blue-500" />
+            <span className="text-xs font-medium text-gray-600">Memproses...</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
