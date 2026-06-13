@@ -27,6 +27,8 @@ import {
 } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import ModalUploadArtikel from '../ModalUploadArtikel';
+import ModalPreviewArtikel from '../ModalPreviewArtikel';
+import ModalEditArtikel from '../ModalEditArtikel';
 import { supabase } from '@/utils/supabase/client';
 
 type StatusType = 'Berhasil Publish' | 'Gagal Publish' | 'Draft' | 'Archived';
@@ -55,6 +57,8 @@ interface Article {
   status: StatusType;
   errorReason?: string;
 }
+
+type ArticleWithContent = Article & { content?: string };
 
 // ── Toast Types ────────────────────────────────────────────────────────────────
 type ToastVariant = 'confirm-delete' | 'success' | 'error' | 'info';
@@ -94,8 +98,6 @@ function ActionToast({ toast, onConfirmDelete, onClose }: { toast: ToastState; o
           <div className="flex-1 min-w-0">
             <p className="text-sm font-bold text-gray-800">{toast.title}</p>
             <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{toast.message}</p>
-
-            {/* Confirm Delete buttons */}
             {toast.variant === 'confirm-delete' && toast.articleId && (
               <div className="flex gap-2 mt-3">
                 <button onClick={onClose} className="flex-1 px-3 py-1.5 text-xs font-semibold text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -107,8 +109,6 @@ function ActionToast({ toast, onConfirmDelete, onClose }: { toast: ToastState; o
               </div>
             )}
           </div>
-
-          {/* Close button (only for non-confirm) */}
           {toast.variant !== 'confirm-delete' && (
             <button onClick={onClose} className="p-1 hover:bg-gray-100 rounded-lg text-gray-400 transition-colors shrink-0">
               <X size={14} />
@@ -137,12 +137,9 @@ function ArticleDropdown({
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     if (open) document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -155,10 +152,8 @@ function ArticleDropdown({
       <button onClick={() => setOpen((v) => !v)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors" title="Opsi lainnya">
         <MoreVertical size={15} />
       </button>
-
       {open && (
         <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-          {/* Arsipkan */}
           <button
             onClick={() => {
               setOpen(false);
@@ -171,10 +166,7 @@ function ArticleDropdown({
             <Archive size={14} />
             <span>{isAlreadyArchived ? 'Sudah Diarsipkan' : 'Arsipkan Artikel'}</span>
           </button>
-
           <div className="border-t border-gray-100" />
-
-          {/* Hapus */}
           <button
             onClick={() => {
               setOpen(false);
@@ -273,7 +265,19 @@ function Select({ options, value, onChange }: { options: string[]; value: string
   );
 }
 
-function MobileArticleCard({ article, onArchive, onDelete }: { article: Article; onArchive: (id: string, title: string) => void; onDelete: (id: string, title: string) => void }) {
+function MobileArticleCard({
+  article,
+  onView,
+  onEdit,
+  onArchive,
+  onDelete,
+}: {
+  article: Article;
+  onView: (a: Article) => void;
+  onEdit: (a: Article) => void;
+  onArchive: (id: string, title: string) => void;
+  onDelete: (id: string, title: string) => void;
+}) {
   return (
     <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 space-y-2">
       <div className="flex gap-3 items-start">
@@ -292,10 +296,10 @@ function MobileArticleCard({ article, onArchive, onDelete }: { article: Article;
       </div>
       {article.errorReason && <p className="text-[10px] text-red-400 bg-red-50 rounded-lg px-2 py-1 leading-snug">{article.errorReason}</p>}
       <div className="flex gap-2 pt-1 items-center">
-        <button className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium">
+        <button onClick={() => onView(article)} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium">
           <Eye size={13} /> Lihat
         </button>
-        <button className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium">
+        <button onClick={() => onEdit(article)} className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 font-medium">
           <Pencil size={13} /> Edit
         </button>
         {article.status === 'Gagal Publish' && (
@@ -303,7 +307,6 @@ function MobileArticleCard({ article, onArchive, onDelete }: { article: Article;
             <RefreshCw size={13} /> Coba Publish Ulang
           </button>
         )}
-        {/* Mobile dropdown */}
         <div className="ml-auto">
           <ArticleDropdown articleId={article.id} articleTitle={article.title} articleStatus={article.status} onArchive={onArchive} onDelete={onDelete} />
         </div>
@@ -327,22 +330,22 @@ export default function ContainerArtikel() {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [dateRange, setDateRange] = useState<{ from: Date | null; to: Date | null }>({ from: null, to: null });
 
+  // ── Preview & Edit modal state ───────────────────────────────────────────────
+  const [previewArticle, setPreviewArticle] = useState<ArticleWithContent | null>(null);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [editArticle, setEditArticle] = useState<ArticleWithContent | null>(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [contentLoading, setContentLoading] = useState(false);
+
   // ── Toast state ──────────────────────────────────────────────────────────────
-  const [toast, setToast] = useState<ToastState>({
-    open: false,
-    variant: 'info',
-    title: '',
-    message: '',
-  });
+  const [toast, setToast] = useState<ToastState>({ open: false, variant: 'info', title: '', message: '' });
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const showToast = (state: Omit<ToastState, 'open'>, autoDismiss = true) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ ...state, open: true });
     if (autoDismiss && state.variant !== 'confirm-delete') {
-      toastTimerRef.current = setTimeout(() => {
-        setToast((prev) => ({ ...prev, open: false }));
-      }, 3500);
+      toastTimerRef.current = setTimeout(() => setToast((prev) => ({ ...prev, open: false })), 3500);
     }
   };
 
@@ -379,32 +382,48 @@ export default function ContainerArtikel() {
     setCurrentPage(1);
   }, [search, kategori, status, activeTab, sort, dateRange]);
 
-  // ── Archive handler ──────────────────────────────────────────────────────────
-  const handleArchiveRequest = (id: string, title: string) => {
-    handleArchiveConfirm(id, title);
+  // ── Fetch content helper ─────────────────────────────────────────────────────
+  const fetchArticleContent = async (article: Article): Promise<ArticleWithContent> => {
+    setContentLoading(true);
+    try {
+      const { data } = await supabase.from('articles').select('content').eq('id', article.id).single();
+      return { ...article, content: data?.content ?? '' };
+    } finally {
+      setContentLoading(false);
+    }
   };
+
+  // ── View handler ─────────────────────────────────────────────────────────────
+  const handleView = async (article: Article) => {
+    const full = await fetchArticleContent(article);
+    setPreviewArticle(full);
+    setIsPreviewOpen(true);
+  };
+
+  // ── Edit handler ─────────────────────────────────────────────────────────────
+  const handleEdit = async (article: Article) => {
+    const full = await fetchArticleContent(article);
+    setEditArticle(full);
+    setIsEditOpen(true);
+  };
+
+  // ── Archive handler ──────────────────────────────────────────────────────────
+  const handleArchiveRequest = (id: string, title: string) => handleArchiveConfirm(id, title);
 
   const handleArchiveConfirm = async (id: string, title: string) => {
     setActionLoading(true);
     try {
       const { error } = await supabase.from('articles').update({ status: 'archived', updated_at: new Date().toISOString() }).eq('id', id);
-
       if (error) throw error;
-
-      // Optimistic update
       setArticles((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'Archived' as StatusType } : a)));
-
       showToast({
         variant: 'success',
         title: 'Artikel Diarsipkan',
         message: `"${title.length > 40 ? title.slice(0, 40) + '...' : title}" berhasil dipindahkan ke arsip.`,
       });
-    } catch (err: any) {
-      showToast({
-        variant: 'error',
-        title: 'Gagal Mengarsipkan',
-        message: err.message || 'Terjadi kesalahan saat mengarsipkan artikel. Silakan coba lagi.',
-      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat mengarsipkan artikel.';
+      showToast({ variant: 'error', title: 'Gagal Mengarsipkan', message: msg });
     } finally {
       setActionLoading(false);
     }
@@ -420,7 +439,7 @@ export default function ContainerArtikel() {
         articleId: id,
         articleTitle: title,
       },
-      false, // jangan auto-dismiss, tunggu konfirmasi
+      false,
     );
   };
 
@@ -430,21 +449,11 @@ export default function ContainerArtikel() {
     try {
       const { error } = await supabase.from('articles').delete().eq('id', id);
       if (error) throw error;
-
-      // Optimistic update
       setArticles((prev) => prev.filter((a) => a.id !== id));
-
-      showToast({
-        variant: 'success',
-        title: 'Artikel Dihapus',
-        message: 'Artikel berhasil dihapus dari sistem.',
-      });
-    } catch (err: any) {
-      showToast({
-        variant: 'error',
-        title: 'Gagal Menghapus',
-        message: err.message || 'Terjadi kesalahan saat menghapus artikel. Silakan coba lagi.',
-      });
+      showToast({ variant: 'success', title: 'Artikel Dihapus', message: 'Artikel berhasil dihapus dari sistem.' });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan saat menghapus artikel.';
+      showToast({ variant: 'error', title: 'Gagal Menghapus', message: msg });
     } finally {
       setActionLoading(false);
     }
@@ -548,7 +557,15 @@ export default function ContainerArtikel() {
               key={i}
               onClick={() => handleDateClick(date)}
               disabled={!date}
-              className={`p-2 text-xs rounded ${!date ? 'text-gray-200' : dateRange.from?.toDateString() === date?.toDateString() || dateRange.to?.toDateString() === date?.toDateString() ? 'bg-blue-500 text-white font-semibold' : isBetween(date) ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100 text-gray-700'}`}
+              className={`p-2 text-xs rounded ${
+                !date
+                  ? 'text-gray-200'
+                  : dateRange.from?.toDateString() === date?.toDateString() || dateRange.to?.toDateString() === date?.toDateString()
+                    ? 'bg-blue-500 text-white font-semibold'
+                    : isBetween(date)
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'hover:bg-gray-100 text-gray-700'
+              }`}
             >
               {date?.getDate()}
             </button>
@@ -615,7 +632,9 @@ export default function ContainerArtikel() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap border-b-2 transition-colors shrink-0 ${activeTab === tab ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+                className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold whitespace-nowrap border-b-2 transition-colors shrink-0 ${
+                  activeTab === tab ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'
+                }`}
               >
                 {tab}
               </button>
@@ -662,7 +681,7 @@ export default function ContainerArtikel() {
             ) : sortedArticles.length === 0 ? (
               <p className="text-center text-sm text-gray-400 py-8">Tidak ada artikel ditemukan.</p>
             ) : (
-              paginatedArticles.map((a) => <MobileArticleCard key={a.id} article={a} onArchive={handleArchiveRequest} onDelete={handleDeleteRequest} />)
+              paginatedArticles.map((a) => <MobileArticleCard key={a.id} article={a} onView={handleView} onEdit={handleEdit} onArchive={handleArchiveRequest} onDelete={handleDeleteRequest} />)
             )}
           </div>
 
@@ -701,21 +720,17 @@ export default function ContainerArtikel() {
                       <div className="pr-2">
                         <StatusBadge status={article.status} />
                       </div>
-
-                      {/* ── Aksi Column ── */}
+                      {/* Aksi Column */}
                       <div className="flex items-center gap-1 sm:gap-2">
-                        <button className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors">
+                        <button onClick={() => handleView(article)} disabled={contentLoading} className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors disabled:opacity-50">
                           <Eye size={13} /> Lihat
                         </button>
-                        <button className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors">
+                        <button onClick={() => handleEdit(article)} disabled={contentLoading} className="text-xs text-blue-500 hover:text-blue-700 font-medium flex items-center gap-1 transition-colors disabled:opacity-50">
                           <Pencil size={13} /> Edit
                         </button>
-
-                        {/* Dropdown menu */}
                         <ArticleDropdown articleId={article.id} articleTitle={article.title} articleStatus={article.status} onArchive={handleArchiveRequest} onDelete={handleDeleteRequest} />
                       </div>
                     </div>
-
                     {article.errorReason && (
                       <div className="bg-red-50 px-4 pb-2 -mt-1">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -782,13 +797,45 @@ export default function ContainerArtikel() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => {
-          console.log('Artikel berhasil disimpan!');
           fetchArticles();
         }}
       />
 
-      {/* Action Toast (Confirm Delete / Success / Error) */}
+      {/* Modal Preview */}
+      <ModalPreviewArtikel
+        isOpen={isPreviewOpen}
+        onClose={() => {
+          setIsPreviewOpen(false);
+          setPreviewArticle(null);
+        }}
+        article={previewArticle}
+      />
+
+      {/* Modal Edit */}
+      <ModalEditArtikel
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditArticle(null);
+        }}
+        onSuccess={() => {
+          fetchArticles();
+        }}
+        article={editArticle}
+      />
+
+      {/* Action Toast */}
       <ActionToast toast={toast} onConfirmDelete={handleDeleteConfirm} onClose={closeToast} />
+
+      {/* Content loading overlay (saat fetch konten artikel) */}
+      {contentLoading && (
+        <div className="fixed inset-0 z-[9998] flex items-end justify-end p-6 pointer-events-none">
+          <div className="bg-white rounded-xl shadow-lg border border-gray-200 px-4 py-3 flex items-center gap-2.5">
+            <Loader size={16} className="animate-spin text-blue-500" />
+            <span className="text-xs font-medium text-gray-600">Memuat artikel...</span>
+          </div>
+        </div>
+      )}
 
       {/* Global action loading overlay */}
       {actionLoading && (
