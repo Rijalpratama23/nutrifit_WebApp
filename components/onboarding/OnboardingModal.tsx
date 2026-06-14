@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
+import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 import { X, ChevronRight, ChevronLeft, User, Activity, Target, CheckCircle } from 'lucide-react';
 
 interface OnboardingModalProps {
@@ -187,16 +188,22 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         .from('profiles')
         .update({
           is_profile_complete: true,
-          updated_at: now,
         })
         .eq('id',user.id);
 
       if (completeError) throw completeError;
 
       setCurrentStep(4);
+      showSuccessToast({
+        title: 'Profile berhasil disimpan',
+        message: 'Data anda sudah tersimpan dan akan tampil di halaman profile.',
+      });
     } catch (err) {
-      console.error('Error menyimpan profil:', err);
-      alert('Gagal menyimpan data. Silakan coba lagi.');
+      console.error('Error menyimpan profile:', err);
+      showErrorToast({
+        title: 'Gagal menyimpan data',
+        message: 'Terjadi kesalahan, silahkan coba lagi'
+      })
     } finally {
       setIsSubmitting(false);
     }
@@ -204,7 +211,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
   const handleFinish = () => {
     onComplete();
-    router.push('/dashboard/profile');
+    router.push('/user/profile');
   };
 
   const handleSkip = async () => {
