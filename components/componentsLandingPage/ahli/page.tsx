@@ -17,7 +17,7 @@ export default function timAhli() {
         <div className="w-full flex flex-col items-center p-5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-white hover:scale-105 transition-transform duration-300">
           <div className="w-full">
             <div className="relative w-full aspect-[4/3] md:h-[180px]">
-              <Image src="/landingpage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
+              <Image src="/landingPage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
             </div>
             <h4 className="text-center pt-4 font-bold text-gray-800">Dr. Adika Pratama, S.Gz</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>
@@ -33,7 +33,7 @@ export default function timAhli() {
         <div className="w-full flex flex-col items-center p-5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-white hover:scale-105 transition-transform duration-300">
           <div className="w-full text-center">
             <div className="relative w-full aspect-[4/3] md:h-[180px]">
-              <Image src="/landingpage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
+              <Image src="/landingPage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
             </div>
             <h4 className="text-center pt-4 font-bold text-gray-800">Dr. Adika Pratama, S.Gz</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>
@@ -49,24 +49,16 @@ export default function timAhli() {
         <div className="w-full flex flex-col items-center p-5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-white hover:scale-105 transition-transform duration-300">
           <div className="w-full text-center">
             <div className="relative w-full aspect-[4/3] md:h-[180px]">
-              <Image src="/landingpage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
+              <Image src="/landingPage/doctor1.webp" alt="picture" fill className="rounded-2xl object-cover" />
             </div>
-            <h4 className="text-center pt-4 font-bold text-gray-800">Dr. Adika Pratama, S.Gz</h4>
+            <h4 className="text-center pt-4 font-bold text-gray-800">dr. Sentot Handoko, Sp.GK</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>
-            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Dokter dengan pengalaman yang mumpuni dan ahli di bidangnya.</p>
+            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Dokter Handoko juga tergabung dalam Ikatan Dokter Indonesia (IDI) dan Perhimpunan Dokter Spesialis Gizi Klinik Indonesia (PDGKI)./p>
 
             <div className="flex justify-center pb-2">
               <ButtonSecond text="Lihat Profile" background="bg-primary" />
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* View All Section - Responsif */}
-      <div className="flex justify-center md:justify-end items-center gap-4 md:mr-20 mt-10 group cursor-pointer">
-        <p className="font-semibold text-primary group-hover:underline">View All</p>
-        <div className="bg-primary p-2 rounded-full text-white group-hover:translate-x-2 transition-transform shadow-lg">
-          <ArrowRight size={20} />
         </div>
       </div>
     </div>
