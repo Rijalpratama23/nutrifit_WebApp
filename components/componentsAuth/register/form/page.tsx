@@ -19,7 +19,7 @@ export default function FormRegister() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: 'https://nutrifit-web-app.vercel.app/auth/callback',
+        redirectTo: 'https://nutrifit-web-app-opal.vercel.app/auth/callback',
       },
     });
 
