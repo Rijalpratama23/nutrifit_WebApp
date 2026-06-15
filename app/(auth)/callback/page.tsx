@@ -21,39 +21,38 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      try {
+        // ✅ Ambil code dari URL
+        const code = new URLSearchParams(window.location.search).get('code');
 
-      if (error || !session) {
-        if (error?.message.includes('already')) {
-          router.push('/login?error=email-exist');
-        } else {
+        if (!code) {
+          router.push('/login?error=no-code');
+          return;
+        }
+
+        // ✅ Exchange code -> session
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+        if (exchangeError) {
+          console.error('Exchange error:', exchangeError);
           router.push('/login?error=auth-failed');
-        }
-        return;
-      }
-
-      const user = session.user;
-
-      const isGoogleLogin = user.app_metadata?.provider === 'google' || user.identities?.some((id: any) => id.provider === 'google');
-
-      if (isGoogleLogin) {
-        const hasEmailIdentity = user.identities?.some((id: any) => id.provider === 'email');
-        const hasGoogleIdentity = user.identities?.some((id: any) => id.provider === 'google');
-
-        if (hasEmailIdentity && hasGoogleIdentity) {
-          const { data: existingUser } = await supabase.from('users').select('id, role').eq('id', user.id).single();
-
-          if (existingUser) {
-            const role = existingUser.role ?? 'user';
-            setStatus('Login berhasil, mengalihkan...');
-            router.push(getRedirectByRole(role));
-            return;
-          }
+          return;
         }
 
+        // ✅ Sekarang baru ambil session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError || !session) {
+          router.push('/login?error=no-session');
+          return;
+        }
+
+        const user = session.user;
+
+        // ✅ Cek apakah email sudah dipakai akun lain
         const { data: existingByEmail } = await supabase
           .from('users')
           .select('id, role')
@@ -61,20 +60,31 @@ export default function CallbackPage() {
           .single();
 
         if (existingByEmail && existingByEmail.id !== user.id) {
-          setStatus('Email sudah terdaftar, mengalihkan...');
+          setStatus('Email sudah terdaftar...');
           await supabase.auth.signOut();
-          setTimeout(() => {
-            router.push('/login?error=email-exists');
-          }, 1000);
+          setTimeout(() => router.push('/login?error=email-exists'), 1000);
           return;
         }
+
+        // ✅ Upsert user ke tabel users (buat baru jika belum ada)
+        await supabase.from('users').upsert(
+          {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name ?? user.email,
+            avatar_url: user.user_metadata?.avatar_url ?? null,
+            role: existingByEmail?.role ?? 'user',
+          },
+          { onConflict: 'id' },
+        );
+
+        const role = existingByEmail?.role ?? 'user';
+        setStatus('Login berhasil, mengalihkan...');
+        router.push(getRedirectByRole(role));
+      } catch (err) {
+        console.error('Callback error:', err);
+        router.push('/login?error=unknown');
       }
-
-      const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
-
-      const role = userData?.role ?? 'user';
-      setStatus('Login berhasil, mengalihkan...');
-      router.push(getRedirectByRole(role));
     };
 
     handleCallback();
