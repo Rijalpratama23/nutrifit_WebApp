@@ -61,16 +61,6 @@ export default function Konsultasi() {
           </div>
         </div>
       </div>
-
-      <div className="mt-6">
-        <div className="bg-white mt-5 mb-10 p-4 sm:p-6 rounded-2xl">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-10">
-            <div className="w-full md:w-1/2 flex justify-center">
-              <Image src="/landingPage/doctor.png" alt="picture" width={300} height={180} className="object-contain" />
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
