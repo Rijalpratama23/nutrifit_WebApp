@@ -19,7 +19,7 @@ export default function Hero() {
           </div>
         </div>
         <div>
-          <Image src="/hero.png" alt="picture" width={500} height={100} />
+          <Image src="/landingPage/hero.png" alt="picture" width={500} height={100} />
         </div>
       </div>
     </section>
