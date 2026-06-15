@@ -13,7 +13,7 @@ export default function Konsultasi() {
         <div className="w-full sm:w-72 md:w-60 card bg-white p-5 rounded-xl">
           <div className="flex items-center pb-3 gap-4">
             <div className="flex-shrink-0">
-              <Image src="/landingpage/diet.png" alt="picure" width={55} height={55} className="object-contain" />
+              <Image src="/landingPage/diet.png" alt="picure" width={55} height={55} className="object-contain" />
             </div>
             <h3 className="font-semibold text-xl">Nutrisi</h3>
           </div>
@@ -30,7 +30,7 @@ export default function Konsultasi() {
         <div className="w-full sm:w-72 md:w-60 card bg-white p-5 rounded-xl">
           <div className="flex items-center pb-3 gap-4">
             <div className="flex-shrink-0">
-              <Image src="/landingpage/nutritions.png" alt="picure" width={55} height={55} className="object-contain" />
+              <Image src="/landingPage/nutritions.png" alt="picure" width={55} height={55} className="object-contain" />
             </div>
             <h3 className="font-semibold text-xl">Diet</h3>
           </div>
@@ -47,7 +47,7 @@ export default function Konsultasi() {
         <div className="w-full sm:w-72 md:w-60 card bg-white p-5 rounded-xl">
           <div className="flex items-center pb-3 gap-4">
             <div className="flex-shrink-0">
-              <Image src="/landingpage/lifestyle.png" alt="picure" width={55} height={55} className="object-contain" />
+              <Image src="/landingPage/lifestyle.png" alt="picure" width={55} height={55} className="object-contain" />
             </div>
             <h3 className="font-semibold text-xl">Lifestyle</h3>
           </div>
@@ -66,7 +66,7 @@ export default function Konsultasi() {
         <div className="bg-white mt-5 mb-10 p-4 sm:p-6 rounded-2xl">
           <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-10">
             <div className="w-full md:w-1/2 flex justify-center">
-              <Image src="/landingpage/doctor.png" alt="picture" width={300} height={180} className="object-contain" />
+              <Image src="/landingPage/doctor.png" alt="picture" width={300} height={180} className="object-contain" />
             </div>
 
             <div className="w-full md:w-1/2 mt-3 md:mt-0">
