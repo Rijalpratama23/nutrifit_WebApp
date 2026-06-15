@@ -21,43 +21,20 @@ export default function CallbackPage() {
       const { data: { session }, error } = await supabase.auth.getSession();
 
       if (error || !session) {
-        // jika error karena duplikast email
-        if(error?.message.includes('already')) {
+        if (error?.message.includes('already')) {
           router.push('/login?error=email-exist');
-        }else {
-          router.push('/login?error=auth-failed')
+        } else {
+          router.push('/login?error=auth-failed');
         }
         return;
       }
 
-      if(!session) {
-        router.push('/login?error=no-session');
-        return;
-      }
-
-      const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', session.user.id)
-      .single();
-
-    const role = userData?.role ?? 'user';
-    router.push(getRedirectByRole(role));
-  };
-
-  handleCallback();
-}, [router]);
-      
-
       const user = session.user;
 
-      // ── Cek apakah login via Google ──────────────────────────────────────
       const isGoogleLogin = user.app_metadata?.provider === 'google' ||
         user.identities?.some((id: any) => id.provider === 'google');
 
       if (isGoogleLogin) {
-        // Cek apakah email ini sudah punya akun email+password
-        // Caranya: cek apakah user punya identity 'email' JUGA selain 'google'
         const hasEmailIdentity = user.identities?.some(
           (id: any) => id.provider === 'email'
         );
@@ -74,7 +51,7 @@ export default function CallbackPage() {
 
           if (existingUser) {
             const role = existingUser.role ?? 'user';
-            setStatus(`Login berhasil, mengalihkan...`);
+            setStatus('Login berhasil, mengalihkan...');
             router.push(getRedirectByRole(role));
             return;
           }
@@ -96,7 +73,6 @@ export default function CallbackPage() {
         }
       }
 
-      // ── Ambil role & redirect ─────────────────────────────────────────────
       const { data: userData } = await supabase
         .from('users')
         .select('role')
@@ -104,7 +80,7 @@ export default function CallbackPage() {
         .single();
 
       const role = userData?.role ?? 'user';
-      setStatus(`Login berhasil, mengalihkan...`);
+      setStatus('Login berhasil, mengalihkan...');
       router.push(getRedirectByRole(role));
     };
 
