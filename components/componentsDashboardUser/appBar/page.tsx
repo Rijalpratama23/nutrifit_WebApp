@@ -18,10 +18,8 @@ export default function AppBar() {
   const toggleMenu = () => setIsOpen(!isOpen);
   const isActive = (href: string) => pathname === href;
 
-  // ── Ambil nama dari hook (sudah sinkron dengan tabel users) ──
   const displayName = loading ? 'Loading...' : user?.nama || 'User';
 
-  // ── Fetch photo profile dari database ──
   useEffect(() => {
     setIsMounted(true);
     const fetchPhotoUrl = async () => {
@@ -39,15 +37,16 @@ export default function AppBar() {
     fetchPhotoUrl();
   }, []);
 
-  // ── Setup realtime subscription untuk sync otomatis ──
   useEffect(() => {
     if (!isMounted || !user?.id) return;
 
     const subscription = supabase
       .channel(`public:user_profiles:user_id=eq.${user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles', filter: `user_id=eq.${user.id}` }, (payload) => {
-        if (payload.new?.photo_url) {
-          setPhotoUrl(payload.new.photo_url);
+        // ✅ FIX: cast payload.new ke any untuk avoid TypeScript error
+        const newData = payload.new as any;
+        if (newData?.photo_url) {
+          setPhotoUrl(newData.photo_url);
         }
       })
       .subscribe();
@@ -64,14 +63,12 @@ export default function AppBar() {
           <Image src="/Logo.png" alt="logo" width={150} height={50} />
         </div>
 
-        {/* Hamburger Mobile */}
         <div className="md:hidden flex items-center z-[1002]">
           <button onClick={toggleMenu} className="text-gray-700 focus:outline-none transition-colors hover-text-primary">
             {isOpen ? <X size={30} /> : <Menu size={30} />}
           </button>
         </div>
 
-        {/* Navigasi Desktop */}
         <nav className="hidden md:flex">
           <ul className="flex justify-between md:gap-10">
             {[
@@ -90,7 +87,6 @@ export default function AppBar() {
           </ul>
         </nav>
 
-        {/* Profile Desktop */}
         <div className="hidden md:flex items-center gap-5">
           <Link href="" className="group">
             <Bell size={24} className="text-gray-700 group-hover:hover-text-primary transition-all duration-300" />
@@ -107,10 +103,8 @@ export default function AppBar() {
         </div>
       </header>
 
-      {/* Mobile Overlay */}
       <div className={`fixed inset-0 bg-black/40 z-[1000] transition-opacity duration-300 md:hidden ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={() => setIsOpen(false)} />
 
-      {/* Mobile Sidebar */}
       <div className={`fixed top-0 left-0 bottom-0 w-[75%] bg-white z-[1001] shadow-2xl transform transition-transform duration-300 ease-in-out md:hidden ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex flex-col h-full">
           <div className="mb-10 pt-2">

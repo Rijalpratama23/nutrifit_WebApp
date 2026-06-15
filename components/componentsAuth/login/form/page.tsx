@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Image from 'next/image';
 import { Eye, EyeOff, Loader, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -9,29 +9,34 @@ import { supabase } from '@/utils/supabase/client';
 import { useSearchParams } from 'next/navigation';
 import { showErrorToast } from '@/components/customeToast/CustomeToast';
 
-// ─── Pesan error dari URL params ─────────────────────────────────────────────
 const ERROR_MESSAGES: Record<string, string> = {
   'auth-failed': 'Login gagal. Silakan coba lagi.',
   'email-exists': 'Email ini sudah terdaftar melalui email & password. Silakan login dengan email & password, bukan Google.',
 };
 
-export default function Form() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [loadingGoogle, setLoadingGoogle] = useState(false);
-  const { formData, loading, errorMsg, handleChange, handleLogin, rememberMe, setRememberMe } = useLoginForm();
-
-  // ✅ Ambil error dari URL params (dari callback redirect)
+function UrlErrorMessage() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get('error');
   const urlErrorMsg = urlError ? ERROR_MESSAGES[urlError] : null;
+  if (!urlErrorMsg) return null;
+  return (
+    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
+      <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
+      <p className="text-xs text-red-600">{urlErrorMsg}</p>
+    </div>
+  );
+}
+
+function FormContent() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
+  const { formData, loading, errorMsg, handleChange, handleLogin, rememberMe, setRememberMe } = useLoginForm();
 
   const handleLoginGoogle = async () => {
     setLoadingGoogle(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?source=login`,
-      },
+      options: { redirectTo: `${window.location.origin}/auth/callback?source=login` },
     });
     if (error) {
       setLoadingGoogle(false);
@@ -45,22 +50,16 @@ export default function Form() {
         <div className="mb-4 flex justify-center md:justify-start">
           <Image src="/Logo.png" alt="logo" width={180} height={80} />
         </div>
-
         <div className="text-center md:text-left mb-6">
           <h2 className="font-semibold text-xl text-gray-800">Selamat Datang!</h2>
           <p className="text-sm text-gray-600">Silahkan masuk untuk mengakses fitur</p>
         </div>
 
-        {/* ✅ Error dari URL (callback redirect) */}
-        {urlErrorMsg && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
-            <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-red-600">{urlErrorMsg}</p>
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <UrlErrorMessage />
+        </Suspense>
 
-        {/* Error dari form */}
-        {errorMsg && !urlErrorMsg && (
+        {errorMsg && (
           <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 mb-4">
             <AlertCircle size={15} className="text-red-500 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-red-600">{errorMsg}</p>
@@ -81,7 +80,6 @@ export default function Form() {
               className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500"
             />
           </div>
-
           <div className="mb-4">
             <label className="font-semibold text-gray-700">Password</label>
             <div className="relative">
@@ -100,7 +98,6 @@ export default function Form() {
               </div>
             </div>
           </div>
-
           <div className="flex justify-between items-center mb-4 text-sm">
             <label className="flex items-center gap-1 text-gray-600 cursor-pointer">
               <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} />
@@ -110,18 +107,14 @@ export default function Form() {
               Lupa kata sandi?
             </Link>
           </div>
-
           <button type="submit" disabled={loading || loadingGoogle} className="bg-primary hover:bg-opacity-90 w-full py-2 text-white font-semibold rounded-lg mb-3 disabled:bg-gray-400 hover:bg-blue-500 cursor-pointer">
             {loading ? 'Memproses...' : 'Login'}
           </button>
-
-          {/* Divider */}
           <div className="flex items-center gap-3 my-3">
             <hr className="flex-1 border-gray-200" />
             <span className="text-xs text-gray-400">atau</span>
             <hr className="flex-1 border-gray-200" />
           </div>
-
           <button
             onClick={handleLoginGoogle}
             type="button"
@@ -140,7 +133,6 @@ export default function Form() {
               </>
             )}
           </button>
-
           <div className="text-center mt-4 text-sm">
             Belum punya akun?{' '}
             <Link href="/register" className="text-primary font-bold hover:underline">
@@ -151,4 +143,8 @@ export default function Form() {
       </div>
     </div>
   );
+}
+
+export default function Form() {
+  return <FormContent />;
 }

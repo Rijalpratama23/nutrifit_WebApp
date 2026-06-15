@@ -1,3 +1,12 @@
+const COL = {
+  user: 'w-[35%]',
+  tujuan: 'w-[30%]',
+  waktu: 'w-[20%]',
+  aksi: 'w-[15%]',
+};
+
+
+
 export default function Thead() {
   return (
     <table className="w-full text-[13.5px] table-fixed">

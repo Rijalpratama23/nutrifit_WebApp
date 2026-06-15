@@ -6,9 +6,12 @@ import { supabase } from '@/utils/supabase/client';
 
 function getRedirectByRole(role: string): string {
   switch (role) {
-    case 'admin': return '/admin/dashboard';
-    case 'ahli':  return '/ahli/home';
-    default:      return '/user/dashboardUser';
+    case 'admin':
+      return '/admin/dashboard';
+    case 'ahli':
+      return '/ahli/home';
+    default:
+      return '/user/dashboardUser';
   }
 }
 
@@ -18,7 +21,10 @@ export default function CallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
       if (error || !session) {
         if (error?.message.includes('already')) {
@@ -31,23 +37,14 @@ export default function CallbackPage() {
 
       const user = session.user;
 
-      const isGoogleLogin = user.app_metadata?.provider === 'google' ||
-        user.identities?.some((id: any) => id.provider === 'google');
+      const isGoogleLogin = user.app_metadata?.provider === 'google' || user.identities?.some((id: any) => id.provider === 'google');
 
       if (isGoogleLogin) {
-        const hasEmailIdentity = user.identities?.some(
-          (id: any) => id.provider === 'email'
-        );
-        const hasGoogleIdentity = user.identities?.some(
-          (id: any) => id.provider === 'google'
-        );
+        const hasEmailIdentity = user.identities?.some((id: any) => id.provider === 'email');
+        const hasGoogleIdentity = user.identities?.some((id: any) => id.provider === 'google');
 
         if (hasEmailIdentity && hasGoogleIdentity) {
-          const { data: existingUser } = await supabase
-            .from('users')
-            .select('id, role')
-            .eq('id', user.id)
-            .single();
+          const { data: existingUser } = await supabase.from('users').select('id, role').eq('id', user.id).single();
 
           if (existingUser) {
             const role = existingUser.role ?? 'user';
@@ -73,11 +70,7 @@ export default function CallbackPage() {
         }
       }
 
-      const { data: userData } = await supabase
-        .from('users')
-        .select('role')
-        .eq('id', user.id)
-        .single();
+      const { data: userData } = await supabase.from('users').select('role').eq('id', user.id).single();
 
       const role = userData?.role ?? 'user';
       setStatus('Login berhasil, mengalihkan...');

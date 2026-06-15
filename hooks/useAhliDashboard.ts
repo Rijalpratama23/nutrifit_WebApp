@@ -1,3 +1,25 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/utils/supabase/client';
+
+export type KonsultasiItem = {
+  id: string;
+  user_name: string;
+  user_email: string;
+  status: string;
+  created_at: string;
+  scheduled_at: string | null;
+};
+
+export type AhliDashboardData = {
+  permintaanBaru: number;
+  konsultasiAktif: number;
+  selesai: number;
+  konsultasiTerbaru: KonsultasiItem[];
+  loading: boolean;
+};
+
 export function useAhliDashboard(): AhliDashboardData {
   const [data, setData] = useState<AhliDashboardData>({
     permintaanBaru: 0,
@@ -20,25 +42,13 @@ export function useAhliDashboard(): AhliDashboardData {
         { count: selesai },
         { data: terbaru },
       ] = await Promise.all([
-        // Permintaan baru (pending)
-        supabase.from('consultations').select('*', { count: 'exact', head: true })
-          .eq('ahli_id', ahliId).eq('status', 'pending'),
-
-        // Konsultasi aktif (confirmed + ongoing)
-        supabase.from('consultations').select('*', { count: 'exact', head: true })
-          .eq('ahli_id', ahliId).in('status', ['confirmed', 'ongoing']),
-
-        // Selesai (completed)
-        supabase.from('consultations').select('*', { count: 'exact', head: true })
-          .eq('ahli_id', ahliId).eq('status', 'completed'),
-
-        // Konsultasi terbaru dengan data user
+        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('ahli_id', ahliId).eq('status', 'pending'),
+        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('ahli_id', ahliId).in('status', ['confirmed', 'ongoing']),
+        supabase.from('consultations').select('*', { count: 'exact', head: true }).eq('ahli_id', ahliId).eq('status', 'completed'),
         supabase.from('consultations')
           .select(`id, status, created_at, scheduled_at, users!consultations_user_id_fkey(full_name, email)`)
-          .eq('ahli_id', ahliId)
-          .eq('status', 'pending')
-          .order('created_at', { ascending: false })
-          .limit(7),
+          .eq('ahli_id', ahliId).eq('status', 'pending')
+          .order('created_at', { ascending: false }).limit(7),
       ]);
 
       const konsultasiTerbaru: KonsultasiItem[] = (terbaru ?? []).map((item: any) => ({

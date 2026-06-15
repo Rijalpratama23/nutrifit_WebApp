@@ -6,49 +6,49 @@ import { ChevronsLeft, ChevronsRight, House, UsersRound, Stethoscope, ClipboardL
 import Image from 'next/image';
 import { useSidebar } from '@/hooks/useSidebar';
 
+type NavItem = {
+  href: string;
+  icon: React.ReactElement;
+  label: string;
+  badge?: string;
+};
+
 export default function SideBarAdmin() {
   const { isCollapsed, setIsCollapsed, isMobile, isMobileOpen, setIsMobileOpen } = useSidebar();
   const pathname = usePathname();
 
-  const navItems = [
+  const navItems: NavItem[] = [
     { href: '/admin/dashboard', icon: <House size={24} />, label: 'Dashboard' },
-    { href: '/admin/totalPengguna', icon: <UsersRound size={24} />, label: 'Total Pengguna'},
-    { href: '/admin/totalAhli', icon: <Stethoscope size={24} />, label: 'Total Ahli'},
+    { href: '/admin/totalPengguna', icon: <UsersRound size={24} />, label: 'Total Pengguna' },
+    { href: '/admin/totalAhli', icon: <Stethoscope size={24} />, label: 'Total Ahli' },
     { href: '/admin/totalKonsultasi', icon: <ClipboardList size={24} />, label: 'Total Konsultasi' },
     { href: '/admin/artikel', icon: <Newspaper size={24} />, label: 'Artikel' },
   ];
 
-  // Cek apakah link sedang aktif (termasuk sub-halaman)
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(href + '/');
   }
 
-  // Class untuk nav item desktop
   function desktopLinkClass(href: string) {
     return ['flex items-center gap-3 font-semibold px-3 py-2 rounded-lg transition-colors', isCollapsed ? 'justify-center' : 'justify-between', isActive(href) ? 'bg-white text-primary' : 'text-white hover:bg-white/20'].join(' ');
   }
 
-  // Class untuk nav item mobile drawer
   function mobileLinkClass(href: string) {
     return ['flex gap-3 items-center text-xl font-semibold px-2 py-1 rounded-lg transition-colors', isActive(href) ? 'bg-white text-primary' : 'text-white hover:bg-white/20'].join(' ');
   }
 
-  // ── MOBILE ────────────────────────────────────────────────
   if (isMobile) {
     return (
       <>
-        {/* Top bar */}
         <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 bg-primary">
           <Image src="/logoPutih.png" alt="logo" width={120} height={10} />
           <button onClick={() => setIsMobileOpen(true)} className="text-white cursor-pointer">
-            <Menu size={28}/>
+            <Menu size={28} />
           </button>
         </div>
 
-        {/* Overlay */}
         {isMobileOpen && <div className="fixed inset-0 z-40 bg-black/50" onClick={() => setIsMobileOpen(false)} />}
 
-        {/* Drawer */}
         <div className={`fixed top-0 left-0 z-50 h-screen w-72 bg-primary rounded-r-2xl flex flex-col transition-transform duration-300 ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
           <div className="flex items-center justify-between p-4">
             <Image src="/logoPutih.png" alt="logo" width={130} height={10} />
@@ -88,10 +88,8 @@ export default function SideBarAdmin() {
     );
   }
 
-  // ── DESKTOP ───────────────────────────────────────────────
   return (
     <div className={`fixed top-0 left-0 z-50 h-screen bg-primary rounded-r-2xl flex flex-col transition-all duration-300 overflow-hidden ${isCollapsed ? 'w-[72px]' : 'w-64'}`}>
-      {/* Logo + toggle */}
       <div className={`flex items-center p-4 min-h-[64px] ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
         {!isCollapsed && <Image src="/logoPutih.png" alt="logo" width={130} height={10} />}
         <button onClick={() => setIsCollapsed(!isCollapsed)} className="text-white hover:bg-white/20 rounded-md p-1 transition-colors flex-shrink-0">
@@ -101,7 +99,6 @@ export default function SideBarAdmin() {
 
       <hr className="border-t border-white/40 mx-3" />
 
-      {/* Nav items */}
       <nav className="flex-1 flex flex-col justify-center px-2">
         <ul className="space-y-2">
           {navItems.map((item) => (
@@ -120,13 +117,10 @@ export default function SideBarAdmin() {
 
       <hr className="border-t border-white/40 mx-3" />
 
-      {/* Bottom: avatar + logout */}
       <div className={`flex items-center p-3 gap-3 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
         {!isCollapsed && (
           <Link href="/login">
             <LogOut size={24} className="text-red-500" />
-
-
           </Link>
         )}
       </div>
