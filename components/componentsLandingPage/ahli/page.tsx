@@ -17,11 +17,11 @@ export default function timAhli() {
         <div className="w-full flex flex-col items-center p-5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-white hover:scale-105 transition-transform duration-300">
           <div className="w-full">
             <div className="relative w-full aspect-[4/3] md:h-[180px]">
-              <Image src="/landingPage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
+              <Image src="/landingPage/doctor3.jpg" alt="picture" fill className="rounded-2xl object-cover" />
             </div>
-            <h4 className="text-center pt-4 font-bold text-gray-800">Dr. Adika Pratama, S.Gz</h4>
+            <h4 className="text-center pt-4 font-bold text-gray-800">dr. Mulianah Daya, M.Gizi, Sp.GKz</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>
-            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Dokter dengan pengalaman yang mumpuni dan ahli di bidangnya.</p>
+            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Cukup aktif dalam tergabung di organisasi Persatuan Dokter Gizi Klinik Indonesia (PDGKI).</p>
 
             <div className="flex justify-center pb-2">
               <ButtonSecond text="Lihat Profile" background="bg-primary" />
@@ -33,11 +33,11 @@ export default function timAhli() {
         <div className="w-full flex flex-col items-center p-5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-white hover:scale-105 transition-transform duration-300">
           <div className="w-full text-center">
             <div className="relative w-full aspect-[4/3] md:h-[180px]">
-              <Image src="/landingPage/doctor.jpg" alt="picture" fill className="rounded-2xl object-cover" />
+              <Image src="/landingPage/doctor4.jpg" alt="picture" fill className="rounded-2xl object-cover" />
             </div>
-            <h4 className="text-center pt-4 font-bold text-gray-800">Dr. Adika Pratama, S.Gz</h4>
+            <h4 className="text-center pt-4 font-bold text-gray-800">dr. Diyah Eka Andayani, Sp.GK</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>
-            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Dokter dengan pengalaman yang mumpuni dan ahli di bidangnya.</p>
+            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">dr. Diyah Eka Andayani, Sp.GK merupakan dokter spesialis gizi klinik yang biasa mengatasi masalah pertumbuhan pada anak.</p>
 
             <div className="flex justify-center pb-2">
               <ButtonSecond text="Lihat Profile" background="bg-primary" />
@@ -49,7 +49,7 @@ export default function timAhli() {
         <div className="w-full flex flex-col items-center p-5 rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] bg-white hover:scale-105 transition-transform duration-300">
           <div className="w-full text-center">
             <div className="relative w-full aspect-[4/3] md:h-[180px]">
-              <Image src="/landingPage/doctor1.webp" alt="picture" fill className="rounded-2xl object-cover" />
+              <Image src="/landingPage/doctor2.jpg" alt="picture" fill className="rounded-2xl object-cover" />
             </div>
             <h4 className="text-center pt-4 font-bold text-gray-800">dr. Sentot Handoko, Sp.GK</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>

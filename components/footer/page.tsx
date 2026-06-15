@@ -28,16 +28,24 @@ export default function Footer({ logoSrc = '/Logo.png', logoAlt = 'NutriFit', lo
             <p className={`${textColor} text-sm md:text-base leading-relaxed max-w-sm`}>Platform edukasi dan konsultasi nutrisi berbasis web untuk mendukung gaya hidup sehat.</p>
             <div className="flex gap-4 mt-2">
               <div className="w-8 h-8 text-white rounded-md bg-pink-500 cursor-pointer flex justify-center items-center">
-                <Instagram />
+                <Link href="https://www.instagram.com/">
+                  <Instagram />
+                </Link>
               </div>
               <div className="w-8 h-8 text-white bg-blue-500 rounded-md cursor-pointer flex justify-center items-center">
-                <Facebook />
+                <Link href="https://www.facebook.com/">
+                  <Facebook />
+                </Link>
               </div>
               <div className="w-8 h-8 text-white bg-red-600 rounded-md cursor-pointer flex justify-center items-center">
-                <Youtube />
+                <Link href="https://www.youtube.com/">
+                  <Youtube />
+                </Link>
               </div>
               <div className="w-8 h-8 rounded-md text-white bg-blue-500 cursor-pointer flex justify-center items-center">
-                <Linkedin />
+                <Link href="https://www.linkedin.com/">
+                  <Linkedin />
+                </Link>
               </div>
             </div>
           </div>
