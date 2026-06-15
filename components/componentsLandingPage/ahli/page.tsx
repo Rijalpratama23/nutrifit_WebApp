@@ -53,7 +53,7 @@ export default function timAhli() {
             </div>
             <h4 className="text-center pt-4 font-bold text-gray-800">dr. Sentot Handoko, Sp.GK</h4>
             <blockquote className="text-center italic font-light text-sm text-gray-500 pb-2 md:pb-3">Dokter Spesialis Gizi</blockquote>
-            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Dokter Handoko juga tergabung dalam Ikatan Dokter Indonesia (IDI) dan Perhimpunan Dokter Spesialis Gizi Klinik Indonesia (PDGKI)./p>
+            <p className="mb-5 text-center leading-5 text-gray-600 text-sm md:text-base px-2">Dokter Handoko juga tergabung dalam Ikatan Dokter Indonesia (IDI) dan Perhimpunan Dokter Spesialis Gizi Klinik Indonesia (PDGKI).</p>
 
             <div className="flex justify-center pb-2">
               <ButtonSecond text="Lihat Profile" background="bg-primary" />
