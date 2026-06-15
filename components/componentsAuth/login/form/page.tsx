@@ -36,7 +36,7 @@ function FormContent() {
     setLoadingGoogle(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback?source=login` },
+      options: { redirectTo: 'https://nutrifit-web-app.vercel.app/auth/callback' },
     });
     if (error) {
       setLoadingGoogle(false);
