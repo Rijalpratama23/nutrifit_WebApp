@@ -22,52 +22,40 @@ export default function CallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Biarkan Supabase handle otomatis dari URL
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession();
+        // ✅ PKCE: exchange code dari URL menjadi session
+        const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
 
-        if (error || !session) {
-          // Tunggu sebentar lalu coba lagi
-          setTimeout(async () => {
-            const {
-              data: { session: retrySession },
-            } = await supabase.auth.getSession();
-            if (!retrySession) {
-              router.push('/login?error=no-session');
-              return;
-            }
-            await handleSession(retrySession);
-          }, 1000);
+        if (error || !data.session) {
+          console.error('Exchange error:', error);
+          router.push('/login?error=auth-failed');
           return;
         }
 
-        await handleSession(session);
-      } catch {
+        const session = data.session;
+
+        const { data: userData } = await supabase
+          .from('users')
+          .select('id, role')
+          .eq('email', session.user.email ?? '')
+          .single();
+
+        await supabase.from('users').upsert(
+          {
+            id: session.user.id,
+            email: session.user.email,
+            name: session.user.user_metadata?.full_name ?? session.user.email,
+            avatar_url: session.user.user_metadata?.avatar_url ?? null,
+            role: userData?.role ?? 'user',
+          },
+          { onConflict: 'id' },
+        );
+
+        setStatus('Login berhasil, mengalihkan...');
+        router.push(getRedirectByRole(userData?.role ?? 'user'));
+      } catch (err) {
+        console.error('Callback error:', err);
         router.push('/login?error=unknown');
       }
-    };
-
-    const handleSession = async (session: any) => {
-      const { data: userData } = await supabase
-        .from('users')
-        .select('id, role')
-        .eq('email', session.user.email ?? '')
-        .single();
-
-      await supabase.from('users').upsert(
-        {
-          id: session.user.id,
-          email: session.user.email,
-          name: session.user.user_metadata?.full_name ?? session.user.email,
-          avatar_url: session.user.user_metadata?.avatar_url ?? null,
-          role: userData?.role ?? 'user',
-        },
-        { onConflict: 'id' },
-      );
-
-      router.push(getRedirectByRole(userData?.role ?? 'user'));
     };
 
     handleCallback();
