@@ -22,16 +22,15 @@ export default function CallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // ✅ PKCE: exchange code dari URL menjadi session
-        const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.href);
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
 
-        if (error || !data.session) {
-          console.error('Exchange error:', error);
+        if (error || !session) {
           router.push('/login?error=auth-failed');
           return;
         }
-
-        const session = data.session;
 
         const { data: userData } = await supabase
           .from('users')
