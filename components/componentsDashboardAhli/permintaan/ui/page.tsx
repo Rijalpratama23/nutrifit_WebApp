@@ -9,8 +9,6 @@ import { supabase } from '@/utils/supabase/client';
 import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 import { Loader2, X, User, Ruler, Weight, Activity, Target, Leaf, AlertCircle, FileText } from 'lucide-react';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
-
 type Permintaan = {
   id: string;
   user_id: string;
@@ -33,8 +31,6 @@ interface UserProfileDetail {
   target_weight_kg: number | null;
   diet_type: string | null;
 }
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const COL = {
   user: 'w-[30%] px-6 py-3',
@@ -76,40 +72,34 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
   );
 }
 
-// ─── Modal Profil User (untuk ahli) ──────────────────────────────────────────
-
 function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onClose: () => void; permintaan: Permintaan | null }) {
   const [profile, setProfile] = useState<UserProfileDetail | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen || !permintaan) return;
+    const fetchUserProfile = async () => {
+      setLoading(true);
+      const [{ data: userData }, { data: profileData }] = await Promise.all([
+        supabase.from('users').select('full_name').eq('id', permintaan.user_id).single(),
+        supabase.from('user_profiles').select('age, gender, height_cm, weight_kg, activity_level, goal, target_fitness, target_weight_kg, diet_type').eq('user_id', permintaan.user_id).single(),
+      ]);
+      setProfile({
+        full_name: userData?.full_name ?? permintaan.user_name,
+        age: profileData?.age ?? null,
+        gender: profileData?.gender ?? null,
+        height_cm: profileData?.height_cm ?? null,
+        weight_kg: profileData?.weight_kg ?? null,
+        activity_level: profileData?.activity_level ?? null,
+        goal: profileData?.goal ?? null,
+        target_fitness: profileData?.target_fitness ?? null,
+        target_weight_kg: profileData?.target_weight_kg ?? null,
+        diet_type: profileData?.diet_type ?? null,
+      });
+      setLoading(false);
+    };
     fetchUserProfile();
   }, [isOpen, permintaan]);
-
-  const fetchUserProfile = async () => {
-    if (!permintaan) return;
-    setLoading(true);
-
-    const [{ data: userData }, { data: profileData }] = await Promise.all([
-      supabase.from('users').select('full_name').eq('id', permintaan.user_id).single(),
-      supabase.from('user_profiles').select('age, gender, height_cm, weight_kg, activity_level, goal, target_fitness, target_weight_kg, diet_type').eq('user_id', permintaan.user_id).single(),
-    ]);
-
-    setProfile({
-      full_name: userData?.full_name ?? permintaan.user_name,
-      age: profileData?.age ?? null,
-      gender: profileData?.gender ?? null,
-      height_cm: profileData?.height_cm ?? null,
-      weight_kg: profileData?.weight_kg ?? null,
-      activity_level: profileData?.activity_level ?? null,
-      goal: profileData?.goal ?? null,
-      target_fitness: profileData?.target_fitness ?? null,
-      target_weight_kg: profileData?.target_weight_kg ?? null,
-      diet_type: profileData?.diet_type ?? null,
-    });
-    setLoading(false);
-  };
 
   if (!isOpen || !permintaan) return null;
 
@@ -120,7 +110,6 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col">
-        {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
           <div>
             <h2 className="text-base font-bold text-gray-800">Profil User</h2>
@@ -130,7 +119,6 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
             <X className="w-4 h-4" />
           </button>
         </div>
-
         <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
           {loading ? (
             <div className="flex items-center justify-center py-12">
@@ -138,7 +126,6 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
             </div>
           ) : (
             <>
-              {/* Identitas */}
               <div className="bg-gray-50 rounded-xl p-4">
                 <div className="flex items-center gap-3 mb-3 pb-3 border-b border-gray-100">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -151,8 +138,6 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
                     </p>
                   </div>
                 </div>
-
-                {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 mb-3">
                   <div className="bg-white rounded-lg p-2.5 text-center border border-gray-100">
                     <p className="text-[9px] font-bold text-gray-400 uppercase">Tinggi</p>
@@ -170,16 +155,12 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
                     <p className={`text-[9px] ${bmiColor}`}>{bmiLabel}</p>
                   </div>
                 </div>
-
-                {/* Detail */}
                 <InfoRow icon={<Activity size={13} />} label="Level Aktivitas" value={profile?.activity_level ?? '-'} />
                 <InfoRow icon={<Target size={13} />} label="Tujuan Utama" value={profile?.goal ?? '-'} />
                 <InfoRow icon={<Ruler size={13} />} label="Target Kebugaran" value={profile?.target_fitness ?? '-'} />
                 <InfoRow icon={<Weight size={13} />} label="Target Berat" value={profile?.target_weight_kg ? `${profile.target_weight_kg} kg` : '-'} />
                 <InfoRow icon={<Leaf size={13} />} label="Pola Makan" value={profile?.diet_type ?? '-'} />
               </div>
-
-              {/* Keluhan */}
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-1 h-4 bg-orange-400 rounded-full" />
@@ -199,15 +180,12 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
                   </div>
                 )}
               </div>
-
-              {/* Waktu pengajuan */}
               <div className="text-center">
                 <p className="text-[10px] text-gray-400">Diajukan pada {permintaan.waktu}</p>
               </div>
             </>
           )}
         </div>
-
         <div className="px-6 py-4 border-t border-gray-100 flex-shrink-0">
           <button onClick={onClose} className="w-full px-4 py-2.5 text-sm font-semibold text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
             Tutup
@@ -218,14 +196,11 @@ function ModalProfilUser({ isOpen, onClose, permintaan }: { isOpen: boolean; onC
   );
 }
 
-// ─── Komponen Utama ───────────────────────────────────────────────────────────
-
 export default function ContainerPermintaan() {
   const { isCollapsed, isMobile } = useSidebar();
   const [data, setData] = useState<Permintaan[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // State modal profil
+  const [ahliId, setAhliId] = useState<string | null>(null);
   const [selectedPermintaan, setSelectedPermintaan] = useState<Permintaan | null>(null);
   const [showModalProfil, setShowModalProfil] = useState(false);
 
@@ -246,15 +221,13 @@ export default function ContainerPermintaan() {
       return;
     }
 
+    setAhliId(ahliProfile.id);
+
     const { data: konsultasi, error } = await supabase
       .from('consultations')
       .select(
         `
-        id,
-        user_id,
-        created_at,
-        scheduled_at,
-        keluhan,
+        id, user_id, created_at, scheduled_at, keluhan,
         users!consultations_user_id_fkey(full_name, email)
       `,
       )
@@ -285,6 +258,31 @@ export default function ContainerPermintaan() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // ✅ Realtime listener — auto refresh saat ada request baru dari user
+  useEffect(() => {
+    if (!ahliId) return;
+
+    const channel = supabase
+      .channel(`consultations-ahli-${ahliId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'consultations',
+          filter: `ahli_id=eq.${ahliId}`,
+        },
+        () => {
+          fetchData();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [ahliId, fetchData]);
 
   const handleApprove = async (id: string) => {
     const { error } = await supabase.from('consultations').update({ status: 'confirmed' }).eq('id', id);
@@ -341,7 +339,6 @@ export default function ContainerPermintaan() {
 
   const ActionButtons = ({ item }: { item: Permintaan }) => (
     <div className="flex items-center justify-center gap-1.5">
-      {/* Tombol Lihat Profil */}
       <button
         onClick={() => handleLihatProfil(item)}
         title="Lihat Profil User"
@@ -350,13 +347,11 @@ export default function ContainerPermintaan() {
         <User size={11} />
         <span className="hidden lg:inline">Profil</span>
       </button>
-      {/* Tombol Setujui */}
       <button onClick={() => handleApprove(item.id)} title="Setujui" className="w-[26px] h-[26px] rounded-full border-2 border-green-500 flex items-center justify-center hover:bg-green-50 transition-colors">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
           <path d="M5 13l4 4L19 7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </button>
-      {/* Tombol Tolak */}
       <button onClick={() => handleReject(item.id)} title="Tolak" className="w-[26px] h-[26px] rounded-full border-2 border-red-500 flex items-center justify-center hover:bg-red-50 transition-colors">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
           <path d="M6 6l12 12M18 6L6 18" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" />
@@ -373,8 +368,6 @@ export default function ContainerPermintaan() {
           <div className="bg-white rounded-2xl shadow-md w-full overflow-hidden">
             <HeadT />
             <Hr />
-
-            {/* ── Desktop ── */}
             <div className="hidden md:block">
               <table className="w-full text-[13.5px] table-fixed">
                 <thead>
@@ -386,7 +379,6 @@ export default function ContainerPermintaan() {
                   </tr>
                 </thead>
               </table>
-
               <div className="max-h-[372px] overflow-y-auto">
                 <table className="w-full text-[13.5px] table-fixed">
                   <tbody>
@@ -407,7 +399,6 @@ export default function ContainerPermintaan() {
                               </div>
                               <div className="min-w-0">
                                 <span className="text-gray-800 font-medium truncate block">{item.user_name}</span>
-                                {/* Indikator ada keluhan */}
                                 {item.keluhan && (
                                   <span className="text-[10px] text-orange-500 font-medium flex items-center gap-0.5">
                                     <FileText size={9} /> Ada keluhan
@@ -428,8 +419,6 @@ export default function ContainerPermintaan() {
                 </table>
               </div>
             </div>
-
-            {/* ── Mobile ── */}
             <div className="block md:hidden">
               {loading ? (
                 <div className="flex justify-center items-center py-12 gap-2 text-gray-400">
@@ -491,8 +480,6 @@ export default function ContainerPermintaan() {
           </div>
         </div>
       </div>
-
-      {/* Modal Profil User */}
       <ModalProfilUser
         isOpen={showModalProfil}
         onClose={() => {

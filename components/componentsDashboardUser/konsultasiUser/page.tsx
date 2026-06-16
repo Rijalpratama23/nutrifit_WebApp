@@ -25,10 +25,10 @@ export default function PageKonsultasi() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   const fetchConsultations = useCallback(async () => {
     setLoading(true);
-
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -37,19 +37,15 @@ export default function PageKonsultasi() {
       return;
     }
 
+    setUserId(session.user.id);
+
     const { data, error } = await supabase
       .from('consultations')
       .select(
         `
-        id,
-        ahli_id,
-        status,
-        scheduled_at,
-        created_at,
-        completed_at,
+        id, ahli_id, status, scheduled_at, created_at, completed_at,
         ahli_profiles (
-          specialization,
-          profile_photo_url,
+          specialization, profile_photo_url,
           users ( full_name )
         )
       `,
@@ -58,18 +54,19 @@ export default function PageKonsultasi() {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      const mapped: Consultation[] = data.map((c: any) => ({
-        id: c.id,
-        ahli_id: c.ahli_id,
-        status: c.status,
-        scheduled_at: c.scheduled_at,
-        created_at: c.created_at,
-        completed_at: c.completed_at,
-        ahli_name: c.ahli_profiles?.users?.full_name ?? 'Nama tidak tersedia',
-        ahli_specialization: c.ahli_profiles?.specialization ?? '-',
-        ahli_photo_url: c.ahli_profiles?.profile_photo_url ?? null,
-      }));
-      setConsultations(mapped);
+      setConsultations(
+        data.map((c: any) => ({
+          id: c.id,
+          ahli_id: c.ahli_id,
+          status: c.status,
+          scheduled_at: c.scheduled_at,
+          created_at: c.created_at,
+          completed_at: c.completed_at,
+          ahli_name: c.ahli_profiles?.users?.full_name ?? 'Nama tidak tersedia',
+          ahli_specialization: c.ahli_profiles?.specialization ?? '-',
+          ahli_photo_url: c.ahli_profiles?.profile_photo_url ?? null,
+        })),
+      );
     }
     setLoading(false);
   }, []);
@@ -78,16 +75,37 @@ export default function PageKonsultasi() {
     fetchConsultations();
   }, [fetchConsultations]);
 
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel(`consultations-user-${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'consultations',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          fetchConsultations();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, fetchConsultations]);
+
   const filteredData = consultations.filter((c) => {
-    if (activeTab === 'aktif') {
-      return ['confirmed', 'ongoing', 'pending'].includes(c.status);
-    }
+    if (activeTab === 'aktif') return ['confirmed', 'ongoing', 'pending'].includes(c.status);
     return ['completed', 'cancelled'].includes(c.status);
   });
 
   return (
     <div className="px-4 mt-5 md:mt-20 sm:px-6 md:px-8 lg:px-12 pt-6 sm:pt-8 md:pt-10 pb-8">
-      {/* Header + Tombol Cari Ahli */}
       <div className="flex items-start justify-between gap-4 mb-6">
         <HeaderKonsul title="Konsultasi Saya" subTitle="Konsultasikan masalah anda dengan ahli" />
         <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm flex-shrink-0 mt-1">
@@ -97,10 +115,7 @@ export default function PageKonsultasi() {
       </div>
 
       <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-
       <ContainerCard consultations={filteredData} loading={loading} onRefresh={fetchConsultations} />
-
-      {/* Modal Cari Ahli */}
       <ModalCariAhli isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchConsultations} />
     </div>
   );
