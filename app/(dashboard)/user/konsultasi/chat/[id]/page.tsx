@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase/client';
 import { ArrowLeft, Send, User, Check, CheckCheck, Info } from 'lucide-react';
 import ModalProfilAhli from '@/components/componentsDashboardUser/konsultasiUser/ui/ModalProfileAhli/page';
+import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
 interface Message {
   id: string;
@@ -69,6 +70,9 @@ export default function ChatPage() {
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
+  // ── Status konsultasi diakhiri/dibatalkan oleh ahli ──────────────────────
+  const [isEnded, setIsEnded] = useState(false);
+
   // ── State modal profil ahli ──────────────────────────────────────────────
   const [showProfilAhli, setShowProfilAhli] = useState(false);
 
@@ -110,6 +114,7 @@ export default function ChatPage() {
         ahli_specialization: (consult as any).ahli_profiles?.specialization ?? '',
         status: consult.status,
       });
+      setIsEnded(consult.status === 'completed' || consult.status === 'cancelled');
     }
 
     const { data } = await supabase.from('consultation_messages').select('id, sender_id, message_text, sent_at, is_delivered, is_read').eq('consultation_id', consultationId).order('sent_at', { ascending: true });
@@ -155,6 +160,30 @@ export default function ChatPage() {
       })
       .subscribe();
 
+    // ── Realtime listener — status konsultasi ini berubah (misal diakhiri ahli) ──
+    const consultChannel = supabase
+      .channel(`consultation-status:${consultationId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'consultations', filter: `id=eq.${consultationId}` }, (payload) => {
+        const newStatus = (payload.new as any).status as string;
+
+        setConsultInfo((prev) => (prev ? { ...prev, status: newStatus } : prev));
+
+        if (newStatus === 'completed') {
+          setIsEnded(true);
+          showSuccessToast({
+            title: 'Konsultasi Berakhir',
+            message: 'Ahli telah mengakhiri sesi konsultasi ini.',
+          });
+        } else if (newStatus === 'cancelled') {
+          setIsEnded(true);
+          showErrorToast({
+            title: 'Konsultasi Dibatalkan',
+            message: 'Konsultasi ini telah dibatalkan.',
+          });
+        }
+      })
+      .subscribe();
+
     const typingChannel = supabase
       .channel(`typing:${consultationId}`)
       .on('broadcast', { event: 'typing' }, (payload) => {
@@ -167,6 +196,7 @@ export default function ChatPage() {
 
     return () => {
       supabase.removeChannel(msgChannel);
+      supabase.removeChannel(consultChannel);
       supabase.removeChannel(typingChannel);
     };
   }, [consultationId, init]);
@@ -185,7 +215,7 @@ export default function ChatPage() {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || !currentUserId || sending) return;
+    if (!text || !currentUserId || sending || isEnded) return;
     setSending(true);
     setInput('');
     const { data: newMsg } = await supabase
@@ -245,8 +275,8 @@ export default function ChatPage() {
                 <p className="text-xs text-primary italic">sedang mengetik...</p>
               ) : (
                 <>
-                  <span className="w-2 h-2 rounded-full bg-green-400" />
-                  <p className="text-xs text-gray-400">{consultInfo?.ahli_specialization}</p>
+                  <span className={`w-2 h-2 rounded-full ${isEnded ? 'bg-gray-400' : 'bg-green-400'}`} />
+                  <p className="text-xs text-gray-400">{isEnded ? 'Konsultasi selesai' : consultInfo?.ahli_specialization}</p>
                 </>
               )}
             </div>
@@ -261,7 +291,7 @@ export default function ChatPage() {
 
       {/* Info banner */}
       <div className="text-center py-2 px-4 flex-shrink-0">
-        <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">Konsultasi dimulai</span>
+        <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">{isEnded ? '🔒 Konsultasi telah berakhir' : 'Konsultasi dimulai'}</span>
       </div>
 
       {/* Area Pesan */}
@@ -301,28 +331,34 @@ export default function ChatPage() {
       </div>
 
       {/* Input Area */}
-      <div className="flex-shrink-0 px-4 py-3 bg-white border-t border-gray-100">
-        <div className="flex items-end gap-3 bg-gray-50 rounded-2xl px-4 py-2 border border-gray-200 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
-          <textarea
-            ref={inputRef}
-            value={input}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            placeholder="Tulis pesan Anda..."
-            rows={1}
-            className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none max-h-32 py-1.5"
-            style={{ minHeight: '36px' }}
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim() || sending}
-            className="w-9 h-9 flex items-center justify-center bg-primary hover:bg-primary/90 disabled:bg-gray-200 text-white rounded-xl transition-colors flex-shrink-0 mb-0.5"
-          >
-            {sending ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
-          </button>
+      {isEnded ? (
+        <div className="flex-shrink-0 px-4 py-4 bg-white border-t border-gray-100 text-center">
+          <p className="text-sm text-gray-400">🔒 Konsultasi telah berakhir. Chat tidak dapat dilanjutkan.</p>
         </div>
-        <p className="text-[10px] text-gray-400 text-center mt-1.5">Enter untuk kirim · Shift+Enter untuk baris baru</p>
-      </div>
+      ) : (
+        <div className="flex-shrink-0 px-4 py-3 bg-white border-t border-gray-100">
+          <div className="flex items-end gap-3 bg-gray-50 rounded-2xl px-4 py-2 border border-gray-200 focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+            <textarea
+              ref={inputRef}
+              value={input}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              placeholder="Tulis pesan Anda..."
+              rows={1}
+              className="flex-1 bg-transparent text-sm text-gray-700 placeholder-gray-400 resize-none focus:outline-none max-h-32 py-1.5"
+              style={{ minHeight: '36px' }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || sending}
+              className="w-9 h-9 flex items-center justify-center bg-primary hover:bg-primary/90 disabled:bg-gray-200 text-white rounded-xl transition-colors flex-shrink-0 mb-0.5"
+            >
+              {sending ? <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" /> : <Send className="w-4 h-4" />}
+            </button>
+          </div>
+          <p className="text-[10px] text-gray-400 text-center mt-1.5">Enter untuk kirim · Shift+Enter untuk baris baru</p>
+        </div>
+      )}
 
       {/* ── Modal Profil Ahli ──────────────────────────────────────────────── */}
       {consultInfo?.ahli_id && <ModalProfilAhli isOpen={showProfilAhli} onClose={() => setShowProfilAhli(false)} ahliId={consultInfo.ahli_id} />}

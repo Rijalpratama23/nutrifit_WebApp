@@ -7,6 +7,7 @@ import { Flame } from 'lucide-react';
 import { ArrowLeft, Send, User, MoreVertical, PhoneOff, Check, CheckCheck, UserCircle } from 'lucide-react';
 import ModalNutrisiPlan from '@/components/componentsDashboardAhli/konsultasi/ModalNutrisiPlan';
 import ModalProfilUser from '@/components/componentsDashboardAhli/konsultasi/ui/ModalProfileUser/page';
+import { showSuccessToast, showErrorToast } from '@/components/customeToast/CustomeToast';
 
 interface Message {
   id: string;
@@ -166,6 +167,19 @@ export default function ChatPageAhli() {
       })
       .subscribe();
 
+    // ── Realtime listener — status konsultasi ini berubah dari sumber lain ──
+    // (misal ahli sedang membuka tab/device lain dan mengakhiri konsultasi dari sana)
+    const consultChannel = supabase
+      .channel(`consultation-status-ahli:${consultationId}`)
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'consultations', filter: `id=eq.${consultationId}` }, (payload) => {
+        const newStatus = (payload.new as any).status as string;
+        setConsultInfo((prev) => (prev ? { ...prev, status: newStatus } : prev));
+        if (newStatus === 'completed' || newStatus === 'cancelled') {
+          setIsEnded(true);
+        }
+      })
+      .subscribe();
+
     const typingChannel = supabase
       .channel(`typing:${consultationId}`)
       .on('broadcast', { event: 'typing' }, (payload) => {
@@ -178,6 +192,7 @@ export default function ChatPageAhli() {
 
     return () => {
       supabase.removeChannel(msgChannel);
+      supabase.removeChannel(consultChannel);
       supabase.removeChannel(typingChannel);
     };
   }, [consultationId, init]);
@@ -230,9 +245,19 @@ export default function ChatPageAhli() {
     setEnding(false);
     setShowConfirm(false);
     setShowMenu(false);
+
     if (!error) {
       setIsEnded(true);
       setConsultInfo((prev) => (prev ? { ...prev, status: 'completed' } : prev));
+      showSuccessToast({
+        title: 'Konsultasi Diakhiri',
+        message: 'Konsultasi berhasil diakhiri dan user telah diberitahu.',
+      });
+    } else {
+      showErrorToast({
+        title: 'Gagal',
+        message: 'Gagal mengakhiri konsultasi. Silakan coba lagi.',
+      });
     }
   };
 
@@ -425,7 +450,7 @@ export default function ChatPageAhli() {
       {showNutrisiModal && targetUserId && <ModalNutrisiPlan isOpen={showNutrisiModal} onClose={() => setShowNutrisiModal(false)} consultationId={consultationId} userId={targetUserId} userName={consultInfo?.user_name ?? 'User'} />}
 
       {/* ── Modal Profil User ────────────────────────────────────────────── */}
-      {consultInfo?.user_id && <ModalProfilUser isOpen={showProfilUser} onClose={() => setShowProfilUser(false)} userId={consultInfo.user_id}  />}
+      {consultInfo?.user_id && <ModalProfilUser isOpen={showProfilUser} onClose={() => setShowProfilUser(false)} userId={consultInfo.user_id} />}
     </div>
   );
 }
