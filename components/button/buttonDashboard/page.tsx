@@ -9,7 +9,6 @@ interface ButtonDashboardProps {
 }
 
 export default function ButtonDashboard({ text, background, destination }: ButtonDashboardProps) {
-  const router = useRouter();
 
   return (
     <Link href={destination}>
