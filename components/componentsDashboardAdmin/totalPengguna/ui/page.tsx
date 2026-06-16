@@ -135,24 +135,38 @@ interface DropdownPortalProps {
 }
 
 function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalProps) {
-  const [pos, setPos] = useState({ top: 0, left: 0, openUp: false });
+  const [pos, setPos] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     if (!open || !anchorRef.current) return;
     const rect = anchorRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUp = spaceBelow < 160;
-    setPos({
-      top: openUp ? rect.top + window.scrollY - 4 : rect.bottom + window.scrollY + 4,
-      left: rect.right + window.scrollX - 192, // 192 = w-48
-      openUp,
-    });
+    const dropdownWidth = 192; // w-48
+    const dropdownHeight = 200; // perkiraan tinggi, akan disesuaikan dengan konten
+
+    // Coba tampilkan di bawah
+    let top = rect.bottom + window.scrollY + 4;
+    let left = rect.right + window.scrollX - dropdownWidth;
+
+    // Jika tidak cukup ruang di bawah, tampilkan di atas
+    if (rect.bottom + dropdownHeight > window.innerHeight) {
+      top = rect.top + window.scrollY - dropdownHeight - 4;
+    }
+
+    // Pastikan tidak keluar dari kiri/kanan layar
+    if (left < 8) left = 8;
+    if (left + dropdownWidth > window.innerWidth + window.scrollX - 8) {
+      left = window.innerWidth + window.scrollX - dropdownWidth - 8;
+    }
+
+    setPos({ top, left });
   }, [open, anchorRef]);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) onClose();
+      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) {
+        onClose();
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -163,13 +177,13 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
   return createPortal(
     <div
       style={{
-        position: 'absolute',
-        top: pos.openUp ? undefined : pos.top,
-        bottom: pos.openUp ? window.innerHeight + window.scrollY - pos.top - (anchorRef.current?.offsetHeight ?? 0) : undefined,
-        left: Math.max(8, pos.left),
-        zIndex: 9990,
+        position: 'fixed',
+        top: pos.top,
+        left: pos.left,
+        zIndex: 9999,
+        width: '192px', // w-48
       }}
-      className="w-48 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+      className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
     >
       {children}
     </div>,
@@ -197,7 +211,14 @@ function UserActionDropdown({
 
   return (
     <>
-      <button ref={btnRef} onClick={() => setOpen((v) => !v)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+      <button
+        ref={btnRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+      >
         <MoreVertical size={15} />
       </button>
 

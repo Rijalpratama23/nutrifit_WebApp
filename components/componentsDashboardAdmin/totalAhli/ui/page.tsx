@@ -172,24 +172,35 @@ interface DropdownPortalProps {
 }
 
 function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalProps) {
-  const [pos, setPos] = useState({ top: 0, left: 0, openUp: false });
+  const [pos, setPos] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     if (!open || !anchorRef.current) return;
     const rect = anchorRef.current.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUp = spaceBelow < 180;
-    setPos({
-      top: rect.bottom + window.scrollY + 4,
-      left: rect.right + window.scrollX - 208, // 208 = w-52
-      openUp,
-    });
+    const dropdownWidth = 208; // w-52
+    const dropdownHeight = 240; // perkiraan tinggi
+
+    let top = rect.bottom + window.scrollY + 4;
+    let left = rect.right + window.scrollX - dropdownWidth;
+
+    if (rect.bottom + dropdownHeight > window.innerHeight) {
+      top = rect.top + window.scrollY - dropdownHeight - 4;
+    }
+
+    if (left < 8) left = 8;
+    if (left + dropdownWidth > window.innerWidth + window.scrollX - 8) {
+      left = window.innerWidth + window.scrollX - dropdownWidth - 8;
+    }
+
+    setPos({ top, left });
   }, [open, anchorRef]);
 
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) onClose();
+      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) {
+        onClose();
+      }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -197,16 +208,17 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
 
   if (!open || typeof document === 'undefined') return null;
 
-  const { top, left, openUp } = pos;
-  const style: React.CSSProperties = {
-    position: 'absolute',
-    left: Math.max(8, left),
-    zIndex: 9990,
-    ...(openUp ? { bottom: window.innerHeight + window.scrollY - top + (anchorRef.current?.offsetHeight ?? 32) + 8 } : { top }),
-  };
-
   return createPortal(
-    <div style={style} className="w-52 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+    <div
+      style={{
+        position: 'fixed',
+        top: pos.top,
+        left: pos.left,
+        zIndex: 9999,
+        width: '208px', // w-52
+      }}
+      className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150"
+    >
       {children}
     </div>,
     document.body,
@@ -234,7 +246,14 @@ function AhliActionDropdown({
 
   return (
     <>
-      <button ref={btnRef} onClick={() => setOpen((v) => !v)} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+      <button
+        ref={btnRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          setOpen((v) => !v);
+        }}
+        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+      >
         <MoreVertical size={15} />
       </button>
 
