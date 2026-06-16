@@ -12,21 +12,36 @@ export default function ResetPasswordForm() {
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isReady, setIsReady] = useState(false); // ← session recovery siap?
+  const [isReady, setIsReady] = useState(false);
 
-  // Tunggu Supabase proses token recovery dari URL hash
   useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+    const type = hashParams.get('type');
+
+    if (accessToken && type === 'recovery') {
+      supabase.auth
+        .setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken ?? '',
+        })
+        .then(({ error }) => {
+          if (!error) setIsReady(true);
+          else showErrorToast({ title: 'Link Kadaluarsa', message: 'Minta link reset password baru.' });
+        });
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) setIsReady(true);
+      });
+    }
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
         setIsReady(true);
       }
-    });
-
-    // Cek kalau session sudah ada
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setIsReady(true);
     });
 
     return () => subscription.unsubscribe();
@@ -39,12 +54,10 @@ export default function ResetPasswordForm() {
       showErrorToast({ title: 'Password Tidak Cocok', message: 'Pastikan kedua password sama.' });
       return;
     }
-
     if (password.length < 6) {
       showErrorToast({ title: 'Password Terlalu Pendek', message: 'Password minimal 6 karakter.' });
       return;
     }
-
     if (!isReady) {
       showErrorToast({ title: 'Session Tidak Valid', message: 'Link reset sudah kadaluarsa. Minta link baru.' });
       return;
@@ -56,7 +69,6 @@ export default function ResetPasswordForm() {
     if (error) {
       showErrorToast({ title: 'Gagal Reset Password', message: error.message });
     } else {
-      // Sign out dulu agar user login ulang dengan password baru
       await supabase.auth.signOut();
       showSuccessToast({ title: 'Password Diubah!', message: 'Silahkan login dengan password baru.' });
       setTimeout(() => router.push('/login'), 1500);
@@ -70,7 +82,6 @@ export default function ResetPasswordForm() {
       <div className="flex justify-center md:justify-start">
         <Image src="/Logo.png" alt="logo" width={150} height={60} />
       </div>
-
       <div>
         <h2 className="text-xl font-bold text-gray-800">Reset Password</h2>
         <p className="text-gray-500 text-sm mt-1">{isReady ? 'Masukkan password baru kamu.' : 'Memverifikasi link reset...'}</p>
@@ -98,12 +109,10 @@ export default function ResetPasswordForm() {
               </div>
             </div>
           </div>
-
           <div>
             <label className="font-semibold text-gray-700">Konfirmasi Password</label>
             <input type="password" placeholder="******" required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="mt-1 py-2 px-3 w-full border rounded-lg outline-none focus:border-blue-500" />
           </div>
-
           <button type="submit" disabled={loading} className="w-full bg-primary text-white py-2 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400 cursor-pointer">
             {loading ? 'Menyimpan...' : 'Simpan Password Baru'}
           </button>

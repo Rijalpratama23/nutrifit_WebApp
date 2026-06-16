@@ -15,7 +15,7 @@ export default function ForgotPasswordForm() {
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `http://localhost:3000/reset-password`,
+      redirectTo: 'https://nutrifit-web-app-opal.vercel.app/auth/reset-password',
     });
 
     if (error) {
