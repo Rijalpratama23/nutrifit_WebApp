@@ -1,11 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Heart, PencilLine, Timer, Activity, Target } from 'lucide-react';
 import { supabase } from '@/utils/supabase/client';
 import EditModalKesehatan from '../editModalKesehatan/page';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface HealthData {
   height_cm?: number;
@@ -19,8 +17,6 @@ interface PersonalHealthProps {
   userId: string;
   initialData: HealthData;
 }
-
-// ─── Helper BMI ───────────────────────────────────────────────────────────────
 
 function hitungBMI(height_cm?: number, weight_kg?: number): number {
   if (!height_cm || !weight_kg) return 0;
@@ -36,21 +32,21 @@ function kategoriBMI(bmi: number): { label: string; color: string } {
   return { label: 'Obesitas', color: 'text-red-500' };
 }
 
-// ─── Komponen ─────────────────────────────────────────────────────────────────
-
 export default function PersonalHealth({ userId, initialData }: PersonalHealthProps) {
-
-  // Data lokal yang bisa diupdate setelah modal berhasil simpan
   const [data, setData] = useState<HealthData>(initialData);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialData && Object.keys(initialData).length > 0) {
+      setData(initialData);
+    }
+  }, [initialData]);
 
   const bmi = hitungBMI(data.height_cm, data.weight_kg);
   const { label: bmiLabel, color: bmiColor } = kategoriBMI(bmi);
 
-  // Setelah simpan berhasil, refetch data terbaru dari supabase
   const handleSuccess = async () => {
     const { data: updated } = await supabase.from('user_profiles').select('height_cm, weight_kg, activity_level, diet_type, goal').eq('user_id', userId).single();
-
     if (updated) setData(updated);
   };
 
@@ -58,7 +54,6 @@ export default function PersonalHealth({ userId, initialData }: PersonalHealthPr
     <>
       <div className="mt-4 sm:mt-6 md:mt-3 w-full p-3 sm:p-4 md:p-2 lg:p-1">
         <div className="rounded-lg sm:rounded-2xl lg:rounded-3xl border border-gray-200 shadow-md sm:shadow-lg p-4 sm:p-6 md:p-8 hover:shadow-xl transition-shadow">
-          {/* ── Header ── */}
           <div className="flex justify-between items-start sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="text-green-500 flex-shrink-0">
@@ -66,14 +61,11 @@ export default function PersonalHealth({ userId, initialData }: PersonalHealthPr
               </div>
               <h2 className="font-bold text-gray-800 text-base sm:text-lg md:text-xl tracking-wide truncate">KESEHATAN PERSONAL</h2>
             </div>
-
-            {/* Tombol Edit — sekarang membuka modal */}
-            <button onClick={() => setIsModalOpen(true)} className="text-gray-800 hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg sm:rounded-full transition-colors flex-shrink-0" title="Edit Kesehatan Personal">
+            <button onClick={() => setIsModalOpen(true)} className="text-gray-800 hover:bg-gray-100 p-1.5 sm:p-2 rounded-lg sm:rounded-full transition-colors flex-shrink-0">
               <PencilLine size={20} className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
 
-          {/* ── Content ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 items-start lg:items-center">
             {/* BMI */}
             <div className="flex items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-blue-100 transition-colors">
@@ -83,7 +75,7 @@ export default function PersonalHealth({ userId, initialData }: PersonalHealthPr
               <div className="min-w-0">
                 <p className="text-[9px] sm:text-[10px] font-bold text-purple-400 uppercase tracking-widest leading-none mb-1">BMI</p>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
-                  <span className="text-2xl sm:text-3xl font-black text-gray-900">{bmi}</span>
+                  <span className="text-2xl sm:text-3xl font-black text-gray-900">{bmi || '—'}</span>
                   <span className={`text-[8px] sm:text-[10px] font-bold px-2 sm:px-3 py-1 rounded-full uppercase tracking-wider ${bmiColor}`}>{bmiLabel}</span>
                 </div>
               </div>
@@ -96,7 +88,7 @@ export default function PersonalHealth({ userId, initialData }: PersonalHealthPr
               </div>
               <div className="min-w-0">
                 <p className="text-[9px] sm:text-[10px] font-bold text-purple-400 uppercase tracking-widest leading-none mb-1">Aktivitas</p>
-                <p className="text-gray-900 font-bold text-base sm:text-lg truncate">{data.activity_level ?? '—'}</p>
+                <p className="text-gray-900 font-bold text-base sm:text-lg truncate">{data.activity_level || '—'}</p>
               </div>
             </div>
 
@@ -107,14 +99,13 @@ export default function PersonalHealth({ userId, initialData }: PersonalHealthPr
               </div>
               <div className="min-w-0">
                 <p className="text-[9px] sm:text-[10px] font-bold text-purple-400 uppercase tracking-widest leading-none mb-1">Tujuan Utama</p>
-                <p className="text-gray-900 font-bold text-base sm:text-lg truncate">{data.goal ?? '—'}</p>
+                <p className="text-gray-900 font-bold text-base sm:text-lg truncate">{data.goal || '—'}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── Modal Edit Kesehatan Personal ── */}
       <EditModalKesehatan
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
