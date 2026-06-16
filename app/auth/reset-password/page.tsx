@@ -1,1 +1,11 @@
-export { default } from '@/components/componentsAuth/resetPassword/page';
+import ResetPasswordForm from '@/components/componentsAuth/resetPassword/page';
+
+export default function ResetPasswordPage() {
+  return (
+    <div className="h-screen w-full flex justify-center items-center bg-gray-50 px-4">
+      <div className="bg-white shadow-2xl border border-gray-100 rounded-[32px] p-10 w-full max-w-md">
+        <ResetPasswordForm />
+      </div>
+    </div>
+  );
+}
