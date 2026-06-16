@@ -20,7 +20,7 @@ export default function ForgotPasswordForm() {
 
     if (error) {
       showErrorToast({ title: 'Gagal', message: 'Gagal mengirim email reset.' });
-      console.log('Reset error:', error); // 
+      console.log('Reset error:', error); //
     } else {
       setSent(true);
       showInfoToast({ title: 'Email Terkirim!', message: 'Cek inbox untuk reset password.' });
