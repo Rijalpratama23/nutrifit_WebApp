@@ -574,9 +574,11 @@ export default function ContainerProfile() {
         const [{ data: exp }, { data: edu }, { data: selesai }, { data: batal }] = await Promise.all([
           supabase.from('ahli_experience').select('*').eq('ahli_id', profileId).order('tahun_mulai', { ascending: true }),
           supabase.from('ahli_education').select('*').eq('ahli_id', profileId).order('tahun_mulai', { ascending: true }),
-          supabase.from('consultations').select('id, created_at, status, user_id').eq('ahli_id', user.id).eq('status', 'completed').order('created_at', { ascending: false }),
-          supabase.from('consultations').select('id, created_at, status, user_id').eq('ahli_id', user.id).eq('status', 'cancelled').order('created_at', { ascending: false }),
+
+          supabase.from('consultations').select('id, created_at, status, user_id').eq('ahli_id', profileId).eq('status', 'completed').order('created_at', { ascending: false }),
+          supabase.from('consultations').select('id, created_at, status, user_id').eq('ahli_id', profileId).eq('status', 'cancelled').order('created_at', { ascending: false }),
         ]);
+
         setExperience(exp ?? []);
         setEducation(edu ?? []);
         setKonsultasiSelesai(selesai ?? []);
