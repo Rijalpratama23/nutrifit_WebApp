@@ -17,7 +17,7 @@ export default function HeroCarousel() {
                 <div className="content text-left max-w-md">
                   <h1 className="text-4xl font-bold text-gray-800 mb-4">{slide.title}</h1>
                   <p className="text-lg text-gray-600 mb-8">{slide.desc}</p>
-                  <ButtonDashboard text="Konsultasi" background='bg-primary' destination='user/konsultasi' />
+                  <ButtonDashboard text="Konsultasi Sekarang!" background='bg-primary' destination='/user/konsultasi' />
                 </div>
                 <div className="relative w-64 h-64">
                   <Image src={slide.img} alt={slide.title} fill className="object-contain" />
