@@ -43,7 +43,6 @@ export default function AppBar() {
     const subscription = supabase
       .channel(`public:user_profiles:user_id=eq.${user.id}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'user_profiles', filter: `user_id=eq.${user.id}` }, (payload) => {
-        // ✅ FIX: cast payload.new ke any untuk avoid TypeScript error
         const newData = payload.new as any;
         if (newData?.photo_url) {
           setPhotoUrl(newData.photo_url);
@@ -60,7 +59,9 @@ export default function AppBar() {
     <>
       <header className="fixed top-0 left-0 right-0 z-[100] h-20 flex justify-between items-center px-6 md:px-10 bg-white shadow-md">
         <div className="logo flex justify-center items-center">
-          <Image src="/Logo.png" alt="logo" width={150} height={50} />
+          <Link href='/user/dashboardUser'>
+            <Image src="/Logo.png" alt="logo" width={150} height={50} />
+          </Link>
         </div>
 
         <div className="md:hidden flex items-center z-[1002]">
