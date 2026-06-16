@@ -1,4 +1,3 @@
-// components/onboarding/OnboardingModal.tsx
 'use client';
 
 import { useState } from 'react';
@@ -15,14 +14,14 @@ interface FormData {
   full_name: string;
   date_of_birth: string;
   gender: string;
-
   weight: string;
   height: string;
   activity_level: string;
-
   health_goal: string;
+  custom_health_goal: string;
   target_weight: string;
   dietary_preference: string;
+  custom_dietary_preference: string;
 }
 
 const INITIAL_FORM: FormData = {
@@ -33,8 +32,10 @@ const INITIAL_FORM: FormData = {
   height: '',
   activity_level: '',
   health_goal: '',
+  custom_health_goal: '',
   target_weight: '',
   dietary_preference: '',
+  custom_dietary_preference: '',
 };
 
 const STEPS = [
@@ -43,8 +44,6 @@ const STEPS = [
   { id: 3, label: 'Tujuan', icon: Target },
   { id: 4, label: 'Selesai', icon: CheckCircle },
 ];
-
-// ─── Mapping nilai form (kode) → label, konsisten dengan data di user_profiles ──
 
 const ACTIVITY_LEVEL_LABELS: Record<string, string> = {
   sedentary: 'Tidak Aktif',
@@ -71,12 +70,10 @@ const HEALTH_GOAL_LABELS: Record<string, string> = {
   manage_condition: 'Mengelola kondisi medis',
 };
 
-// Hitung usia dari tanggal lahir
 function calculateAge(dateOfBirth: string): number | null {
   if (!dateOfBirth) return null;
   const dob = new Date(dateOfBirth);
   if (isNaN(dob.getTime())) return null;
-
   const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
   const monthDiff = today.getMonth() - dob.getMonth();
@@ -116,7 +113,11 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
     }
 
     if (step === 3) {
-      if (!formData.health_goal) newErrors.health_goal = 'Tujuan kesehatan wajib dipilih';
+      if (!formData.health_goal) {
+        newErrors.health_goal = 'Tujuan kesehatan wajib dipilih';
+      } else if (formData.health_goal === 'other' && !formData.custom_health_goal.trim()) {
+        newErrors.health_goal = 'Mohon tuliskan tujuan kesehatan Anda';
+      }
     }
 
     setErrors(newErrors);
@@ -146,12 +147,15 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
       if (!user) throw new Error('User tidak ditemukan');
 
       const age = calculateAge(formData.date_of_birth);
-      const goalLabel = HEALTH_GOAL_LABELS[formData.health_goal] ?? formData.health_goal;
-      const dietLabel = DIET_TYPE_LABELS[formData.dietary_preference] ?? formData.dietary_preference;
+
+      const goalLabel = formData.health_goal === 'other' ? formData.custom_health_goal : (HEALTH_GOAL_LABELS[formData.health_goal] ?? formData.health_goal);
+
+      const dietLabel = formData.dietary_preference === 'other' ? formData.custom_dietary_preference : (DIET_TYPE_LABELS[formData.dietary_preference] ?? formData.dietary_preference);
+
       const activityLabel = ACTIVITY_LEVEL_LABELS[formData.activity_level] ?? formData.activity_level;
       const now = new Date().toISOString();
 
-      // 1. Update nama di tabel users (dipakai SideBar/ProfilePage untuk nama)
+      // 1. Update nama di tabel users
       const { error: usersError } = await supabase
         .from('users')
         .update({
@@ -184,26 +188,21 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
       if (profileError) throw profileError;
 
       // 3. Tandai onboarding selesai
-      const { error: completeError } = await supabase
-        .from('profiles')
-        .update({
-          is_profile_complete: true,
-        })
-        .eq('id',user.id);
+      const { error: completeError } = await supabase.from('profiles').update({ is_profile_complete: true }).eq('id', user.id);
 
       if (completeError) throw completeError;
 
       setCurrentStep(4);
       showSuccessToast({
-        title: 'Profile berhasil disimpan',
-        message: 'Data anda sudah tersimpan dan akan tampil di halaman profile.',
+        title: 'Profil berhasil disimpan',
+        message: 'Data Anda sudah tersimpan dan akan tampil di halaman Profile.',
       });
     } catch (err) {
-      console.error('Error menyimpan profile:', err);
+      console.error('Error menyimpan profil:', err);
       showErrorToast({
         title: 'Gagal menyimpan data',
-        message: 'Terjadi kesalahan, silahkan coba lagi'
-      })
+        message: 'Terjadi kesalahan, silakan coba lagi.',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -232,7 +231,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header dengan gradient hijau */}
+        {/* Header */}
         <div className="bg-primary px-6 pt-6 pb-8">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -270,6 +269,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
           )}
         </div>
 
+        {/* Body */}
         <div className="-mt-4 bg-white dark:bg-gray-900 rounded-t-2xl px-6 pt-6 pb-6 space-y-4 max-h-[55vh] overflow-y-auto">
           {/* ===== STEP 1: Data Pribadi ===== */}
           {currentStep === 1 && (
@@ -286,7 +286,6 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   <input type="date" className={InputClass} value={formData.date_of_birth} onChange={(e) => updateField('date_of_birth', e.target.value)} />
                   {errors.date_of_birth && <p className={ErrorClass}>{errors.date_of_birth}</p>}
                 </div>
-
                 <div>
                   <label className={LabelClass}>Jenis Kelamin *</label>
                   <select className={InputClass} value={formData.gender} onChange={(e) => updateField('gender', e.target.value)}>
@@ -309,7 +308,6 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   <input type="number" className={InputClass} placeholder="e.g. 65" min="20" max="300" value={formData.weight} onChange={(e) => updateField('weight', e.target.value)} />
                   {errors.weight && <p className={ErrorClass}>{errors.weight}</p>}
                 </div>
-
                 <div>
                   <label className={LabelClass}>Tinggi Badan (cm) *</label>
                   <input type="number" className={InputClass} placeholder="e.g. 165" min="100" max="250" value={formData.height} onChange={(e) => updateField('height', e.target.value)} />
@@ -344,6 +342,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     { value: 'maintain_weight', label: '⚖️ Jaga Berat Badan Ideal' },
                     { value: 'improve_health', label: '❤️ Perbaiki Kesehatan Umum' },
                     { value: 'manage_condition', label: '🩺 Kelola Kondisi Medis' },
+                    { value: 'other', label: '✏️ Lainnya' },
                   ].map((goal) => (
                     <label
                       key={goal.value}
@@ -351,11 +350,26 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                         formData.health_goal === goal.value ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
                       }`}
                     >
-                      <input type="radio" name="health_goal" value={goal.value} checked={formData.health_goal === goal.value} onChange={(e) => updateField('health_goal', e.target.value)} className="accent-green-500" />
+                      <input
+                        type="radio"
+                        name="health_goal"
+                        value={goal.value}
+                        checked={formData.health_goal === goal.value}
+                        onChange={(e) => {
+                          updateField('health_goal', e.target.value);
+                          updateField('custom_health_goal', '');
+                        }}
+                        className="accent-green-500"
+                      />
                       <span className="text-sm text-gray-800 dark:text-gray-200">{goal.label}</span>
                     </label>
                   ))}
                 </div>
+
+                {formData.health_goal === 'other' && (
+                  <input type="text" className={`${InputClass} mt-2`} placeholder="Tuliskan tujuan kesehatan Anda..." value={formData.custom_health_goal} onChange={(e) => updateField('custom_health_goal', e.target.value)} />
+                )}
+
                 {errors.health_goal && <p className={ErrorClass}>{errors.health_goal}</p>}
               </div>
 
@@ -366,7 +380,14 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
               <div>
                 <label className={LabelClass}>Preferensi Diet</label>
-                <select className={InputClass} value={formData.dietary_preference} onChange={(e) => updateField('dietary_preference', e.target.value)}>
+                <select
+                  className={InputClass}
+                  value={formData.dietary_preference}
+                  onChange={(e) => {
+                    updateField('dietary_preference', e.target.value);
+                    updateField('custom_dietary_preference', '');
+                  }}
+                >
                   <option value="">Pilih preferensi diet</option>
                   <option value="none">Tidak ada preferensi khusus</option>
                   <option value="vegetarian">Vegetarian</option>
@@ -374,7 +395,12 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                   <option value="halal">Halal</option>
                   <option value="low_carb">Rendah Karbohidrat</option>
                   <option value="high_protein">Tinggi Protein</option>
+                  <option value="other">Lainnya</option>
                 </select>
+
+                {formData.dietary_preference === 'other' && (
+                  <input type="text" className={`${InputClass} mt-2`} placeholder="Tuliskan preferensi diet Anda..." value={formData.custom_dietary_preference} onChange={(e) => updateField('custom_dietary_preference', e.target.value)} />
+                )}
               </div>
             </>
           )}
@@ -410,6 +436,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
           )}
         </div>
 
+        {/* Footer */}
         <div className="px-6 pb-6 pt-2 flex items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-800">
           {currentStep < 4 ? (
             <>
@@ -424,14 +451,17 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                     Kembali
                   </button>
                 )}
-
                 {currentStep < 3 ? (
                   <button onClick={handleNext} className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-blue-400 cursor-pointer text-white text-sm font-medium transition-colors">
                     Lanjut
                     <ChevronRight size={16} />
                   </button>
                 ) : (
-                  <button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-blue-300 cursor-pointer disabled:opacity-60 text-white text-sm font-medium transition-colors">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary hover:bg-blue-300 cursor-pointer disabled:opacity-60 text-white text-sm font-medium transition-colors"
+                  >
                     {isSubmitting ? 'Menyimpan...' : 'Simpan Profil'}
                     {!isSubmitting && <CheckCircle size={16} />}
                   </button>
