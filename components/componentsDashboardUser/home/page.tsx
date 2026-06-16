@@ -1,7 +1,7 @@
 'use client';
 
 import { Calendar} from 'lucide-react';
-import ButtonSecond from '@/components/button/secondaryButton/page';
+import ButtonSecDashboard from '@/components/button/buttonSecDashboard/page';
 import Footer from '@/components/footer/page';
 import { useUser } from '@/hooks/useUser';
 import ProgramSec from './ui/programsec/page';
@@ -35,7 +35,7 @@ export default function DashboardUser() {
                         <p>konsultasi sekarang juga</p>
                       </div>
                       <div className="flex justify-center items-center">
-                        <ButtonSecond text="Konsultasi" background="bg-secondary" />
+                        <ButtonSecDashboard text="Konsultasi" background="bg-secondary" destination='/user/konsultasi' />
                       </div>
                     </div>
                   </div>

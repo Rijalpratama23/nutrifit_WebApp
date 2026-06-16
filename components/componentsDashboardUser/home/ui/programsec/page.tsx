@@ -1,5 +1,5 @@
 import Image from "next/image";
-import ButtonXl from "@/components/button/buttonXl/page";
+import ButtonDashboard from "@/components/button/buttonDashboard/page";
 
 export default function ProgramSec() {
   return (
@@ -15,7 +15,7 @@ export default function ProgramSec() {
               <p className="text-base md:text-lg mb-4 md:mb-5">
                 Atur jadwal Konsultasi anda dengan <br className="hidden md:block" /> waktu yang fleksibel dan senyaman <br className="hidden md:block" /> mungkin
               </p>
-              <ButtonXl title="Mulai Konsultasi" />
+              <ButtonDashboard text="Mulai Konsultasi" background="bg-primary" destination="/user/program" />
             </div>
           </div>
         </div>
