@@ -55,9 +55,9 @@ const ACTIVITY_LEVEL_LABELS: Record<string, string> = {
 
 const DIET_TYPE_LABELS: Record<string, string> = {
   none: 'Tidak ada preferensi khusus',
-  vegetarian: 'Vegetarian',
-  vegan: 'Vegan',
-  halal: 'Halal',
+  vegetarian: 'Tidak memakan daging',
+  vegan: 'Hanya memakan sayur',
+  halal: 'Makanan halal',
   low_carb: 'Rendah Karbohidrat',
   high_protein: 'Tinggi Protein',
 };
@@ -390,9 +390,9 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
                 >
                   <option value="">Pilih preferensi diet</option>
                   <option value="none">Tidak ada preferensi khusus</option>
-                  <option value="vegetarian">Vegetarian</option>
-                  <option value="vegan">Vegan</option>
-                  <option value="halal">Halal</option>
+                  <option value="vegetarian">Tidak memakan daging</option>
+                  <option value="vegan">Hanya memakan sayuran</option>
+                  <option value="halal">Makanan halal</option>
                   <option value="low_carb">Rendah Karbohidrat</option>
                   <option value="high_protein">Tinggi Protein</option>
                   <option value="other">Lainnya</option>
