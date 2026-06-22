@@ -10,7 +10,7 @@ export default function HeaderKomponents() {
   return (
     <div className="flex justify-between items-center mb-6 sm:mb-8 mt-10 sm:mt-0">
       <div className="min-w-0 flex-1">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 break-words">Selamat Datang Doctor {user?.nama ? `${user.nama}` : 'Ahli'}</h1>
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-slate-800 break-words">Selamat Datang {user?.nama ? `${user.nama}` : 'Ahli'}</h1>
         <p className="text-slate-500 text-xs sm:text-sm mt-1">Pemberitahuan dan informasi menyeluruh</p>
       </div>
 

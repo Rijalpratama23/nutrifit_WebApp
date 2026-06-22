@@ -28,9 +28,9 @@ export default function ProfileSidebar() {
             <p className="text-xs sm:text-sm font-medium">Verified</p>
           </div>
           <div className="flex items-center justify-between gap-2 sm:gap-3">
-            <p className="tracking-widest text-xs sm:text-sm font-medium">status user</p>
+            <p className="tracking-widest text-xs sm:text-sm font-medium">Status User</p>
             <ul>
-              <li className="text-secondary text-xs sm:text-sm">online</li>
+              <li className="text-secondary text-xs sm:text-sm">Online</li>
             </ul>
           </div>
           <Link href="/login" className="flex justify-center items-center gap-2 bg-red-50 border border-red-500 px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg text-red-600 font-semibold text-sm sm:text-base hover:bg-red-100 transition-colors">

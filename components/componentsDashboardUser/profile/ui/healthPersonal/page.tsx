@@ -25,11 +25,11 @@ function hitungBMI(height_cm?: number, weight_kg?: number): number {
 }
 
 function kategoriBMI(bmi: number): { label: string; color: string } {
-  if (bmi === 0) return { label: 'Belum diketahui', color: 'text-gray-400' };
-  if (bmi < 18.5) return { label: 'Underweight', color: 'text-blue-500' };
-  if (bmi < 25) return { label: 'Normal', color: 'text-green-600' };
-  if (bmi < 30) return { label: 'Overweight', color: 'text-yellow-500' };
-  return { label: 'Obesitas', color: 'text-red-500' };
+  if (bmi === 0) return { label: 'Belum di isi', color: 'text-gray-400' };
+  if (bmi < 18.5) return { label: 'Berat badan kurang', color: 'text-blue-500' };
+  if (bmi < 25) return { label: 'Berat badan ideal', color: 'text-green-600' };
+  if (bmi < 30) return { label: 'Berat badan berlebih', color: 'text-yellow-500' };
+  return { label: 'Obesitas/Sangat gemuk', color: 'text-red-500' };
 }
 
 export default function PersonalHealth({ userId, initialData }: PersonalHealthProps) {

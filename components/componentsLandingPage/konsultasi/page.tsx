@@ -1,82 +1,60 @@
 import Image from 'next/image';
 import ButtonSecond from '@/components/button/secondaryButton/page';
 
+const konsultasiList = [
+  {
+    img: '/landingPage/diet.png',
+    title: 'Nutrisi',
+    desc: 'Diskusikan pola makan, kebutuhan gizi dan suplemen sehat',
+  },
+  {
+    img: '/landingPage/nutritions.png',
+    title: 'Diet',
+    desc: 'Diskusikan pola makan, kebutuhan gizi dan asupan kalori dengan ahli',
+  },
+  {
+    img: '/landingPage/lifestyle.png',
+    title: 'Lifestyle',
+    desc: 'Gaya hidup mempengaruhi bagaimana hidup anda kedepannya, diskusikan pola hidup sehat dengan ahli',
+  },
+];
+
 export default function Konsultasi() {
   return (
     <div id="konsultasi" className="py-12 md:py-20 bg-primary mb-10 px-4 sm:px-6 md:px-20">
       <div className="text-white pt-4 mb-6 md:mb-8">
         <h2 className="font-semibold text-2xl md:text-3xl">Pilih Jenis Konsultasi</h2>
-        <p className="font-light text-sm md:text-base">Sesuaikan toopik konsultasi dengan kebutuhan dan tujuan anda</p>
+        <p className="font-light text-sm md:text-base">Sesuaikan topik konsultasi dengan kebutuhan dan tujuan anda</p>
       </div>
 
-      <div className="flex flex-col md:flex-row flex-wrap justify-center items-stretch gap-6 md:gap-10">
-        <div className="w-full sm:w-72 md:w-60 card bg-white p-5 rounded-xl">
-          <div className="flex items-center pb-3 gap-4">
-            <div className="flex-shrink-0">
-              <Image src="/landingPage/diet.png" alt="picure" width={55} height={55} className="object-contain" />
+      {/* Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        {konsultasiList.map((item) => (
+          <div key={item.title} className="bg-white p-5 rounded-xl flex flex-col">
+            <div className="flex items-center gap-4 pb-3">
+              <Image src={item.img} alt={item.title} width={55} height={55} className="object-contain flex-shrink-0" />
+              <h3 className="font-semibold text-xl">{item.title}</h3>
             </div>
-            <h3 className="font-semibold text-xl">Nutrisi</h3>
-          </div>
-          <h4 className="mb-3 font-semibold">
-            Konsultasi <span className="text-primary">Nutrisi</span>
-          </h4>
-          <p className="mb-4 text-sm md:text-base">Diskusikan pola makan, kebutuhan gizi dan suplemen sehat</p>
-
-          <div className="mt-2">
-            <ButtonSecond text="Pilih Konsultasi" background="bg-secondary" />
-          </div>
-        </div>
-
-        <div className="w-full sm:w-72 md:w-60 card bg-white p-5 rounded-xl">
-          <div className="flex items-center pb-3 gap-4">
-            <div className="flex-shrink-0">
-              <Image src="/landingPage/nutritions.png" alt="picure" width={55} height={55} className="object-contain" />
+            <h4 className="mb-3 font-semibold">
+              Konsultasi <span className="text-primary">{item.title}</span>
+            </h4>
+            <p className="text-sm md:text-base flex-1">{item.desc}</p>
+            <div className="mt-4">
+              <ButtonSecond text="Pilih Konsultasi" background="bg-secondary" />
             </div>
-            <h3 className="font-semibold text-xl">Diet</h3>
           </div>
-          <h4 className="mb-3 font-semibold">
-            Konsultasi <span className="text-primary">Diet</span>
-          </h4>
-          <p className="mb-4 text-sm md:text-base">Diskusikan pola makan, kebutuhan gizi dan asupan kalori dengan ahli</p>
-
-          <div className="mt-2">
-            <ButtonSecond text="Pilih Konsultasi" background="bg-secondary" />
-          </div>
-        </div>
-
-        <div className="w-full sm:w-72 md:w-60 card bg-white p-5 rounded-xl">
-          <div className="flex items-center pb-3 gap-4">
-            <div className="flex-shrink-0">
-              <Image src="/landingPage/lifestyle.png" alt="picure" width={55} height={55} className="object-contain" />
-            </div>
-            <h3 className="font-semibold text-xl">Lifestyle</h3>
-          </div>
-          <h4 className="mb-2 font-semibold">
-            Konsultasi <span className="text-primary">Lifestyle</span>
-          </h4>
-          <p className="mb-4 text-sm md:text-base">Gaya hidup mempengarhi bagaimana hidup anda kedepanya, maka diskusikan pola hidup sehat dengan ahli</p>
-
-          <div className="mt-2">
-            <ButtonSecond text="Pilih Konsultasi" background="bg-secondary" />
-          </div>
-        </div>
+        ))}
       </div>
 
-      <div className="mt-6">
-        <div className="bg-white mt-5 mb-10 p-4 sm:p-6 rounded-2xl">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-10">
-            <div className="w-full md:w-1/2 flex justify-center">
-              <Image src="/landingPage/doctor.png" alt="picture" width={300} height={180} className="object-contain" />
-            </div>
-
-            <div className="w-full md:w-1/2 mt-3 md:mt-0">
-              <p className="text-lg md:text-xl mb-4">
-                Atur jadwal Konsultasi anda dengan <br className="hidden md:block" /> waktu yang fleksibel dan senyaman <br className="hidden md:block" /> mungkin
-              </p>
-              <div className="flex justify-start md:justify-start">
-                <ButtonSecond text="Pilih Konsultasi" background="bg-secondary" />
-              </div>
-            </div>
+      {/* Banner bawah */}
+      <div className="mt-8">
+        <div className="bg-white p-5 sm:p-8 rounded-2xl flex flex-col md:flex-row items-center gap-6">
+          <div className="w-full md:w-1/2 flex justify-center">
+            <Image src="/landingPage/doctor.png" alt="doctor" width={300} height={180} className="object-contain" />
+          </div>
+          <div className="w-full md:w-1/2">
+            <p className="text-lg md:text-xl font-medium mb-5 leading-relaxed">Atur jadwal konsultasi anda dengan waktu yang fleksibel dan senyaman mungkin</p>
+            <ButtonSecond text="Pilih Konsultasi" background="bg-secondary" />
           </div>
         </div>
       </div>

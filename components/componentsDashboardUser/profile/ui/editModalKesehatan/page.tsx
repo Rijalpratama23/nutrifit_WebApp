@@ -27,12 +27,12 @@ const ACTIVITY_OPTIONS = [
 ];
 
 const DIET_OPTIONS = [
-  { value: 'Omnivore', label: 'Omnivore', icon: '🍖' },
-  { value: 'Vegetarian', label: 'Vegetarian', icon: '🥗' },
-  { value: 'Vegan', label: 'Vegan', icon: '🌱' },
-  { value: 'Pescatarian', label: 'Pescatarian', icon: '🐟' },
-  { value: 'Keto', label: 'Keto', icon: '🥑' },
-  { value: 'Halal', label: 'Halal', icon: '☪️' },
+  { value: 'Omnivore', label: 'Makan apa saja (makanan!)', icon: '🍖' },
+  { value: 'Vegetarian', label: 'Tidak makan daging', icon: '🥗' },
+  { value: 'Vegan', label: 'Memakan sayuran', icon: '🌱' },
+  { value: 'Pescatarian', label: 'Memakan Ikan saja', icon: '🐟' },
+  { value: 'Keto', label: 'Mengurangi nasi dan makanan manis', icon: '🥑' },
+  { value: 'Halal', label: 'Makanan halal', icon: '☪️' },
 ];
 
 const GOAL_OPTIONS = [
@@ -50,11 +50,11 @@ function hitungBMI(height_cm: number, weight_kg: number): number {
 }
 
 function kategoriBMI(bmi: number): { label: string; color: string } {
-  if (bmi === 0) return { label: 'Belum diketahui', color: 'text-gray-400' };
-  if (bmi < 18.5) return { label: 'Underweight', color: 'text-blue-500' };
-  if (bmi < 25) return { label: 'Normal', color: 'text-green-500' };
-  if (bmi < 30) return { label: 'Overweight', color: 'text-yellow-500' };
-  return { label: 'Obesitas', color: 'text-red-500' };
+  if (bmi === 0) return { label: 'Belum diisi', color: 'text-gray-400' };
+  if (bmi < 18.5) return { label: 'Berat badan kurang', color: 'text-blue-500' };
+  if (bmi < 25) return { label: 'Berat badan ideal', color: 'text-green-500' };
+  if (bmi < 30) return { label: 'Berat badan berlebih', color: 'text-yellow-500' };
+  return { label: 'Obesitas/Sangat gemuk', color: 'text-red-500' };
 }
 
 export default function EditModalKesehatan({ isOpen, onClose, onSuccess, userId, initialData }: EditModalKesehatanProps) {
@@ -190,11 +190,11 @@ export default function EditModalKesehatan({ isOpen, onClose, onSuccess, userId,
 
         <div className="flex items-center justify-end gap-3 px-6 pb-6">
           <button onClick={onClose} disabled={loading} className="px-5 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50">
-            CANCEL
+            Batal
           </button>
           <button onClick={handleSave} disabled={loading} className="flex items-center gap-2 px-5 py-2.5 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm">
             <Save className="w-4 h-4" />
-            {loading ? 'MENYIMPAN...' : 'SAVE DATA'}
+            {loading ? 'MENYIMPAN...' : 'SIMPAN DATA'}
           </button>
         </div>
       </div>

@@ -7,13 +7,8 @@ export async function GET() {
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
   const [{ count: totalAhli }, { count: ahliBaruBulanIni }, { count: ahliVerified }] = await Promise.all([
-    // Total semua ahli
     supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ahli'),
-
-    // Ahli baru bulan ini
     supabaseAdmin.from('users').select('*', { count: 'exact', head: true }).eq('role', 'ahli').gte('created_at', startOfMonth),
-
-    // Ahli terverifikasi (join ahli_profiles)
     supabaseAdmin.from('ahli_profiles').select('*', { count: 'exact', head: true }).eq('is_verified', true),
   ]);
 

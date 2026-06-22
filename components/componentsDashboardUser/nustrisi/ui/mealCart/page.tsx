@@ -23,30 +23,30 @@ export default function CartMeal({ plan }: CartMealProps) {
           <div className="bg-green-200 p-2 rounded-sm text-green-600">
             <Utensils size={20} />
           </div>
-          <h3 className="text-sm sm:text-base md:text-lg">Contoh Meal Plan</h3>
+          <h3 className="text-sm sm:text-base md:text-lg">Contoh Rencana Makanan</h3>
         </div>
 
         <div className="flex gap-2 sm:gap-3 md:gap-20 md:justify-center flex-wrap">
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
-            <p className="bg-orange-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Breakfast</p>
+            <p className="bg-orange-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Sarapan</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
             <p className="font-semibold p-3 text-center text-xs sm:text-sm">{breakfast}</p>
           </div>
 
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
-            <p className="bg-blue-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Lunch</p>
+            <p className="bg-blue-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Makan Siang</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
             <p className="font-semibold p-3 text-center text-xs sm:text-sm">{lunch}</p>
           </div>
 
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
-            <p className="bg-green-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Dinner</p>
+            <p className="bg-green-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Makan Malam</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
             <p className="font-semibold p-3 text-center text-xs sm:text-sm">{dinner}</p>
           </div>
 
           <div className="mt-4 sm:mt-5 w-full sm:w-1/2 lg:w-auto rounded-xl bg-white shadow">
-            <p className="bg-yellow-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Snack</p>
+            <p className="bg-yellow-400 p-2 text-center rounded-t-xl text-xs sm:text-sm">Camilan</p>
             <Image src="/makanan.png" alt="picture" width={205} height={20} className="w-full h-auto" />
             <p className="font-semibold p-3 text-center text-xs sm:text-sm">{snack}</p>
           </div>

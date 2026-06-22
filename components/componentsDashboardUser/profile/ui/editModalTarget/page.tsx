@@ -13,7 +13,7 @@ interface EditTargetModalProps {
 
 const TARGET_KEBUGARAN_OPTIONS = ['Menambah masa otot', 'Menurunkan berat badan', 'Menjaga berat badan', 'Meningkatkan stamina', 'Hidup sehat', 'Meningkatkan fleksibilitas'];
 
-const KONSUMSI_MAKAN_OPTIONS = ['Vegetarian', 'Vegan', 'Semua makanan', 'Pescatarian', 'Keto', 'Diet rendah kalori', 'Diet tinggi protein'];
+const KONSUMSI_MAKAN_OPTIONS = ['Tidak makan daging', 'Memakan sayuran', 'Semua makanan', 'Makan ikan saja', 'Kurangi nasi dan gula', 'Mengurangi porsi makan', 'Perbanyak makanan berprotein'];
 
 export default function EditTargetModal({ isOpen, onClose, onSaved }: EditTargetModalProps) {
   const [form, setForm] = useState({
@@ -167,7 +167,7 @@ export default function EditTargetModal({ isOpen, onClose, onSaved }: EditTarget
               disabled={loading}
               className="flex-1 py-3 text-sm font-bold text-gray-600 border-2 border-gray-200 rounded-xl hover:bg-gray-50 transition-colors uppercase tracking-widest disabled:opacity-50"
             >
-              Cancel
+              Batal
             </button>
             <button
               onClick={handleSave}
@@ -175,7 +175,7 @@ export default function EditTargetModal({ isOpen, onClose, onSaved }: EditTarget
               className="flex-1 py-3 text-sm font-bold text-white bg-green-500 hover:bg-green-600 rounded-xl transition-colors flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50 shadow-lg shadow-green-200"
             >
               {loading ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-              Save Data
+              Simpan Data
             </button>
           </div>
         </div>

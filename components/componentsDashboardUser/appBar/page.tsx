@@ -89,16 +89,12 @@ export default function AppBar() {
         </nav>
 
         <div className="hidden md:flex items-center gap-5">
-          <Link href="" className="group">
-            <Bell size={24} className="text-gray-700 group-hover:hover-text-primary transition-all duration-300" />
-          </Link>
           <Link href="/user/profile">
             <div className="flex items-center gap-3 bg-primary py-1.5 pl-2 pr-2 rounded-full shadow-md hover:brightness-110 transition-all cursor-pointer">
               <div className="bg-white rounded-full p-1 text-primary overflow-hidden w-10 h-10 flex items-center justify-center">
                 {photoUrl ? <img src={photoUrl} alt="profile" className="w-full h-full object-cover rounded-full" /> : <UserRound size={18} strokeWidth={2.5} />}
               </div>
               <p className="text-white font-semibold text-sm">{displayName}</p>
-              <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={20} />
             </div>
           </Link>
         </div>
@@ -130,11 +126,6 @@ export default function AppBar() {
             </ul>
 
             <div className="mt-4 pt-8 border-t border-gray-100 flex flex-col gap-6">
-              <div className="flex items-center gap-4 text-gray-600 hover-text-primary transition-colors cursor-pointer group" onClick={() => setIsOpen(false)}>
-                <Bell size={22} className="group-hover:hover-text-primary" />
-                <span className="font-medium">Notifikasi</span>
-              </div>
-
               <Link href="/user/profile" onClick={() => setIsOpen(false)} className="cursor-pointer">
                 <div className="flex items-center justify-between bg-primary p-2 rounded-2xl w-full pr-4 shadow-sm hover:brightness-110 transition-all">
                   <div className="flex items-center gap-3">
@@ -143,7 +134,6 @@ export default function AppBar() {
                     </div>
                     <p className="text-white font-semibold text-sm">{displayName}</p>
                   </div>
-                  <CircleArrowLeft className="text-white hover:scale-110 transition-transform" size={22} />
                 </div>
               </Link>
             </div>

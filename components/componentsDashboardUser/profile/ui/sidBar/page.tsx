@@ -67,8 +67,8 @@ export default function SideBar({ profileData }: Props) {
               <p className="text-xs sm:text-sm font-medium">Verified</p>
             </div>
             <div className="flex items-center justify-between gap-2">
-              <p className="text-xs sm:text-sm font-medium">status user</p>
-              <p className="text-secondary text-xs sm:text-sm">online</p>
+              <p className="text-xs sm:text-sm font-medium">Status User</p>
+              <p className="text-secondary text-xs sm:text-sm">Online</p>
             </div>
             <button onClick={handleLogout} className="flex cursor-pointer w-full justify-center items-center gap-2 bg-red-50 border border-red-500 px-4 py-2 rounded-lg text-red-600 font-semibold text-sm hover:bg-red-100 transition-colors">
               <LogOut size={18} />
