@@ -70,6 +70,43 @@ const HEALTH_GOAL_LABELS: Record<string, string> = {
   manage_condition: 'Mengelola kondisi medis',
 };
 
+// ─── Reusable choice card component ──────────────────────────────────────────
+
+interface ChoiceCardProps {
+  value: string;
+  selected: boolean;
+  onSelect: (value: string) => void;
+  icon?: string;
+  label: string;
+  desc?: string;
+}
+
+function ChoiceCard({ value, selected, onSelect, icon, label, desc }: ChoiceCardProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(value)}
+      className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border-2 text-left transition-all ${
+        selected ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+      }`}
+    >
+      {/* custom radio dot */}
+      <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${selected ? 'border-green-500' : 'border-gray-300 dark:border-gray-600'}`}>
+        {selected && <span className="w-2 h-2 rounded-full bg-green-500" />}
+      </span>
+
+      {icon && <span className="text-lg">{icon}</span>}
+
+      <div className="min-w-0">
+        <p className={`text-sm font-medium ${selected ? 'text-green-700 dark:text-green-300' : 'text-gray-800 dark:text-gray-200'}`}>{label}</p>
+        {desc && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{desc}</p>}
+      </div>
+    </button>
+  );
+}
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
 function calculateAge(dateOfBirth: string): number | null {
   if (!dateOfBirth) return null;
   const dob = new Date(dateOfBirth);
@@ -77,11 +114,11 @@ function calculateAge(dateOfBirth: string): number | null {
   const today = new Date();
   let age = today.getFullYear() - dob.getFullYear();
   const monthDiff = today.getMonth() - dob.getMonth();
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-    age--;
-  }
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) age--;
   return age;
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -92,9 +129,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
   const updateField = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
   const validateStep = (step: number): boolean => {
@@ -125,9 +160,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   };
 
   const handleNext = () => {
-    if (validateStep(currentStep)) {
-      setCurrentStep((prev) => prev + 1);
-    }
+    if (validateStep(currentStep)) setCurrentStep((prev) => prev + 1);
   };
 
   const handleBack = () => {
@@ -137,36 +170,23 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
-
     setIsSubmitting(true);
+
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-
       if (!user) throw new Error('User tidak ditemukan');
 
       const age = calculateAge(formData.date_of_birth);
-
       const goalLabel = formData.health_goal === 'other' ? formData.custom_health_goal : (HEALTH_GOAL_LABELS[formData.health_goal] ?? formData.health_goal);
-
       const dietLabel = formData.dietary_preference === 'other' ? formData.custom_dietary_preference : (DIET_TYPE_LABELS[formData.dietary_preference] ?? formData.dietary_preference);
-
       const activityLabel = ACTIVITY_LEVEL_LABELS[formData.activity_level] ?? formData.activity_level;
       const now = new Date().toISOString();
 
-      // 1. Update nama di tabel users
-      const { error: usersError } = await supabase
-        .from('users')
-        .update({
-          full_name: formData.full_name,
-          updated_at: now,
-        })
-        .eq('id', user.id);
-
+      const { error: usersError } = await supabase.from('users').update({ full_name: formData.full_name, updated_at: now }).eq('id', user.id);
       if (usersError) throw usersError;
 
-      // 2. Upsert data kesehatan & target ke user_profiles
       const { error: profileError } = await supabase.from('user_profiles').upsert(
         {
           user_id: user.id,
@@ -184,25 +204,16 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         },
         { onConflict: 'user_id' },
       );
-
       if (profileError) throw profileError;
 
-      // 3. Tandai onboarding selesai
       const { error: completeError } = await supabase.from('profiles').update({ is_profile_complete: true }).eq('id', user.id);
-
       if (completeError) throw completeError;
 
       setCurrentStep(4);
-      showSuccessToast({
-        title: 'Profil berhasil disimpan',
-        message: 'Data Anda sudah tersimpan dan akan tampil di halaman Profile.',
-      });
+      showSuccessToast({ title: 'Profil berhasil disimpan', message: 'Data Anda sudah tersimpan dan akan tampil di halaman Profile.' });
     } catch (err) {
       console.error('Error menyimpan profil:', err);
-      showErrorToast({
-        title: 'Gagal menyimpan data',
-        message: 'Terjadi kesalahan, silakan coba lagi.',
-      });
+      showErrorToast({ title: 'Gagal menyimpan data', message: 'Terjadi kesalahan, silakan coba lagi.' });
     } finally {
       setIsSubmitting(false);
     }
@@ -217,9 +228,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (user) {
-      await supabase.from('profiles').update({ is_profile_complete: false }).eq('id', user.id);
-    }
+    if (user) await supabase.from('profiles').update({ is_profile_complete: false }).eq('id', user.id);
     onComplete();
   };
 
@@ -229,9 +238,9 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
   const LabelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:pt-10">
       <div className="relative w-full max-w-lg bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
+        {/* ── Header ── */}
         <div className="bg-primary px-6 pt-6 pb-8">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -269,135 +278,143 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
           )}
         </div>
 
-        {/* Body */}
+        {/* ── Body ── */}
         <div className="-mt-4 bg-white dark:bg-gray-900 rounded-t-2xl px-6 pt-6 pb-6 space-y-4 max-h-[55vh] overflow-y-auto">
-          {/* ===== STEP 1: Data Pribadi ===== */}
+          {/* ── STEP 1: Data Pribadi ── */}
           {currentStep === 1 && (
             <>
+              {/* Nama lengkap — tetap input teks, tidak bisa multi-choice */}
               <div>
                 <label className={LabelClass}>Nama Lengkap *</label>
                 <input type="text" className={InputClass} placeholder="Masukkan nama lengkap Anda" value={formData.full_name} onChange={(e) => updateField('full_name', e.target.value)} />
                 {errors.full_name && <p className={ErrorClass}>{errors.full_name}</p>}
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={LabelClass}>Tanggal Lahir *</label>
-                  <input type="date" className={InputClass} value={formData.date_of_birth} onChange={(e) => updateField('date_of_birth', e.target.value)} />
-                  {errors.date_of_birth && <p className={ErrorClass}>{errors.date_of_birth}</p>}
+              {/* Tanggal lahir — tetap date picker */}
+              <div>
+                <label className={LabelClass}>Tanggal Lahir *</label>
+                <input type="date" className={InputClass} value={formData.date_of_birth} onChange={(e) => updateField('date_of_birth', e.target.value)} />
+                {errors.date_of_birth && <p className={ErrorClass}>{errors.date_of_birth}</p>}
+              </div>
+
+              {/* Jenis kelamin — DIUBAH ke card multi-choice */}
+              <div>
+                <label className={LabelClass}>Jenis Kelamin *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { value: 'male', icon: '👨', label: 'Laki-laki' },
+                    { value: 'female', icon: '👩', label: 'Perempuan' },
+                  ].map((opt) => (
+                    <ChoiceCard key={opt.value} value={opt.value} selected={formData.gender === opt.value} onSelect={(v) => updateField('gender', v)} icon={opt.icon} label={opt.label} />
+                  ))}
                 </div>
-                <div>
-                  <label className={LabelClass}>Jenis Kelamin *</label>
-                  <select className={InputClass} value={formData.gender} onChange={(e) => updateField('gender', e.target.value)}>
-                    <option value="">Pilih</option>
-                    <option value="male">Laki-laki</option>
-                    <option value="female">Perempuan</option>
-                  </select>
-                  {errors.gender && <p className={ErrorClass}>{errors.gender}</p>}
-                </div>
+                {errors.gender && <p className={ErrorClass}>{errors.gender}</p>}
               </div>
             </>
           )}
 
-          {/* ===== STEP 2: Data Kesehatan ===== */}
+          {/* ── STEP 2: Data Kesehatan ── */}
           {currentStep === 2 && (
             <>
+              {/* Berat & tinggi — tetap number input karena nilai unik per orang */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className={LabelClass}>Berat Badan (kg) *</label>
-                  <input type="number" className={InputClass} placeholder="e.g. 65" min="20" max="300" value={formData.weight} onChange={(e) => updateField('weight', e.target.value)} />
+                  <input type="number" className={InputClass} placeholder="cth. 65" min="20" max="300" value={formData.weight} onChange={(e) => updateField('weight', e.target.value)} />
                   {errors.weight && <p className={ErrorClass}>{errors.weight}</p>}
                 </div>
                 <div>
                   <label className={LabelClass}>Tinggi Badan (cm) *</label>
-                  <input type="number" className={InputClass} placeholder="e.g. 165" min="100" max="250" value={formData.height} onChange={(e) => updateField('height', e.target.value)} />
+                  <input type="number" className={InputClass} placeholder="cth. 165" min="100" max="250" value={formData.height} onChange={(e) => updateField('height', e.target.value)} />
                   {errors.height && <p className={ErrorClass}>{errors.height}</p>}
                 </div>
               </div>
 
+              {/* Tingkat aktivitas — DIUBAH ke card multi-choice */}
               <div>
                 <label className={LabelClass}>Tingkat Aktivitas *</label>
-                <select className={InputClass} value={formData.activity_level} onChange={(e) => updateField('activity_level', e.target.value)}>
-                  <option value="">Pilih tingkat aktivitas</option>
-                  <option value="sedentary">Tidak aktif (kerja kantoran, jarang olahraga)</option>
-                  <option value="light">Aktif ringan (olahraga 1–3x/minggu)</option>
-                  <option value="moderate">Aktif sedang (olahraga 3–5x/minggu)</option>
-                  <option value="active">Aktif (olahraga 6–7x/minggu)</option>
-                  <option value="very_active">Sangat aktif (atlet / kerja fisik berat)</option>
-                </select>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { value: 'sedentary', icon: '🪑', label: 'Tidak Aktif', desc: 'Kerja kantoran, jarang olahraga' },
+                    { value: 'light', icon: '🚶', label: 'Aktif Ringan', desc: 'Olahraga 1–3x per minggu' },
+                    { value: 'moderate', icon: '🏃', label: 'Aktif Sedang', desc: 'Olahraga 3–5x per minggu' },
+                    { value: 'active', icon: '💪', label: 'Aktif', desc: 'Olahraga 6–7x per minggu' },
+                    { value: 'very_active', icon: '🏋️', label: 'Sangat Aktif', desc: 'Atlet atau kerja fisik berat' },
+                  ].map((opt) => (
+                    <ChoiceCard key={opt.value} value={opt.value} selected={formData.activity_level === opt.value} onSelect={(v) => updateField('activity_level', v)} icon={opt.icon} label={opt.label} desc={opt.desc} />
+                  ))}
+                </div>
                 {errors.activity_level && <p className={ErrorClass}>{errors.activity_level}</p>}
               </div>
             </>
           )}
 
-          {/* ===== STEP 3: Tujuan ===== */}
+          {/* ── STEP 3: Tujuan ── */}
           {currentStep === 3 && (
             <>
+              {/* Tujuan kesehatan — sudah multi-choice, dipertahankan */}
               <div>
                 <label className={LabelClass}>Tujuan Kesehatan Utama *</label>
                 <div className="grid grid-cols-1 gap-2">
                   {[
-                    { value: 'lose_weight', label: '🏃 Turunkan Berat Badan' },
-                    { value: 'gain_muscle', label: '💪 Tingkatkan Massa Otot' },
-                    { value: 'maintain_weight', label: '⚖️ Jaga Berat Badan Ideal' },
-                    { value: 'improve_health', label: '❤️ Perbaiki Kesehatan Umum' },
-                    { value: 'manage_condition', label: '🩺 Kelola Kondisi Medis' },
-                    { value: 'other', label: '✏️ Lainnya' },
+                    { value: 'lose_weight', icon: '🏃', label: 'Turunkan Berat Badan' },
+                    { value: 'gain_muscle', icon: '💪', label: 'Tingkatkan Massa Otot' },
+                    { value: 'maintain_weight', icon: '⚖️', label: 'Jaga Berat Badan Ideal' },
+                    { value: 'improve_health', icon: '❤️', label: 'Perbaiki Kesehatan Umum' },
+                    { value: 'manage_condition', icon: '🩺', label: 'Kelola Kondisi Medis' },
+                    { value: 'other', icon: '✏️', label: 'Lainnya' },
                   ].map((goal) => (
-                    <label
+                    <ChoiceCard
                       key={goal.value}
-                      className={`flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer transition-all ${
-                        formData.health_goal === goal.value ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="health_goal"
-                        value={goal.value}
-                        checked={formData.health_goal === goal.value}
-                        onChange={(e) => {
-                          updateField('health_goal', e.target.value);
-                          updateField('custom_health_goal', '');
-                        }}
-                        className="accent-green-500"
-                      />
-                      <span className="text-sm text-gray-800 dark:text-gray-200">{goal.label}</span>
-                    </label>
+                      value={goal.value}
+                      selected={formData.health_goal === goal.value}
+                      onSelect={(v) => {
+                        updateField('health_goal', v);
+                        updateField('custom_health_goal', '');
+                      }}
+                      icon={goal.icon}
+                      label={goal.label}
+                    />
                   ))}
                 </div>
-
                 {formData.health_goal === 'other' && (
                   <input type="text" className={`${InputClass} mt-2`} placeholder="Tuliskan tujuan kesehatan Anda..." value={formData.custom_health_goal} onChange={(e) => updateField('custom_health_goal', e.target.value)} />
                 )}
-
                 {errors.health_goal && <p className={ErrorClass}>{errors.health_goal}</p>}
               </div>
 
+              {/* Target berat — tetap number input */}
               <div>
                 <label className={LabelClass}>Target Berat Badan (kg)</label>
-                <input type="number" className={InputClass} placeholder="e.g. 55 (opsional)" min="20" max="300" value={formData.target_weight} onChange={(e) => updateField('target_weight', e.target.value)} />
+                <input type="number" className={InputClass} placeholder="cth. 55 (opsional)" min="20" max="300" value={formData.target_weight} onChange={(e) => updateField('target_weight', e.target.value)} />
               </div>
 
+              {/* Preferensi diet — DIUBAH ke card multi-choice */}
               <div>
                 <label className={LabelClass}>Preferensi Diet</label>
-                <select
-                  className={InputClass}
-                  value={formData.dietary_preference}
-                  onChange={(e) => {
-                    updateField('dietary_preference', e.target.value);
-                    updateField('custom_dietary_preference', '');
-                  }}
-                >
-                  <option value="">Pilih preferensi diet</option>
-                  <option value="none">Tidak ada preferensi khusus</option>
-                  <option value="vegetarian">Tidak memakan daging</option>
-                  <option value="vegan">Hanya memakan sayuran</option>
-                  <option value="halal">Makanan halal</option>
-                  <option value="low_carb">Rendah Karbohidrat</option>
-                  <option value="high_protein">Tinggi Protein</option>
-                  <option value="other">Lainnya</option>
-                </select>
-
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { value: 'none', icon: '🍽️', label: 'Tidak ada preferensi khusus' },
+                    { value: 'vegetarian', icon: '🥩', label: 'Tidak memakan daging' },
+                    { value: 'vegan', icon: '🥦', label: 'Hanya memakan sayuran' },
+                    { value: 'halal', icon: '☪️', label: 'Makanan halal' },
+                    { value: 'low_carb', icon: '🌾', label: 'Rendah Karbohidrat' },
+                    { value: 'high_protein', icon: '🥚', label: 'Tinggi Protein' },
+                    { value: 'other', icon: '✏️', label: 'Lainnya' },
+                  ].map((opt) => (
+                    <ChoiceCard
+                      key={opt.value}
+                      value={opt.value}
+                      selected={formData.dietary_preference === opt.value}
+                      onSelect={(v) => {
+                        updateField('dietary_preference', v);
+                        updateField('custom_dietary_preference', '');
+                      }}
+                      icon={opt.icon}
+                      label={opt.label}
+                    />
+                  ))}
+                </div>
                 {formData.dietary_preference === 'other' && (
                   <input type="text" className={`${InputClass} mt-2`} placeholder="Tuliskan preferensi diet Anda..." value={formData.custom_dietary_preference} onChange={(e) => updateField('custom_dietary_preference', e.target.value)} />
                 )}
@@ -405,7 +422,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
             </>
           )}
 
-          {/* ===== STEP 4: Selesai ===== */}
+          {/* ── STEP 4: Selesai ── */}
           {currentStep === 4 && (
             <div className="flex flex-col items-center text-center py-6 gap-4">
               <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
@@ -436,7 +453,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
           )}
         </div>
 
-        {/* Footer */}
+        {/* ── Footer ── */}
         <div className="px-6 pb-6 pt-2 flex items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-800">
           {currentStep < 4 ? (
             <>
