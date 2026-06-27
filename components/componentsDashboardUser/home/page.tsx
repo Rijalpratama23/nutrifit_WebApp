@@ -11,9 +11,10 @@ export default function DashboardUser() {
   const { user } = useUser();
 
   return (
-    <main className="w-full bg-white">
+    <main className="w-full bg-white pt-20">
+      {' '}
+      {/* ← TAMBAH INI: pt-20 */}
       <HeroCarousel />
-
       {/* Konsultasi Section */}
       <section className="konsultasi bg-primary pb-6 sm:pb-8 md:pb-10 lg:pb-12">
         <div className="p-4 sm:p-6 md:p-8 lg:p-10 text-white">
@@ -54,10 +55,8 @@ export default function DashboardUser() {
           </div>
         </div>
       </section>
-
       {/* Programs Section */}
       <ProgramSec />
-
       {/* Footer */}
       <Footer logoSrc="/logoPutih.png" logoAlt="picture" accentColor="bg-white" background="bg-primary" textColor="text-white" />
     </main>
