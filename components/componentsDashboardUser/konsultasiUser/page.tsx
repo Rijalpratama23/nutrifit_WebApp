@@ -106,9 +106,9 @@ export default function PageKonsultasi() {
 
   return (
     <div className="px-4 mt-5 md:mt-20 sm:px-6 md:px-8 lg:px-12 pt-6 sm:pt-8 md:pt-10 pb-8">
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex items-start justify-between gap-4 mb-6 ">
         <HeaderKonsul title="Konsultasi Saya" subTitle="Konsultasikan masalah anda dengan ahli" />
-        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm flex-shrink-0 mt-1">
+        <button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 px-4 py-2.5 mt-10 md:mt-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm flex-shrink-0">
           <Plus className="w-4 h-4" />
           <span className="hidden sm:inline">Cari Ahli</span>
         </button>
