@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { useSidebar } from '@/hooks/useSidebar';
 import { useCalendar } from '@/hooks/useCalendar';
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { CalendarDay } from '@/lib/libUser/calendar/dateUtils';
+import DetailModal from './detailModal';
 import { supabase } from '@/utils/supabase/client';
 import { useUser } from '@/hooks/useUser';
 
@@ -14,6 +14,7 @@ type Riwayat = {
   id: string;
   user_name: string;
   user_email: string;
+  user_photo: string | null;
   completed_at: string;
   tanggal: string;
 };
@@ -47,8 +48,8 @@ const MAX_HEIGHT = ROW_HEIGHT * MAX_VISIBLE;
 
 export default function ContainerRiwayat() {
   const { isCollapsed, isMobile } = useSidebar();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const { user } = useUser();
-  const router = useRouter();
 
   const [allData, setAllData] = useState<Riwayat[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +69,6 @@ export default function ContainerRiwayat() {
     const {
       data: { session },
     } = await supabase.auth.getSession();
-
     if (!session?.user) {
       setLoading(false);
       return;
@@ -85,17 +85,21 @@ export default function ContainerRiwayat() {
 
     const ahliProfileId = ahliProfile.id;
 
-    // Step 2: fetch consultations pakai ahli_profiles.id
+    // Step 2: fetch consultations + user info + foto
     const { data: konsultasi, error } = await supabase
       .from('consultations')
       .select(
         `
-      id,
-      status,
-      completed_at,
-      created_at,
-      users!consultations_user_id_fkey(full_name, email)
-    `,
+        id,
+        status,
+        completed_at,
+        created_at,
+        users!consultations_user_id_fkey(
+          full_name,
+          email,
+          user_profiles(photo_url)
+        )
+      `,
       )
       .eq('ahli_id', ahliProfileId)
       .eq('status', 'completed')
@@ -110,10 +114,16 @@ export default function ContainerRiwayat() {
     if (konsultasi && konsultasi.length > 0) {
       const mapped: Riwayat[] = konsultasi.map((item: any) => {
         const dateStr = item.completed_at ?? item.created_at;
+
+        // ← FIX: ambil photo_url dengan aman
+        const userProfiles = item.users?.user_profiles;
+        const photo: string | null = Array.isArray(userProfiles) ? (userProfiles[0]?.photo_url ?? null) : (userProfiles?.photo_url ?? null);
+
         return {
           id: item.id,
           user_name: item.users?.full_name ?? 'User',
           user_email: item.users?.email ?? '-',
+          user_photo: photo, // ← FIX: variabel photo sudah didefinisikan
           completed_at: dateStr,
           tanggal: toDateString(new Date(dateStr)),
         };
@@ -181,7 +191,7 @@ export default function ContainerRiwayat() {
   });
 
   function handleDetail(id: string) {
-    router.push(`/ahli/riwayat/${id}`);
+    setSelectedId(id);
   }
 
   return (
@@ -198,10 +208,11 @@ export default function ContainerRiwayat() {
               <Bell size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-slate-600" />
               <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
             </div>
+            {/* ← FIX: hapus item.user_photo, ganti dengan user?.photo_url dari useUser */}
             <Link href="/ahli/profile">
               <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">
                 <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden bg-white flex-shrink-0 flex items-center justify-center">
-                  {!loading && user?.phoro_url ? <img src={user.phoro_url} alt={user.nama} className="w-full h-full object-cover" /> : <User size={14} className="sm:w-4 sm:h-4 text-primary" fill="currentColor" />}
+                  {user?.phoro_url ? <img src={user.phoro_url} alt={user.nama} className="w-full h-full object-cover" /> : <User size={14} className="sm:w-4 sm:h-4 text-primary" fill="currentColor" />}
                 </div>
                 <div className="hidden sm:flex flex-col whitespace-nowrap">
                   <span className="text-xs font-bold leading-none">{user?.nama || 'Ahli'}</span>
@@ -267,7 +278,7 @@ export default function ContainerRiwayat() {
                   {calendarDays.map((day, i) => {
                     const isSelected = isSameDay(day.fullDate, activeDate);
                     const isToday = isSameDay(day.fullDate, today);
-                    const hasData = activeDates.has(toDateString(day.fullDate)); // ← Real data!
+                    const hasData = activeDates.has(toDateString(day.fullDate));
                     return (
                       <button
                         key={i}
@@ -342,14 +353,15 @@ export default function ContainerRiwayat() {
                       <tr key={item.id} className="border-t border-gray-100 hover:bg-blue-50 transition-colors duration-150">
                         <td className="w-[32%] px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5">
                           <div className="flex items-center gap-2 md:gap-3">
-                            <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                              <User size={12} className="sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-gray-400" />
+                            {/* ← FIX: tampilkan foto user di tabel */}
+                            <div className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+                              {item.user_photo ? <img src={item.user_photo} alt={item.user_name} className="w-full h-full object-cover" /> : <User size={12} className="sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 text-gray-400" />}
                             </div>
                             <span className="text-xs sm:text-sm text-gray-800 font-medium truncate">{item.user_name}</span>
                           </div>
                         </td>
                         <td className="w-[35%] px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-gray-500 text-[10px] sm:text-xs truncate">{item.user_email}</td>
-                        <td className="w-[20%] px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-gray-500 text-[10px] sm:text-xs md:text-sm">{formatLabel(activeDate)}</td>
+                        <td className="w-[20%] px-2 sm:px-3 md:px-4 py-2.5 sm:py-3.5 text-gray-500 text-[10px] sm:text-xs md:text-sm">{formatLabel(new Date(item.tanggal))}</td>
                         <td className="w-[13%] px-3 sm:px-4 md:px-6 py-2.5 sm:py-3.5 text-center">
                           <button
                             onClick={() => handleDetail(item.id)}
@@ -383,13 +395,14 @@ export default function ContainerRiwayat() {
                 {filtered.map((item) => (
                   <div key={item.id} className="flex items-center justify-between px-3 py-2.5 hover:bg-blue-50 transition-colors">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <User size={14} className="text-gray-400" />
+                      {/* ← FIX: tampilkan foto user di mobile */}
+                      <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center flex-shrink-0">
+                        {item.user_photo ? <img src={item.user_photo} alt={item.user_name} className="w-full h-full object-cover" /> : <User size={14} className="text-gray-400" />}
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-gray-800 truncate">{item.user_name}</p>
                         <p className="text-[10px] text-gray-500 truncate">{item.user_email}</p>
-                        <p className="text-[9px] text-gray-400 mt-0.5">{formatLabelShort(activeDate)}</p>
+                        <p className="text-[9px] text-gray-400 mt-0.5">{formatLabelShort(new Date(item.tanggal))}</p>
                       </div>
                     </div>
                     <button
@@ -405,6 +418,8 @@ export default function ContainerRiwayat() {
           </div>
         </div>
       </div>
+
+      <DetailModal consultationId={selectedId} onClose={() => setSelectedId(null)} />
     </div>
   );
 }
