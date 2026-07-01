@@ -13,10 +13,6 @@ export default function HeadJadwal() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-shrink-0 ml-2 sm:ml-4">
-        <div className="relative p-1.5 sm:p-2 md:p-2.5 bg-white rounded-full shadow-sm border border-slate-100 cursor-pointer">
-          <Bell size={16} className="sm:w-5 sm:h-5 md:w-5 md:h-5 text-slate-600" />
-          <div className="absolute top-0 right-0 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-red-500 rounded-full border-2 border-white" />
-        </div>
 
         <Link href="/ahli/profile">
           <div className="flex items-center cursor-pointer gap-2 sm:gap-2.5 md:gap-3 bg-primary text-white px-2 sm:px-3 md:px-6 py-1 sm:py-1.5 rounded-full shadow-lg hover:shadow-xl transition-shadow">

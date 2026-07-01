@@ -167,11 +167,6 @@ export default function SideBar() {
       <hr className="border-t border-white/40 mx-3" />
 
       <div className={`flex items-center p-3 gap-3 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-        <div className="p-2 rounded-full bg-gray-500 cursor-pointer flex-shrink-0">
-          <Link href="/profile">
-            <User size={24} className="text-white" />
-          </Link>
-        </div>
         {!isCollapsed && (
           <Link href="/login">
             <LogOut size={24} className="text-red-500" />
