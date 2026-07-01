@@ -121,15 +121,6 @@ export default function ContainerTotalKonsultasi({ totalKonsultasi, totalSelesai
             <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Kelola total Konsultasi</p>
           </div>
           <div className="relative">
-            <button
-              onClick={() => setShowDatePicker(!showDatePicker)}
-              className="self-start sm:self-auto flex items-center gap-2 bg-white border border-blue-200 text-blue-600 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium shadow-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
-            >
-              <Calendar size={14} className="text-blue-500 flex-shrink-0" />
-              <span className="hidden sm:inline">{formatDisplayDate(selectedDate)}</span>
-              <span className="sm:hidden">{formatDisplayDate(selectedDate, true)}</span>
-              <ChevronDown size={14} />
-            </button>
 
             {/* Date Picker Calendar */}
             {showDatePicker && (

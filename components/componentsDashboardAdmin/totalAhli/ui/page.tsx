@@ -173,6 +173,9 @@ interface DropdownPortalProps {
 
 function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalProps) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
+  // FIX: ref untuk konten dropdown yang di-portal ke document.body,
+  // agar bisa dibedakan dari "klik di luar" secara akurat.
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || !anchorRef.current) return;
@@ -198,7 +201,13 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedAnchor = anchorRef.current?.contains(target);
+      // FIX: sebelumnya hanya mengecek anchorRef, sehingga klik pada
+      // item menu di dalam dropdown (yang di-portal ke document.body)
+      // dianggap "klik di luar" dan menutup menu sebelum onClick sempat berjalan.
+      const clickedContent = contentRef.current?.contains(target);
+      if (!clickedAnchor && !clickedContent) {
         onClose();
       }
     };
@@ -210,6 +219,7 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
 
   return createPortal(
     <div
+      ref={contentRef}
       style={{
         position: 'fixed',
         top: pos.top,
@@ -624,17 +634,6 @@ export default function ContainerTotalAhli({ totalAhli: initTotal, ahliBaru: ini
             <p className="text-xs sm:text-sm text-gray-400 mt-0.5">Kelola informasi Ahli Gizi</p>
           </div>
           <div className="relative flex-shrink-0 self-start sm:self-auto" ref={dateRef}>
-            <button
-              onClick={() => setDateOpen((o) => !o)}
-              className="flex items-center gap-2 bg-white border border-blue-200 text-blue-600 rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium shadow-sm hover:bg-blue-50 transition-colors whitespace-nowrap"
-            >
-              <Calendar size={14} className="text-blue-500 flex-shrink-0" />
-              <span className="sm:hidden">
-                {activeDate.getDate()} {BULAN[activeDate.getMonth()]} {activeDate.getFullYear()}
-              </span>
-              <span className="hidden sm:inline">{formatTanggal(activeDate)}</span>
-              <ChevronDown size={14} className={`transition-transform duration-200 ${dateOpen ? 'rotate-180' : ''}`} />
-            </button>
             {dateOpen && (
               <div className="absolute top-[calc(100%+8px)] right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-56 text-sm text-gray-500">
                 <p className="font-semibold text-gray-700 mb-1">Tanggal aktif</p>

@@ -136,6 +136,9 @@ interface DropdownPortalProps {
 
 function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalProps) {
   const [pos, setPos] = useState({ top: 0, left: 0 });
+  // FIX #1: ref untuk konten dropdown yang di-portal ke document.body,
+  // agar bisa dibedakan dari "klik di luar" secara akurat.
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || !anchorRef.current) return;
@@ -143,19 +146,27 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
     const dropdownWidth = 192; // w-48
     const dropdownHeight = 200; // perkiraan tinggi, akan disesuaikan dengan konten
 
-    // Coba tampilkan di bawah
-    let top = rect.bottom + window.scrollY + 4;
-    let left = rect.right + window.scrollX - dropdownWidth;
+    // FIX #2 (BUG UTAMA): container dropdown menggunakan `position: fixed`,
+    // yang artinya posisinya SUDAH relatif terhadap viewport (layar terlihat),
+    // bukan terhadap seluruh halaman. Sebelumnya kode ini menambahkan
+    // window.scrollY / window.scrollX ke posisi — itu salah untuk elemen fixed.
+    // Akibatnya begitu halaman di-scroll (yang hampir pasti terjadi karena
+    // tabel "Daftar Pengguna" ada di bagian bawah), dropdown dihitung berada
+    // jauh di luar layar (misal top: 1200px padahal tinggi layar cuma 800px).
+    // Dropdown tetap ter-render, hanya saja tidak terlihat / tidak terjangkau,
+    // sehingga terkesan "diklik tidak muncul apa-apa".
+    let top = rect.bottom + 4;
+    let left = rect.right - dropdownWidth;
 
     // Jika tidak cukup ruang di bawah, tampilkan di atas
     if (rect.bottom + dropdownHeight > window.innerHeight) {
-      top = rect.top + window.scrollY - dropdownHeight - 4;
+      top = rect.top - dropdownHeight - 4;
     }
 
     // Pastikan tidak keluar dari kiri/kanan layar
     if (left < 8) left = 8;
-    if (left + dropdownWidth > window.innerWidth + window.scrollX - 8) {
-      left = window.innerWidth + window.scrollX - dropdownWidth - 8;
+    if (left + dropdownWidth > window.innerWidth - 8) {
+      left = window.innerWidth - dropdownWidth - 8;
     }
 
     setPos({ top, left });
@@ -164,7 +175,10 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (anchorRef.current && !anchorRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const clickedAnchor = anchorRef.current?.contains(target);
+      const clickedContent = contentRef.current?.contains(target);
+      if (!clickedAnchor && !clickedContent) {
         onClose();
       }
     };
@@ -176,6 +190,7 @@ function DropdownPortal({ anchorRef, open, onClose, children }: DropdownPortalPr
 
   return createPortal(
     <div
+      ref={contentRef}
       style={{
         position: 'fixed',
         top: pos.top,
@@ -525,11 +540,6 @@ export default function ContainerTotalPengguna({ totalPengguna: initTotal, pengg
             <p className="text-slate-500 text-xs sm:text-sm mt-0.5">Kelola informasi pengguna aplikasi</p>
           </div>
           <div className="relative flex-shrink-0 self-start sm:self-auto" ref={dateRef}>
-            <button onClick={() => setDateOpen((o) => !o)} className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 sm:px-4 py-2 shadow-sm hover:bg-gray-50 transition-colors">
-              <Calendar size={16} className="text-blue-500 flex-shrink-0" />
-              <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">{formatTanggal(activeDate)}</span>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${dateOpen ? 'rotate-180' : ''}`} />
-            </button>
             {dateOpen && (
               <div className="absolute top-[calc(100%+8px)] right-0 z-50 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-56 text-sm text-gray-500">
                 <p className="font-semibold text-gray-700 mb-1">Tanggal aktif</p>
