@@ -11,11 +11,7 @@ import { supabase } from '@/utils/supabase/client'; // ✅ tambah ini
 export default function SideBar() {
   const { isCollapsed, setIsCollapsed, isMobile, isMobileOpen, setIsMobileOpen } = useSidebar();
   const pathname = usePathname();
-
-  // ✅ State untuk badge permintaan
   const [permintaanCount, setPermintaanCount] = useState(0);
-
-  // ✅ Fetch count permintaan pending secara realtime
   const fetchPermintaan = useCallback(async () => {
     const {
       data: { session },
@@ -62,7 +58,6 @@ export default function SideBar() {
     { href: '/ahli/permintaan', icon: <Users size={24} />, label: 'Permintaan', badge: permintaanCount },
     { href: '/ahli/konsultasi', icon: <HeartHandshake size={24} />, label: 'Konsultasi' },
     { href: '/ahli/riwayat', icon: <ScrollText size={24} />, label: 'Riwayat' },
-    { href: '/ahli/jadwal', icon: <CalendarCheck size={24} />, label: 'Jadwal' },
   ];
 
   function isActive(href: string) {
@@ -152,7 +147,6 @@ export default function SideBar() {
             <li key={item.label}>
               <Link href={item.href} className={desktopLinkClass(item.href)} title={isCollapsed ? item.label : undefined}>
                 <div className="flex items-center gap-3 min-w-0">
-                  {/* ✅ Badge collapsed (icon mode) */}
                   <span className="flex-shrink-0 relative">
                     {item.icon}
                     {isCollapsed && item.badge !== undefined && item.badge > 0 && (
@@ -161,7 +155,6 @@ export default function SideBar() {
                   </span>
                   {!isCollapsed && <span className="text-lg truncate">{item.label}</span>}
                 </div>
-                {/* ✅ Badge expanded (label mode) */}
                 {!isCollapsed && item.badge !== undefined && item.badge > 0 && (
                   <span className="bg-gray-500 text-white text-xs font-bold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1 flex-shrink-0">{item.badge > 99 ? '99+' : item.badge}</span>
                 )}
@@ -173,7 +166,6 @@ export default function SideBar() {
 
       <hr className="border-t border-white/40 mx-3" />
 
-      {/* Bottom: avatar + logout */}
       <div className={`flex items-center p-3 gap-3 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
         <div className="p-2 rounded-full bg-gray-500 cursor-pointer flex-shrink-0">
           <Link href="/profile">

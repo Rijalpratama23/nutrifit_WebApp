@@ -64,35 +64,56 @@ export default function ContainerRiwayat() {
   // ── Fetch Data ──────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     setLoading(true);
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
+
     if (!session?.user) {
       setLoading(false);
       return;
     }
 
+    // Step 1: ambil ahli_profiles.id berdasarkan user_id
+    const { data: ahliProfile, error: profileError } = await supabase.from('ahli_profiles').select('id').eq('user_id', session.user.id).single();
+
+    if (profileError || !ahliProfile) {
+      console.error('Ahli profile tidak ditemukan:', profileError?.message);
+      setLoading(false);
+      return;
+    }
+
+    const ahliProfileId = ahliProfile.id;
+
+    // Step 2: fetch consultations pakai ahli_profiles.id
     const { data: konsultasi, error } = await supabase
       .from('consultations')
       .select(
         `
-        id,
-        completed_at,
-        created_at,
-        users!consultations_user_id_fkey(full_name, email)
-      `,
+      id,
+      status,
+      completed_at,
+      created_at,
+      users!consultations_user_id_fkey(full_name, email)
+    `,
       )
-      .eq('ahli_id', session.user.id)
+      .eq('ahli_id', ahliProfileId)
       .eq('status', 'completed')
-      .order('completed_at', { ascending: false });
+      .order('created_at', { ascending: false });
 
-    if (!error && konsultasi) {
+    if (error) {
+      console.error('Fetch riwayat error:', error.message);
+      setLoading(false);
+      return;
+    }
+
+    if (konsultasi && konsultasi.length > 0) {
       const mapped: Riwayat[] = konsultasi.map((item: any) => {
         const dateStr = item.completed_at ?? item.created_at;
         return {
           id: item.id,
           user_name: item.users?.full_name ?? 'User',
-          user_email: item.users?.email ?? '',
+          user_email: item.users?.email ?? '-',
           completed_at: dateStr,
           tanggal: toDateString(new Date(dateStr)),
         };
@@ -100,15 +121,14 @@ export default function ContainerRiwayat() {
 
       setAllData(mapped);
 
-      // Set tanggal yang punya data untuk kalender
       const dates = new Set(mapped.map((r) => r.tanggal));
       setActiveDates(dates);
 
-      // Auto-pilih tanggal pertama yang ada data
-      if (mapped.length > 0) {
-        const firstDate = mapped[0].tanggal.split('-').map(Number);
-        setActiveDate(new Date(firstDate[0], firstDate[1] - 1, firstDate[2]));
-      }
+      const firstDate = mapped[0].tanggal.split('-').map(Number);
+      setActiveDate(new Date(firstDate[0], firstDate[1] - 1, firstDate[2]));
+    } else {
+      setAllData([]);
+      setActiveDates(new Set());
     }
 
     setLoading(false);
