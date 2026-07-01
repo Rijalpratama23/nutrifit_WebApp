@@ -17,6 +17,7 @@ type Permintaan = {
   waktu: string;
   scheduled_at: string | null;
   keluhan: string | null;
+  photo_url: string | null; // ⬅️ foto profil user
 };
 
 interface UserProfileDetail {
@@ -68,6 +69,25 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
         <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wide">{label}</p>
         <p className="text-sm font-semibold text-gray-700 truncate">{value || '-'}</p>
       </div>
+    </div>
+  );
+}
+
+// ─── Avatar kecil di tabel — hanya tampilan, foto asli atau fallback ikon ───
+function UserAvatar({ photoUrl, nama, size = 'w-8 h-8' }: { photoUrl: string | null; nama: string; size?: string }) {
+  const [imgError, setImgError] = useState(false);
+  const showPhoto = !!photoUrl && !imgError;
+
+  return (
+    <div className={`${size} rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+      {showPhoto ? (
+        <img src={photoUrl!} alt={nama} className="w-full h-full object-cover" onError={() => setImgError(true)} />
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="8" r="4" fill="#9e9e9e" />
+          <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      )}
     </div>
   );
 }
@@ -241,8 +261,29 @@ export default function ContainerPermintaan() {
       return;
     }
 
+    const list = konsultasi ?? [];
+
+    // ✅ Ambil foto profil semua user yang muncul di daftar (1 query batch)
+    const userIds = [...new Set(list.map((item: any) => item.user_id).filter(Boolean))];
+    let photoMap: Record<string, string | null> = {};
+
+    if (userIds.length > 0) {
+      const { data: profiles, error: profileErr } = await supabase.from('user_profiles').select('user_id, photo_url').in('user_id', userIds);
+
+      if (profileErr) {
+        console.error('[ContainerPermintaan] Error fetch user_profiles (photo):', profileErr.message);
+      }
+
+      if (profiles) {
+        photoMap = profiles.reduce((acc: Record<string, string | null>, p: any) => {
+          acc[p.user_id] = p.photo_url ?? null;
+          return acc;
+        }, {});
+      }
+    }
+
     setData(
-      (konsultasi ?? []).map((item: any) => ({
+      list.map((item: any) => ({
         id: item.id,
         user_id: item.user_id,
         user_name: item.users?.full_name ?? 'User',
@@ -250,6 +291,7 @@ export default function ContainerPermintaan() {
         waktu: formatWaktu(item.created_at),
         scheduled_at: item.scheduled_at ? formatWaktu(item.scheduled_at) : null,
         keluhan: item.keluhan ?? null,
+        photo_url: photoMap[item.user_id] ?? null,
       })),
     );
     setLoading(false);
@@ -391,12 +433,7 @@ export default function ContainerPermintaan() {
                         <tr key={item.id} className="border-t border-gray-100 hover:bg-blue-50 transition-colors duration-150">
                           <td className={COL.user}>
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                  <circle cx="12" cy="8" r="4" fill="#9e9e9e" />
-                                  <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" />
-                                </svg>
-                              </div>
+                              <UserAvatar photoUrl={item.photo_url} nama={item.user_name} />
                               <div className="min-w-0">
                                 <span className="text-gray-800 font-medium truncate block">{item.user_name}</span>
                                 {item.keluhan && (
@@ -439,12 +476,7 @@ export default function ContainerPermintaan() {
                 <div className="divide-y divide-gray-100 max-h-[480px] overflow-y-auto">
                   {data.map((item) => (
                     <div key={item.id} className="flex items-center gap-3 px-4 py-3.5 hover:bg-blue-50 transition-colors">
-                      <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="8" r="4" fill="#9e9e9e" />
-                          <path d="M4 20c0-4 3.582-7 8-7s8 3 8 7" stroke="#9e9e9e" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
-                      </div>
+                      <UserAvatar photoUrl={item.photo_url} nama={item.user_name} size="w-9 h-9" />
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-gray-800 truncate">{item.user_name}</p>
                         <p className="text-[11px] text-gray-500 truncate">{item.user_email}</p>

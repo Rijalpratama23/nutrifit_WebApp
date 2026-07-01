@@ -13,11 +13,13 @@ type FilterType = 'semua' | StatusType;
 
 interface Konsultasi {
   id: string;
+  user_id: string;
   nama: string;
   email: string;
   status: StatusType;
   waktu: string;
   db_status: string;
+  photo_url: string | null; // ⬅️ foto profil user
 }
 
 // ─── Status Mapping dari DB → Display ────────────────────────
@@ -55,6 +57,18 @@ const FILTER_OPTIONS: { value: FilterType; label: string; dot: string }[] = [
   { value: 'selesai', label: 'Selesai', dot: 'bg-gray-400' },
 ];
 
+// ─── Avatar kecil (dipakai desktop & mobile) ───────────────────
+function UserAvatar({ photoUrl, nama, size = 'w-7 h-7 lg:w-8 lg:h-8' }: { photoUrl: string | null; nama: string; size?: string }) {
+  const [imgError, setImgError] = useState(false);
+  const showPhoto = !!photoUrl && !imgError;
+
+  return (
+    <div className={`${size} rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+      {showPhoto ? <img src={photoUrl!} alt={nama} className="w-full h-full object-cover" onError={() => setImgError(true)} /> : <User size={13} strokeWidth={1.5} className="text-gray-400" />}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────
 export default function ContainerKonsultasi() {
   const { isCollapsed, isMobile } = useSidebar();
@@ -81,41 +95,70 @@ export default function ContainerKonsultasi() {
     // ✅ Ambil ahli_profiles.id dulu
     const { data: ahliProfile } = await supabase.from('ahli_profiles').select('id').eq('user_id', session.user.id).eq('is_verified', true).maybeSingle();
 
-    console.log('ahliProfile:', ahliProfile); // ← tambah ini
-    console.log('session.user.id:', session.user.id); // ← dan ini
-
     if (!ahliProfile) {
       setLoading(false);
       return;
     }
 
-    // ✅ Query pakai ahli_profiles.id
+    // ✅ Ambil daftar konsultasi + data user (nama, email)
     const { data: konsultasi, error } = await supabase
       .from('consultations')
       .select(
         `
       id,
+      user_id,
       status,
       created_at,
       scheduled_at,
       users!consultations_user_id_fkey(full_name, email)
     `,
       )
-      .eq('ahli_id', ahliProfile.id) // ✅ bukan session.user.id
+      .eq('ahli_id', ahliProfile.id)
       .order('created_at', { ascending: false });
 
-    if (!error && konsultasi) {
-      setData(
-        konsultasi.map((item: any) => ({
-          id: item.id,
-          nama: item.users?.full_name ?? 'User',
-          email: item.users?.email ?? '',
-          status: mapStatus(item.status),
-          db_status: item.status,
-          waktu: formatWaktu(item.created_at),
-        })),
-      );
+    if (error) {
+      console.error('[ContainerKonsultasi] Error fetch consultations:', error.message);
+      setLoading(false);
+      return;
     }
+
+    if (!konsultasi || konsultasi.length === 0) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Ambil foto profil semua user yang muncul di daftar konsultasi (1 query batch)
+    const userIds = [...new Set(konsultasi.map((item: any) => item.user_id).filter(Boolean))];
+
+    let photoMap: Record<string, string | null> = {};
+    if (userIds.length > 0) {
+      const { data: profiles, error: profileErr } = await supabase.from('user_profiles').select('user_id, photo_url').in('user_id', userIds);
+
+      if (profileErr) {
+        console.error('[ContainerKonsultasi] Error fetch user_profiles (photo):', profileErr.message);
+      }
+
+      if (profiles) {
+        photoMap = profiles.reduce((acc: Record<string, string | null>, p: any) => {
+          acc[p.user_id] = p.photo_url ?? null;
+          return acc;
+        }, {});
+      }
+    }
+
+    setData(
+      konsultasi.map((item: any) => ({
+        id: item.id,
+        user_id: item.user_id,
+        nama: item.users?.full_name ?? 'User',
+        email: item.users?.email ?? '',
+        status: mapStatus(item.status),
+        db_status: item.status,
+        waktu: formatWaktu(item.created_at),
+        photo_url: photoMap[item.user_id] ?? null,
+      })),
+    );
 
     setLoading(false);
   }, []);
@@ -256,9 +299,7 @@ export default function ContainerKonsultasi() {
                         <tr key={row.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
                           <td className="w-[25%] px-4 lg:px-6 py-3">
                             <div className="flex items-center gap-2 lg:gap-2.5">
-                              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                                <User size={13} strokeWidth={1.5} className="text-gray-400" />
-                              </div>
+                              <UserAvatar photoUrl={row.photo_url} nama={row.nama} />
                               <span className="font-medium text-gray-800 text-xs lg:text-sm truncate">{row.nama}</span>
                             </div>
                           </td>
@@ -311,9 +352,7 @@ export default function ContainerKonsultasi() {
                   return (
                     <div key={row.id} className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
-                          <User size={15} strokeWidth={1.5} className="text-gray-400" />
-                        </div>
+                        <UserAvatar photoUrl={row.photo_url} nama={row.nama} size="w-9 h-9" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-gray-800 truncate">{row.nama}</p>
                           <p className="text-xs text-gray-500 truncate">{row.email}</p>
